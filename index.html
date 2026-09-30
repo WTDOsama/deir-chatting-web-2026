@@ -55,11 +55,12 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '2.0.0',
+  VERSION: '2.0.1',
   USE_BACKEND: localStorage.getItem('USE_BACKEND') === 'true',
   API_URL: localStorage.getItem('API_URL') || 'http://localhost:5000/api',
   STORAGE_KEY: 'deir_albalah_correspondence',
   USER_KEY: 'deir_albalah_user',
+  USERS_KEY: 'deir_albalah_users',
   OUTBOX_KEY: 'deir_albalah_outbox',
   SETTINGS_KEY: 'deir_albalah_settings',
 };
@@ -77,6 +78,14 @@ const ROLES = {
   sector_admin: 'مدير قاطع',
   sector_staff: 'موظف قاطع',
 };
+
+const DEFAULT_USERS = [
+  { id: '1', username: 'admin', password: 'admin123', fullName: 'المدير العام', role: 'super_admin', sectorId: null },
+  { id: '2', username: 'east', password: 'east123', fullName: 'مدير القاطع الشرقي', role: 'sector_admin', sectorId: 'east' },
+  { id: '3', username: 'west', password: 'west123', fullName: 'مدير القاطع الغربي', role: 'sector_admin', sectorId: 'west' },
+  { id: '4', username: 'north', password: 'north123', fullName: 'مدير القاطع الشمالي', role: 'sector_admin', sectorId: 'north' },
+  { id: '5', username: 'south', password: 'south123', fullName: 'مدير القاطع الجنوبي', role: 'sector_admin', sectorId: 'south' },
+];
 
 // ============================================================
 // UTILITIES - أدوات مساعدة
@@ -112,9 +121,31 @@ const Utils = {
     return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   },
   
-  saveLocal: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+  saveLocal: (key, data) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+      console.log(`✓ Saved to ${key}`);
+      return true;
+    } catch (e) {
+      console.error(`✗ Failed to save ${key}:`, e);
+      return false;
+    }
+  },
+  
   loadLocal: (key, def = null) => {
-    try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : def; } catch { return def; }
+    try { 
+      const d = localStorage.getItem(key); 
+      if (d) {
+        const parsed = JSON.parse(d);
+        console.log(`✓ Loaded ${key}:`, Array.isArray(parsed) ? `${parsed.length} items` : parsed);
+        return parsed;
+      }
+      console.log(`⚠ ${key} not found, using default`);
+      return def; 
+    } catch (e) { 
+      console.error(`✗ Failed to load ${key}:`, e);
+      return def; 
+    }
   },
   
   toast: (msg, type = 'info') => {
@@ -126,6 +157,17 @@ const Utils = {
     setTimeout(() => el.remove(), 3500);
   },
 };
+
+// Initialize default users on first load
+console.log('🚀 Initializing application...');
+const existingUsers = Utils.loadLocal(CONFIG.USERS_KEY, null);
+if (!existingUsers || existingUsers.length === 0) {
+  console.log('📝 No users found, creating default users...');
+  Utils.saveLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
+  console.log('✓ Default users created');
+} else {
+  console.log(`✓ Found ${existingUsers.length} existing users`);
+}
 
 // ============================================================
 // API CLIENT - عميل API
@@ -339,7 +381,6 @@ class ApiCorrespondenceService {
   }
 }
 
-// اختيار الخدمة
 const correspondenceService = CONFIG.USE_BACKEND ? new ApiCorrespondenceService() : new LocalCorrespondenceService();
 
 // ============================================================
@@ -351,18 +392,18 @@ const Auth = {
   },
   
   login(username, password) {
-    // Demo mode - في الوضع الحقيقي يتم الاتصال بالـ Backend
-    const users = Utils.loadLocal('deir_albalah_users', [
-      { id: '1', username: 'admin', password: 'admin123', fullName: 'المدير العام', role: 'super_admin', sectorId: null },
-      { id: '2', username: 'east', password: 'east123', fullName: 'مدير القاطع الشرقي', role: 'sector_admin', sectorId: 'east' },
-      { id: '3', username: 'west', password: 'west123', fullName: 'مدير القاطع الغربي', role: 'sector_admin', sectorId: 'west' },
-      { id: '4', username: 'north', password: 'north123', fullName: 'مدير القاطع الشمالي', role: 'sector_admin', sectorId: 'north' },
-      { id: '5', username: 'south', password: 'south123', fullName: 'مدير القاطع الجنوبي', role: 'sector_admin', sectorId: 'south' },
-    ]);
+    console.log('🔐 Login attempt:', { username, password });
+    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
+    console.log('📋 Available users:', users.map(u => u.username));
     
     const user = users.find(u => u.username === username && u.password === password);
-    if (!user) throw new Error('بيانات الدخول غير صحيحة');
     
+    if (!user) {
+      console.error('✗ Login failed: Invalid credentials');
+      throw new Error('بيانات الدخول غير صحيحة');
+    }
+    
+    console.log('✓ Login successful:', user.fullName);
     const session = { ...user, loginAt: Utils.now() };
     delete session.password;
     Utils.saveLocal(CONFIG.USER_KEY, session);
@@ -551,7 +592,6 @@ const App = {
 // VIEWS - الواجهات
 // ============================================================
 const Views = {
-  // ---------- LOGIN ----------
   login() {
     return `
       <div class="min-h-screen flex items-center justify-center p-4">
@@ -607,7 +647,6 @@ const Views = {
     };
   },
   
-  // ---------- DASHBOARD ----------
   dashboard() {
     const user = Auth.getCurrentUser();
     const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
@@ -686,7 +725,6 @@ const Views = {
     `;
   },
   
-  // ---------- SECTOR VIEW ----------
   sector() {
     const sectorId = Router.params.id;
     const sector = SECTORS.find(s => s.id === sectorId);
@@ -766,7 +804,6 @@ const Views = {
     document.getElementById('sortBy').onchange = filterList;
   },
   
-  // ---------- GENERAL ADMIN ----------
   general() {
     const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => !r.isArchived);
     
@@ -826,7 +863,6 @@ const Views = {
     document.getElementById('generalPriority').onchange = filter;
   },
   
-  // ---------- ARCHIVE ----------
   archive() {
     const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.isArchived);
     
@@ -846,7 +882,6 @@ const Views = {
     `;
   },
   
-  // ---------- FOLLOW-UPS ----------
   followups() {
     const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
     const withFollowUps = all.filter(r => r.followUps && r.followUps.length > 0);
@@ -891,7 +926,6 @@ const Views = {
     `;
   },
   
-  // ---------- VIEW CORRESPONDENCE ----------
   viewCorrespondence() {
     const id = Router.params.id;
     const record = Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r => r.id === id);
@@ -1003,7 +1037,6 @@ const Views = {
     `;
   },
   
-  // ---------- SETTINGS ----------
   settings() {
     return `
       <div class="min-h-screen flex items-center justify-center p-4">
@@ -1053,7 +1086,6 @@ const Views = {
     `;
   },
   
-  // ---------- MIGRATION ----------
   migration() {
     return `
       ${this.navbar()}
@@ -1080,9 +1112,8 @@ const Views = {
     `;
   },
   
-  // ---------- USERS ----------
   users() {
-    const users = Utils.loadLocal('deir_albalah_users', []);
+    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
     
     return `
       ${this.navbar()}
@@ -1111,7 +1142,6 @@ const Views = {
     `;
   },
   
-  // ---------- NAVBAR ----------
   navbar() {
     const user = Auth.getCurrentUser();
     if (!user) return '';
@@ -1150,7 +1180,6 @@ const Views = {
     `;
   },
   
-  // ---------- CORRESPONDENCE CARD ----------
   correspondenceCard(r, showRestore = false) {
     const sector = SECTORS.find(s => s.id === r.sectorId);
     const priorityClass = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
@@ -1179,7 +1208,6 @@ const Views = {
     `;
   },
   
-  // ---------- CREATE MODAL ----------
   createModal(sectorId) {
     return `
       <div id="createModal" class="modal-overlay hidden">
@@ -1343,7 +1371,7 @@ const UI = {
       version: CONFIG.VERSION,
       exportedAt: Utils.now(),
       correspondence: Utils.loadLocal(CONFIG.STORAGE_KEY, []),
-      users: Utils.loadLocal('deir_albalah_users', []),
+      users: Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -1361,7 +1389,7 @@ const UI = {
       try {
         const data = JSON.parse(e.target.result);
         if (data.correspondence) Utils.saveLocal(CONFIG.STORAGE_KEY, data.correspondence);
-        if (data.users) Utils.saveLocal('deir_albalah_users', data.users);
+        if (data.users) Utils.saveLocal(CONFIG.USERS_KEY, data.users);
         Utils.toast('تم الاستيراد بنجاح', 'success');
         App.render();
       } catch (err) {
@@ -1401,7 +1429,7 @@ const UI = {
     document.getElementById('userModal').classList.remove('hidden');
     document.getElementById('userForm').onsubmit = (e) => {
       e.preventDefault();
-      const users = Utils.loadLocal('deir_albalah_users', []);
+      const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
       users.push({
         id: Utils.uuid(),
         fullName: document.getElementById('uFullName').value,
@@ -1410,7 +1438,7 @@ const UI = {
         role: document.getElementById('uRole').value,
         sectorId: document.getElementById('uSector').value || null,
       });
-      Utils.saveLocal('deir_albalah_users', users);
+      Utils.saveLocal(CONFIG.USERS_KEY, users);
       Utils.toast('تمت الإضافة', 'success');
       App.render();
     };
@@ -1418,8 +1446,8 @@ const UI = {
   
   deleteUser(id) {
     if (!confirm('حذف المستخدم؟')) return;
-    const users = Utils.loadLocal('deir_albalah_users', []).filter(u => u.id !== id);
-    Utils.saveLocal('deir_albalah_users', users);
+    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS).filter(u => u.id !== id);
+    Utils.saveLocal(CONFIG.USERS_KEY, users);
     Utils.toast('تم الحذف', 'success');
     App.render();
   },
@@ -1446,17 +1474,6 @@ window.addEventListener('offline', () => {
 // ============================================================
 Router.init();
 App.render();
-
-// Initialize default admin if no users exist
-if (!Utils.loadLocal('deir_albalah_users', null)) {
-  Utils.saveLocal('deir_albalah_users', [
-    { id: '1', username: 'admin', password: 'admin123', fullName: 'المدير العام', role: 'super_admin', sectorId: null },
-    { id: '2', username: 'east', password: 'east123', fullName: 'مدير القاطع الشرقي', role: 'sector_admin', sectorId: 'east' },
-    { id: '3', username: 'west', password: 'west123', fullName: 'مدير القاطع الغربي', role: 'sector_admin', sectorId: 'west' },
-    { id: '4', username: 'north', password: 'north123', fullName: 'مدير القاطع الشمالي', role: 'sector_admin', sectorId: 'north' },
-    { id: '5', username: 'south', password: 'south123', fullName: 'مدير القاطع الجنوبي', role: 'sector_admin', sectorId: 'south' },
-  ]);
-}
 
 console.log(`%c${CONFIG.APP_NAME} v${CONFIG.VERSION}`, 'color:#0f766e;font-size:20px;font-weight:bold');
 console.log(`%c© 2026 ${CONFIG.ORG}`, 'color:#666');
