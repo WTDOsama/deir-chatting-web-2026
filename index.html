@@ -1,14 +1,1467 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b263b"><title>مراسلات إدارة إيواءات دير البلح</title><style>
-:root{--navy:#0b263b;--teal:#0e9c98;--bg:#f4f7f9;--ink:#183448;--muted:#80929d;--line:#e2eaed;--white:#fff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#0b263b,#155b65);padding:20px}.login-card{width:410px;max-width:100%;padding:38px 40px;background:#fff;border-radius:16px;text-align:center;box-shadow:0 22px 55px #001b2a66}.logo{width:58px;height:58px;margin:auto;display:grid;place-items:center;background:var(--teal);color:#fff;border-radius:16px;font-size:28px}.login h1{font-size:20px;line-height:1.7;margin:18px 0 5px}.muted{color:var(--muted);font-size:12px}.login form{text-align:right;margin-top:25px}.login label,.form label{display:grid;gap:7px;color:#55707e;font-size:12px;margin:13px 0}.login input,.form input,.form textarea,.form select,.toolbar select,.inline-form input,.inline-form select{width:100%;border:1px solid #d8e3e7;border-radius:7px;padding:11px;outline:0;background:#fff;color:var(--ink)}.primary,.outline,.danger,.text{border:0;border-radius:7px;padding:10px 15px;display:inline-flex;align-items:center;justify-content:center;gap:8px}.primary{background:var(--teal);color:#fff}.outline{background:#fff;color:#486473;border:1px solid #d7e3e6}.danger{background:#fff0ee;color:#c35a51}.text{background:transparent;color:var(--teal);padding:4px}.wide{width:100%}.notice{background:#eff9f6;color:#287e73;border-radius:7px;padding:10px;font-size:11px;line-height:1.8;margin-top:18px}.login footer{border-top:1px solid #eef2f3;margin-top:26px;padding-top:16px;font-size:10px;color:#97a7af;line-height:2}.app{min-height:100vh}.side{position:fixed;z-index:4;inset:0 0 0 auto;width:270px;background:var(--navy);color:#c8d8df;display:flex;flex-direction:column}.side-head{display:flex;align-items:center;gap:10px;padding:18px 20px;height:78px;border-bottom:1px solid #244256}.side-head b{display:block;color:#fff;font-size:14px}.side-head small{display:block;color:#8ca8b7;font-size:10px;margin-top:4px}.mini{width:40px;height:40px;border-radius:12px;background:var(--teal);display:grid;place-items:center;color:#fff;font-size:21px}.side nav{padding:18px 12px;display:grid;gap:4px}.nav{border:0;background:none;color:#aac0cc;padding:11px 12px;border-radius:8px;text-align:right;display:flex;gap:12px;align-items:center}.nav:hover,.nav.active{background:#143d58;color:#fff}.nav.active{box-shadow:inset -3px 0 var(--teal)}.side-bottom{margin-top:auto;padding:14px;border-top:1px solid #244256}.local{padding:10px;background:#102f45;border-radius:8px;font-size:10px;color:#9bb3bf;margin-bottom:10px}.main{margin-right:270px}.top{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 32px;position:sticky;top:0;z-index:3}.crumb{color:#8496a0;font-size:12px}.top-right{display:flex;align-items:center;gap:18px;font-size:11px;color:#56717d}.online i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#33bd87;margin-left:5px}.avatar{border:0;background:#dff4ee;color:#118b7c;border-radius:50%;width:34px;height:34px;font-weight:bold}.content{padding:30px 36px;max-width:1500px;margin:auto}.title{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:25px}.title h2{font-size:25px;margin:0 0 7px}.title p{color:var(--muted);font-size:12px;margin:0}.eyebrow{color:var(--teal);font-size:11px;font-weight:bold;margin-bottom:7px}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:30px}.card,.stat,.panel{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 3px 12px #173b4b09}.stat{padding:16px;display:flex;align-items:center;gap:12px}.stat small{display:block;color:var(--muted);font-size:10px;white-space:nowrap}.stat strong{display:block;font-size:24px;margin-top:6px}.stat i{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;background:#e7f6f3;color:var(--teal);font-style:normal;font-size:18px}.stat:nth-child(3) i{background:#fff3df;color:#dc983b}.stat:nth-child(4) i{background:#fff0ee;color:#d35e56}.stat:nth-child(5) i{background:#eee9ff;color:#7657bb}.section-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 13px}.section-head h3{font-size:16px;margin:0}.sectors{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}.sector{padding:18px;text-align:right}.sector:hover{border-color:#5ac3b8}.sector-top{display:flex;justify-content:space-between;color:#92a4ad}.sector-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:#e5f6f2;color:var(--teal)}.sector h3{font-size:15px;margin:17px 0 10px}.big{font-size:27px;font-weight:bold}.big small{font-size:11px;color:var(--muted);font-weight:normal}.sector-foot{border-top:1px solid #edf1f3;padding-top:11px;margin-top:16px;display:flex;justify-content:space-between;font-size:10px;color:#8498a2}.message{display:flex;align-items:center;gap:12px;padding:15px 19px;border-bottom:1px solid #edf1f3;width:100%;text-align:right;background:#fff}.message:hover{background:#f8fbfb}.message.unread{border-right:3px solid var(--teal);padding-right:16px}.avatar2{width:36px;height:36px;border-radius:50%;background:#e2f3ef;color:#168e82;display:grid;place-items:center;font-weight:bold;flex:none}.msg{flex:1;min-width:0}.msg-top{display:flex;gap:12px}.msg-top span,.time{font-size:10px;color:#91a2aa;margin-right:auto}.msg b{font-size:13px}.msg strong{display:block;margin:7px 0 5px;font-size:13px}.msg p{margin:0;color:#8799a2;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{font-size:10px;background:#edf5f6;color:#3d8987;padding:5px 8px;border-radius:5px;white-space:nowrap}.toolbar{display:flex;gap:10px;margin-bottom:17px}.search{background:#fff;border:1px solid #dfe8eb;border-radius:7px;display:flex;align-items:center;padding:0 12px;max-width:450px;flex:1;color:#8da0a9}.search input{border:0;outline:0;padding:10px;width:100%;background:none}.panel-head{display:flex;justify-content:space-between;padding:16px 19px;border-bottom:1px solid #edf1f3;font-size:12px}.list{overflow:hidden}.empty{text-align:center;padding:45px;color:#93a4ac;font-size:12px}.form{padding:24px}.form-section{border-bottom:1px solid #edf1f3;padding-bottom:23px;margin-bottom:22px}.form-section h3{font-size:15px;margin:0 0 17px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.form textarea{resize:vertical;line-height:1.8}.drop{border:1px dashed #9dc7c5!important;padding:22px;text-align:center;justify-items:center!important;color:var(--teal)!important}.drop input{display:none}.file{display:inline-flex;gap:7px;background:#f0f7f7;padding:7px;border-radius:6px;font-size:11px;margin:10px 6px 0 0}.form-actions{display:flex;gap:9px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:820px;text-align:right}.table th{background:#f7f9fa;padding:14px;font-size:11px;color:#748d99;font-weight:normal}.table td{padding:14px;border-top:1px solid #edf1f3;font-size:12px}.ref{color:#168f8a;font-size:11px}.status{font-size:10px;background:#edf5f6;padding:5px 8px;border-radius:5px;color:#62818c}.inline-form{display:flex;gap:10px;padding:15px;margin-bottom:16px}.inline-form>*{flex:1}.report-grid,.settings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.report{padding:22px}.report strong{font-size:30px;display:block;margin-top:12px}.bar{height:6px;background:#e5eeee;border-radius:4px;margin:17px 0 9px}.bar i{display:block;height:100%;background:var(--teal);border-radius:4px}.settings-grid{grid-template-columns:1fr 1fr}.setting{padding:23px}.setting h3{margin:0 0 18px;font-size:15px}.setting-row{border-top:1px solid #edf1f3;padding:15px 0;display:flex;justify-content:space-between;align-items:center}.setting-row span:first-child{display:grid;gap:5px}.setting-row small{font-size:10px;color:var(--muted)}.toggle{width:42px;height:23px;border:0;border-radius:20px;background:#d6e1e3;padding:3px}.toggle.on{background:var(--teal)}.toggle i{display:block;width:17px;height:17px;border-radius:50%;background:#fff}.toggle.on i{transform:translateX(-19px)}.about{text-align:center;max-width:550px;margin:60px auto}.about .logo{margin:auto}.about h2{margin:18px 0 10px}.about p{color:#738a95;line-height:1.9}.about-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:5px 20px;text-align:right;margin:25px 0}.about-box div{display:flex;justify-content:space-between;border-bottom:1px solid #edf1f3;padding:14px 0;font-size:12px}.about-box div:last-child{border:0}.about-box span{color:#78909b}.modal{position:fixed;inset:0;background:#08243788;z-index:20;display:flex;justify-content:flex-start}.details{width:min(650px,100%);background:#fff;height:100%;overflow:auto;padding:29px}.details-head{display:flex;justify-content:space-between}.details h2{font-size:21px;margin:0 0 8px}.detail-user{border-top:1px solid #edf1f3;border-bottom:1px solid #edf1f3;padding:19px 0;margin:20px 0;display:flex;align-items:center;gap:10px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;background:#f7fafa;padding:15px;border-radius:8px}.detail-grid div{display:grid;gap:7px}.detail-grid small{color:#879ba4;font-size:10px}.detail-grid b{font-size:12px}.body{font-size:14px;line-height:2.1;margin:23px 0;white-space:pre-wrap}.actions{border-top:1px solid #edf1f3;padding-top:20px;margin-top:25px;display:flex;gap:8px;flex-wrap:wrap}.toast{position:fixed;bottom:24px;left:25px;background:#123b51;color:#fff;padding:13px 18px;border-radius:8px;z-index:30;font-size:12px}
-@media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}.sectors,.report-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.side{transform:translateX(100%);transition:.25s}.side.open{transform:none}.main{margin-right:0}.top{padding:0 15px}.menu{display:block!important}.content{padding:22px 15px}.title{flex-direction:column;gap:15px}.title .primary{width:100%}.stats{grid-template-columns:repeat(2,1fr);gap:9px}.stat{padding:11px}.stat strong{font-size:21px}.sectors{gap:9px}.sector{padding:13px}.sector h3{font-size:13px}.sector-foot{display:block;line-height:1.9}.msg p{max-width:190px}.msg .badge{display:none}.form-grid,.settings-grid{grid-template-columns:1fr}.form-actions{flex-direction:column}.inline-form{display:grid}.report-grid{grid-template-columns:1fr}.details{padding:22px 16px}.menu{border:0;background:none;font-size:20px;display:none}}
-</style></head><body><div id="root"></div><script>
-const sectors=['الشرقي','الغربي','الشمالي','الجنوبي'];let data=JSON.parse(localStorage.dbs_data||'null')||[
-{id:1,ref:'DBS-EAST-2026-00001',sector:'الشرقي',sender:'محمد أبو عيشة',job:'منسق إيواءات القاطع الشرقي',recipient:'الإدارة العامة',subject:'تقرير الاحتياجات اليومية لمركز الأمل',body:'نرفع لحضرتكم تقرير الاحتياجات اليومية للمركز، حيث نحتاج إلى دعم عاجل بالمياه الصالحة للشرب والبطانيات قبل نهاية اليوم. كما نرفق كشفاً محدثاً بأعداد الأسر المستفيدة.',type:'تقرير يومي',priority:'عاجل',date:'2026-09-30',time:'08:45',read:false,archived:false,attachments:1,status:'قيد المتابعة'},
-{id:2,ref:'DBS-WEST-2026-00007',sector:'الغربي',sender:'سارة النجار',job:'مسؤولة مركز الكرامة',recipient:'إدارة الإيواءات',subject:'طلب صيانة شبكة الكهرباء',body:'نرجو التكرم بتوجيه فريق الصيانة للكشف على شبكة الكهرباء في مبنى المركز، وذلك حفاظاً على سلامة العائلات المقيمة.',type:'طلب',priority:'مهم',date:'2026-09-29',time:'14:20',read:true,archived:false,attachments:1,status:'بانتظار الرد'},
-{id:3,ref:'DBS-NORTH-2026-00003',sector:'الشمالي',sender:'أحمد الكحلوت',job:'مشرف ميداني',recipient:'الإدارة العامة',subject:'إشعار بوصول مواد النظافة',body:'نفيدكم بوصول الدفعة الأولى من مواد النظافة إلى المخزن المركزي وتوزيعها على نقاط الخدمة حسب الخطة المعتمدة.',type:'إشعار',priority:'عادي',date:'2026-09-28',time:'11:10',read:true,archived:false,attachments:0,status:'مكتمل'},
-{id:4,ref:'DBS-SOUTH-2026-00012',sector:'الجنوبي',sender:'ريم قاسم',job:'منسقة القاطع الجنوبي',recipient:'الإدارة العامة',subject:'تعميم مواعيد توزيع الوجبات',body:'يرجى اعتماد مواعيد التوزيع الجديدة وإبلاغ المستفيدين بها، مع التأكيد على أولوية كبار السن وذوي الإعاقة.',type:'تعميم',priority:'مهم',date:'2026-09-27',time:'09:30',read:false,archived:false,attachments:0,status:'جديد'},
-{id:5,ref:'DBS-EAST-2026-00002',sector:'الشرقي',sender:'يوسف الشامي',job:'مسؤول اللوجستيات',recipient:'القاطع الشرقي',subject:'تحديث مخزون المستلزمات الطبية',body:'مرفق بيان بالمخزون الحالي للمستلزمات الطبية ونسبة الاستهلاك الأسبوعية، ونوصي بإعادة الطلب للأصناف الأساسية.',type:'متابعة',priority:'عاجل جداً',date:'2026-09-26',time:'16:05',read:false,archived:false,attachments:1,status:'متأخر'}];
-let page=location.hash.slice(1)||'home',selected=null;const save=()=>localStorage.dbs_data=JSON.stringify(data);function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}function go(p){location.hash=p}onhashchange=()=>{page=location.hash.slice(1)||'home';selected=null;render()};function nav(){return [['⌂','الرئيسية','home'],['✉','مراسلات القاطع الشرقي','sector:الشرقي'],['✉','مراسلات القاطع الغربي','sector:الغربي'],['✉','مراسلات القاطع الشمالي','sector:الشمالي'],['✉','مراسلات القاطع الجنوبي','sector:الجنوبي'],['▣','الإدارة العامة','admin'],['＋','إنشاء مراسلة','create'],['◷','المتابعة','follow'],['▤','الأرشيف','archive'],['▥','التقارير','reports'],['⚙','الإعدادات','settings'],['ⓘ','حول التطبيق','about']]};function layout(inner){return `<aside class="side" id="side"><div class="side-head"><div class="mini">▣</div><div><b>إيواءات دير البلح</b><small>نظام المراسلات</small></div></div><nav>${nav().map(x=>`<button class="nav ${page==x[2]?'active':''}" onclick="go('${x[2]}')"><span>${x[0]}</span>${x[1]}</button>`).join('')}</nav><div class="side-bottom"><div class="local">● البيانات محفوظة محلياً<br><small>لا يوجد اتصال بخادم</small></div><button class="nav" onclick="logout()">⇥ تسجيل الخروج</button></div></aside><main class="main"><header class="top"><button class="menu" onclick="document.getElementById('side').classList.toggle('open')">☰</button><div class="crumb">إدارة الإيواءات　/　<b>${nav().find(x=>x[2]==page)?.[1]||'تفاصيل المراسلة'}</b></div><div class="top-right"><span class="online"><i></i> متصل</span><span>◉</span><button class="avatar">م</button></div></header><div class="content">${inner}</div></main>${selected?detail(selected):''}`}
-function title(t,d,button=''){return `<div class="title"><div><div class="eyebrow">نظرة عامة</div><h2>${t}</h2><p>${d||''}</p></div>${button}</div>`}function stats(){let urgent=data.filter(x=>x.priority.includes('عاجل')).length;return `<div class="stats">${[['إجمالي المراسلات',data.length,'▤'],['المراسلات الواردة',data.length-1,'✉'],['الرسائل غير المقروءة',data.filter(x=>!x.read&&!x.archived).length,'●'],['المراسلات العاجلة',urgent,'!'],['قيد المتابعة',data.filter(x=>x.status=='قيد المتابعة'||x.status=='بانتظار الرد').length,'◷'],['إجمالي المرفقات',data.reduce((a,x)=>a+x.attachments,0),'⌑']].map(x=>`<div class="stat"><i>${x[2]}</i><div><small>${x[0]}</small><strong>${x[1]}</strong></div></div>`).join('')}</div>`}function sectorCards(){return `<div class="sectors">${sectors.map(s=>{let a=data.filter(x=>x.sector==s);return `<button class="card sector" onclick="go('sector:${s}')"><div class="sector-top"><span class="sector-icon">▣</span><span>‹</span></div><h3>القاطع ${s}</h3><div class="big">${a.length} <small>مراسلات</small></div><div class="sector-foot"><span>● ${a.filter(x=>!x.read).length} غير مقروءة</span><span>${a[0]?.date||'—'}</span></div></button>`}).join('')}</div>`}function row(x){return `<button class="message ${x.read?'':'unread'}" onclick="openDetail('${x.id}')"><span class="avatar2">${esc(x.sender[0])}</span><span class="msg"><span class="msg-top"><b>${esc(x.sender)}</b><span>${x.date} · ${x.time}</span></span><strong>${esc(x.subject)}</strong><p>${esc(x.body)}</p></span>${x.attachments?'<span>⌑</span>':''}<span class="badge">${x.priority}</span></button>`}function home(){return title('لوحة التحكم','مرحباً بك في مركز إدارة المراسلات اليومية',`<button class="primary" onclick="go('create')">＋ إنشاء مراسلة</button>`)+stats()+`<div class="section-head"><h3>مراسلات القطاعات</h3><button class="text" onclick="go('admin')">عرض الكل ‹</button></div>`+sectorCards()+`<div class="section-head"><h3>أحدث المراسلات</h3><span class="muted">آخر تحديث منذ دقائق</span></div><div class="panel">${data.filter(x=>!x.archived).slice(0,5).map(row).join('')}</div>`}function sectorPage(s){let a=data.filter(x=>x.sector==s&&!x.archived);return title('مراسلات القاطع '+s,'عرض وإدارة المراسلات الخاصة بالقطاع',`<button class="primary" onclick="go('create')">＋ مراسلة جديدة</button>`)+`<div class="toolbar"><div class="search">⌕<input placeholder="البحث في المراسلات..." oninput="filterRows(this.value,'${s}')"></div><button class="outline">☷ تصفية</button></div><div class="panel list"><div class="panel-head"><b>${a.length} مراسلات</b><span>مرتبة حسب الأحدث</span></div><div id="rows">${a.map(row).join('')}</div></div>`}function filterRows(q,s){document.querySelector('#rows').innerHTML=data.filter(x=>x.sector==s&&!x.archived&&(x.subject+x.sender+x.ref).includes(q)).map(row).join('')}function create(){return title('إنشاء مراسلة','أدخل بيانات المراسلة ليتم حفظها محلياً')+`<form class="panel form" onsubmit="submitForm(event)"><div class="form-section"><h3>بيانات المراسلة</h3><div class="form-grid"><label>اسم المرسل *<input name="sender" required placeholder="أدخل اسم المرسل"></label><label>الوصف الوظيفي *<input name="job" required placeholder="مثال: منسق إيواءات"></label><label>القاطع<select name="sector">${sectors.map(x=>`<option>${x}</option>`).join('')}</select></label><label>الجهة المستلمة<input name="recipient" value="الإدارة العامة"></label><label>عنوان المراسلة *<input name="subject" required></label><label>نوع المراسلة<select name="type"><option>مراسلة إدارية</option><option>تقرير يومي</option><option>تقرير شهري</option><option>طلب</option><option>تعميم</option><option>إشعار</option><option>متابعة</option><option>أخرى</option></select></label><label>درجة الأهمية<select name="priority"><option>عادي</option><option>مهم</option><option>عاجل</option><option>عاجل جداً</option></select></label></div></div><div class="form-section"><h3>محتوى المراسلة</h3><label>نص الرسالة *<textarea name="body" rows="6" required placeholder="اكتب نص المراسلة بالتفصيل..."></textarea></label><label>ملاحظات داخلية<textarea name="notes" rows="3"></textarea></label></div><div class="form-section"><h3>المرفقات</h3><label class="drop">⌑<b> إرفاق ملفات محلية</b><small> JPG, PNG, PDF, DOCX, XLSX, ZIP وغيرها</small><input type="file" multiple></label></div><div class="form-actions"><button type="button" class="outline" onclick="go('home')">إلغاء</button><button class="primary">✓ حفظ المراسلة محلياً</button></div></form>`}function submitForm(e){e.preventDefault();let f=new FormData(e.target),s=f.get('sector'),n=data.length+1;let x={id:Date.now(),ref:'DBS-'+({الشرقي:'EAST',الغربي:'WEST',الشمالي:'NORTH',الجنوبي:'SOUTH'})[s]+'-2026-'+String(n).padStart(5,'0'),sector:s,sender:f.get('sender'),job:f.get('job'),recipient:f.get('recipient'),subject:f.get('subject'),body:f.get('body'),type:f.get('type'),priority:f.get('priority'),date:new Date().toISOString().slice(0,10),time:new Date().toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'}),read:true,archived:false,attachments:e.target.querySelector('input[type=file]').files.length,status:'جديد'};data.unshift(x);save();toast('تم حفظ المراسلة محلياً بنجاح');go('sector:'+s)}
-function admin(){let a=data.filter(x=>!x.archived);return title('الإدارة العامة','مركز موحد لمتابعة جميع مراسلات القطاعات')+stats()+`<div class="toolbar"><div class="search">⌕<input placeholder="بحث بالمرسل أو الرقم المرجعي..." oninput="filterTable(this.value)"></div><button class="outline" onclick="exportTxt()">⇩ تصدير</button></div><div class="panel table-wrap"><table class="table"><thead><tr><th>رقم المراسلة</th><th>القاطع</th><th>اسم المرسل</th><th>العنوان</th><th>الأولوية</th><th>التاريخ</th><th>الحالة</th><th></th></tr></thead><tbody id="tbody">${a.map(tableRow).join('')}</tbody></table></div>`}function tableRow(x){return `<tr><td class="ref">${x.ref}</td><td>القاطع ${x.sector}</td><td>${esc(x.sender)}<small>${esc(x.job)}</small></td><td>${esc(x.subject)}</td><td><span class="badge">${x.priority}</span></td><td>${x.date}</td><td><span class="status">${x.status}</span></td><td><button class="text" onclick="openDetail('${x.id}')">عرض</button></td></tr>`}function filterTable(q){document.querySelector('#tbody').innerHTML=data.filter(x=>!x.archived&&(x.sender+x.ref+x.subject).includes(q)).map(tableRow).join('')}function archivePage(){let a=data.filter(x=>x.archived);return title('الأرشيف','المراسلات المؤرشفة والمحفوظة محلياً')+`<div class="panel">${a.length?a.map(x=>`<div class="message"><span class="avatar2">${x.sender[0]}</span><span class="msg"><b>${x.subject}</b><p>${x.ref} · ${x.date}</p></span><button class="outline" onclick="restore('${x.id}')">استعادة</button></div>`).join(''):'<div class="empty">الأرشيف فارغ</div>'}</div>`}function restore(id){data=data.map(x=>x.id==id?{...x,archived:false}:x);save();render()}function reports(){return title('التقارير','ملخص مؤشرات المراسلات حسب القطاع')+`<div class="report-grid">${sectors.map(s=>{let a=data.filter(x=>x.sector==s);return `<div class="card report"><div class="sector-icon">▥</div><h3>القاطع ${s}</h3><strong>${a.length}</strong><span class="muted">إجمالي المراسلات</span><div class="bar"><i style="width:${Math.min(100,a.length*20+10)}%"></i></div><small>${a.filter(x=>x.priority.includes('عاجل')).length} مراسلات عاجلة</small></div>`}).join('')}</div>`}function settings(){return title('الإعدادات','إدارة تفضيلات التطبيق والبيانات المحلية')+`<div class="settings-grid"><div class="card setting"><h3>⚙ المظهر العام</h3><div class="setting-row"><span><b>الوضع الداكن</b><small>تغيير مظهر واجهة التطبيق</small></span><button class="toggle" onclick="document.body.classList.toggle('dark')"><i></i></button></div><div class="setting-row"><span><b>حالة التخزين</b><small>يتم حفظ البيانات داخل هذا المتصفح</small></span><span class="status">✓ محلي</span></div></div><div class="card setting"><h3>▣ إدارة البيانات</h3><p class="muted">يمكنك حفظ نسخة من مراسلاتك أو إعادة بيانات العرض التجريبية.</p><button class="outline wide" onclick="exportJson()">⇩ تصدير البيانات كملف JSON</button><br><br><button class="danger wide" onclick="resetData()">↻ إعادة بيانات العرض التجريبية</button></div></div>`}function follow(){return title('المتابعة','تتبع المراسلات والإجراءات المطلوبة',`<button class="primary" onclick="toast('يمكن إضافة متابعة من خلال إنشاء مراسلة')">＋ إضافة متابعة</button>`)+`<div class="panel table-wrap"><table class="table"><thead><tr><th>المرجع</th><th>الموضوع</th><th>المسؤول</th><th>الحالة</th></tr></thead><tbody>${data.filter(x=>x.status!='مكتمل').map(x=>`<tr><td class="ref">${x.ref}</td><td>${x.subject}</td><td>فريق المتابعة</td><td><span class="status">${x.status}</span></td></tr>`).join('')}</tbody></table></div>`}function about(){return `<div class="about"><div class="logo">▣</div><h2>مراسلات إدارة إيواءات دير البلح</h2><p>منصة إدارية محلية لتنظيم المراسلات ومتابعة احتياجات قطاعات الإيواءات.</p><div class="about-box"><div><b>الإصدار</b><span>1.0.0 · نسخة تجريبية</span></div><div><b>التخزين</b><span>محلي داخل المتصفح فقط</span></div><div><b>التطوير</b><span>WTDOsama – وتد لبرمجة مواقع الويب</span></div></div><small>© 2026 إدارة إيواءات دير البلح – جميع الحقوق محفوظة.</small></div>`}function detail(x){return `<div class="modal" onclick="if(event.target===this)closeDetail()"><div class="details"><div class="details-head"><div><div class="eyebrow">تفاصيل المراسلة</div><h2>${esc(x.subject)}</h2><b class="ref">${x.ref}</b></div><button class="text" onclick="closeDetail()">✕</button></div><div class="detail-user"><span class="avatar2">${x.sender[0]}</span><div><b>${esc(x.sender)}</b><small>${esc(x.job)} · القاطع ${x.sector}</small></div><span class="time">${x.date} · ${x.time}</span></div><div class="detail-grid"><div><small>الجهة المستلمة</small><b>${x.recipient}</b></div><div><small>نوع المراسلة</small><b>${x.type}</b></div><div><small>الأولوية</small><b>${x.priority}</b></div><div><small>الحالة</small><b>${x.status}</b></div></div><div class="body">${esc(x.body)}</div>${x.attachments?'<p class="muted">⌑ يوجد مرفق محلي محفوظ في هذا المتصفح</p>':''}<div class="actions"><button class="outline" onclick="copyText('${x.id}')">▣ نسخ النص</button><button class="outline" onclick="window.print()">▣ طباعة</button><button class="outline" onclick="navigator.share?navigator.share({title:'${esc(x.subject)}',text:'${esc(x.body)}'}):toast('تم تجهيز المشاركة')">↗ مشاركة</button><button class="danger" onclick="archive('${x.id}')">▤ أرشفة</button></div></div></div>`}function openDetail(id){selected=data.find(x=>x.id==id);if(selected){selected.read=true;save();render()}}function closeDetail(){selected=null;render()}function archive(id){data=data.map(x=>x.id==id?{...x,archived:true}:x);save();selected=null;toast('تمت أرشفة المراسلة');render()}function copyText(id){navigator.clipboard?.writeText(data.find(x=>x.id==id).body);toast('تم نسخ نص المراسلة')}function exportTxt(){let blob=new Blob([data.map(x=>x.ref+' | '+x.sector+' | '+x.sender+' | '+x.subject).join('\n')],{type:'text/plain'});download(blob,'مراسلات-الإدارة.txt')}function exportJson(){download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),'نسخة-احتياطية.json')}function download(b,n){let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}function resetData(){if(confirm('هل تريد إعادة بيانات العرض التجريبية؟')){localStorage.removeItem('dbs_data');location.reload()}}function toast(t){let x=document.createElement('div');x.className='toast';x.textContent=t;document.body.append(x);setTimeout(()=>x.remove(),2500)}function logout(){localStorage.removeItem('dbs_session');location.reload()}function login(){document.getElementById('root').innerHTML=`<div class="login"><div class="login-card"><div class="logo">▣</div><h1>مراسلات إدارة<br>إيواءات دير البلح</h1><p class="muted">بوابة المراسلات الإدارية الموحدة</p><form onsubmit="event.preventDefault();if(this.u.value==='admin'&&this.p.value==='123456'){localStorage.dbs_session='1';location.reload()}else toast('بيانات الدخول غير صحيحة')"><label>اسم المستخدم<input name="u" placeholder="admin"></label><label>كلمة المرور<input name="p" type="password" placeholder="••••••"></label><button class="primary wide">تسجيل الدخول　‹</button></form><div class="notice">ⓘ نسخة تجريبية – تسجيل الدخول محلي دون خادم خلفي<br><small>admin / 123456</small></div><footer>© 2026 إدارة إيواءات دير البلح<br><b>WTDOsama – وتد لبرمجة مواقع الويب</b></footer></div></div>`}function render(){let inner=page=='home'?home():page.startsWith('sector:')?sectorPage(page.split(':')[1]):page=='create'?create():page=='admin'?admin():page=='archive'?archivePage():page=='reports'?reports():page=='settings'?settings():page=='follow'?follow():about();document.getElementById('root').innerHTML=layout(inner)}if(localStorage.dbs_session)render();else login();
-</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a43175f99f30b776',t:'MTc5MDc1Mjc4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body></html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f766e">
+<title>مراسلات إدارة إيواءات دير البلح</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2YXYr9mF2LEg2KfZhNil2YrYp9mF2LEg2KfZhdmC2KzYp9mE2K3ZiiIsInNob3J0X25hbWUiOiLZhdmC2KzYp9mFIiwiZGVzY3JpcHRpb24iOiJOesK4YW0g2YXYr9mF2LEg2KfZhNil2YrYp9mF2LEg2KfZhdmC2KzYp9mE2K3ZiiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGY3NjZlIiwidGhlbWVfY29sb3IiOiIjMGY3NjZlIiwib3JpZW50YXRpb24iOiJhbnkiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCc+PHRleHQgeT0nLjllbScgZm9udC1zaXplPSc5MCc+8J+TjTwvdGV4dD48L3N2Zz4iLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+  * { font-family: 'Cairo', sans-serif; }
+  body { background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); min-height: 100vh; }
+  .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
+  .card-hover { transition: all 0.3s ease; }
+  .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+  .priority-high { border-right: 4px solid #dc2626; }
+  .priority-normal { border-right: 4px solid #2563eb; }
+  .priority-low { border-right: 4px solid #16a34a; }
+  .fade-in { animation: fadeIn 0.4s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .sync-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 6px; }
+  .sync-online { background: #16a34a; box-shadow: 0 0 8px #16a34a; }
+  .sync-offline { background: #dc2626; box-shadow: 0 0 8px #dc2626; }
+  .sync-syncing { background: #f59e0b; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; transition: all 0.2s; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,118,110,0.4); }
+  .sector-east { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .sector-west { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .sector-north { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+  .sector-south { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+  .sector-general { background: linear-gradient(135deg, #0f766e, #134e4a); }
+  .tab-active { background: white; color: #0f766e; font-weight: 700; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  input, textarea, select { font-family: 'Cairo', sans-serif; }
+  .scrollbar::-webkit-scrollbar { width: 8px; }
+  .scrollbar::-webkit-scrollbar-thumb { background: #0f766e; border-radius: 4px; }
+  @media print { .no-print { display: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ============================================================
+// CONFIGURATION - إعدادات التطبيق
+// ============================================================
+const CONFIG = {
+  APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
+  ORG: 'إدارة إيواءات دير البلح',
+  DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
+  VERSION: '2.0.0',
+  USE_BACKEND: localStorage.getItem('USE_BACKEND') === 'true',
+  API_URL: localStorage.getItem('API_URL') || 'http://localhost:5000/api',
+  STORAGE_KEY: 'deir_albalah_correspondence',
+  USER_KEY: 'deir_albalah_user',
+  OUTBOX_KEY: 'deir_albalah_outbox',
+  SETTINGS_KEY: 'deir_albalah_settings',
+};
+
+const SECTORS = [
+  { id: 'east', name: 'القاطع الشرقي', code: 'EAST', class: 'sector-east', icon: '🌅' },
+  { id: 'west', name: 'القاطع الغربي', code: 'WEST', class: 'sector-west', icon: '🌊' },
+  { id: 'north', name: 'القاطع الشمالي', code: 'NORTH', class: 'sector-north', icon: '🏔️' },
+  { id: 'south', name: 'القاطع الجنوبي', code: 'SOUTH', class: 'sector-south', icon: '☀️' },
+];
+
+const ROLES = {
+  super_admin: 'مدير عام للنظام',
+  general_admin: 'مدير عام',
+  sector_admin: 'مدير قاطع',
+  sector_staff: 'موظف قاطع',
+};
+
+// ============================================================
+// UTILITIES - أدوات مساعدة
+// ============================================================
+const Utils = {
+  uuid: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  }),
+  
+  now: () => new Date().toISOString(),
+  
+  formatDate: (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  },
+  
+  formatShortDate: (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  },
+  
+  generateRef: (sectorCode) => {
+    const year = new Date().getFullYear();
+    const rand = Math.floor(Math.random() * 9000) + 1000;
+    return `DB-${sectorCode}-${year}-${rand}`;
+  },
+  
+  escapeHtml: (str) => {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  },
+  
+  saveLocal: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+  loadLocal: (key, def = null) => {
+    try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : def; } catch { return def; }
+  },
+  
+  toast: (msg, type = 'info') => {
+    const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600', warning: 'bg-yellow-600' };
+    const el = document.createElement('div');
+    el.className = `fixed top-4 left-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-2xl z-[200] fade-in`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  },
+};
+
+// ============================================================
+// API CLIENT - عميل API
+// ============================================================
+const ApiClient = {
+  async request(method, path, data = null, options = {}) {
+    const token = localStorage.getItem('auth_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    try {
+      const res = await fetch(`${CONFIG.API_URL}${path}`, {
+        method,
+        headers,
+        body: data ? JSON.stringify(data) : null,
+        ...options,
+      });
+      
+      if (res.status === 401) {
+        Auth.logout();
+        throw new Error('انتهت الجلسة، يرجى تسجيل الدخول');
+      }
+      
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.message || 'خطأ في الاتصال');
+      return json;
+    } catch (err) {
+      if (err.message.includes('Failed to fetch')) {
+        throw new Error('لا يوجد اتصال بالخادم');
+      }
+      throw err;
+    }
+  },
+  
+  get: (p) => this.request('GET', p),
+  post: (p, d) => this.request('POST', p, d),
+  put: (p, d) => this.request('PUT', p, d),
+  delete: (p) => this.request('DELETE', p),
+};
+
+// ============================================================
+// SERVICE ABSTRACTION - طبقة التجريد
+// ============================================================
+class LocalCorrespondenceService {
+  getAll(filters = {}) {
+    let data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    if (filters.sectorId) data = data.filter(d => d.sectorId === filters.sectorId);
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      data = data.filter(d => 
+        (d.subject || '').toLowerCase().includes(s) ||
+        (d.content || '').toLowerCase().includes(s) ||
+        (d.referenceNumber || '').toLowerCase().includes(s) ||
+        (d.sender || '').toLowerCase().includes(s)
+      );
+    }
+    if (filters.priority) data = data.filter(d => d.priority === filters.priority);
+    if (filters.archived !== undefined) data = data.filter(d => !!d.isArchived === filters.archived);
+    return Promise.resolve(data.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
+  }
+  
+  getById(id) {
+    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    return Promise.resolve(data.find(d => d.id === id));
+  }
+  
+  async create(record) {
+    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    const newRec = {
+      ...record,
+      id: Utils.uuid(),
+      referenceNumber: record.referenceNumber || Utils.generateRef(SECTORS.find(s => s.id === record.sectorId)?.code || 'XX'),
+      createdAt: Utils.now(),
+      updatedAt: Utils.now(),
+      isArchived: false,
+      replies: [],
+      attachments: [],
+      followUps: [],
+      notes: [],
+    };
+    data.push(newRec);
+    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+    return newRec;
+  }
+  
+  async update(id, updates) {
+    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    const idx = data.findIndex(d => d.id === id);
+    if (idx === -1) throw new Error('السجل غير موجود');
+    data[idx] = { ...data[idx], ...updates, updatedAt: Utils.now() };
+    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+    return data[idx];
+  }
+  
+  async archive(id) { return this.update(id, { isArchived: true }); }
+  async restore(id) { return this.update(id, { isArchived: false }); }
+  
+  async delete(id) {
+    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(d => d.id !== id);
+    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+  }
+  
+  async addReply(id, reply) {
+    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    const rec = data.find(d => d.id === id);
+    if (!rec) throw new Error('السجل غير موجود');
+    rec.replies = rec.replies || [];
+    rec.replies.push({ id: Utils.uuid(), ...reply, createdAt: Utils.now() });
+    rec.updatedAt = Utils.now();
+    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+    return rec;
+  }
+  
+  async addFollowUp(id, followUp) {
+    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    const rec = data.find(d => d.id === id);
+    if (!rec) throw new Error('السجل غير موجود');
+    rec.followUps = rec.followUps || [];
+    rec.followUps.push({ id: Utils.uuid(), ...followUp, createdAt: Utils.now() });
+    rec.updatedAt = Utils.now();
+    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+    return rec;
+  }
+}
+
+class ApiCorrespondenceService {
+  constructor() { this.local = new LocalCorrespondenceService(); }
+  
+  async getAll(filters = {}) {
+    try {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([k,v]) => v !== undefined && params.append(k, v));
+      return await ApiClient.get(`/correspondence?${params}`);
+    } catch (e) {
+      Utils.toast('تعذر الاتصال بالخادم - عرض البيانات المحلية', 'warning');
+      return this.local.getAll(filters);
+    }
+  }
+  
+  async getById(id) {
+    try { return await ApiClient.get(`/correspondence/${id}`); }
+    catch { return this.local.getById(id); }
+  }
+  
+  async create(record) {
+    if (!navigator.onLine) {
+      await this.queueForSync('create', record);
+      return this.local.create(record);
+    }
+    try {
+      const created = await ApiClient.post('/correspondence', record);
+      await this.local.create(created);
+      return created;
+    } catch (e) {
+      await this.queueForSync('create', record);
+      return this.local.create(record);
+    }
+  }
+  
+  async update(id, updates) {
+    try {
+      const updated = await ApiClient.put(`/correspondence/${id}`, updates);
+      await this.local.update(id, updated);
+      return updated;
+    } catch { return this.local.update(id, updates); }
+  }
+  
+  async archive(id) {
+    try { await ApiClient.post(`/correspondence/${id}/archive`); } catch {}
+    return this.local.archive(id);
+  }
+  
+  async restore(id) {
+    try { await ApiClient.post(`/correspondence/${id}/restore`); } catch {}
+    return this.local.restore(id);
+  }
+  
+  async delete(id) {
+    try { await ApiClient.delete(`/correspondence/${id}`); } catch {}
+    return this.local.delete(id);
+  }
+  
+  async addReply(id, reply) {
+    try { await ApiClient.post(`/correspondence/${id}/replies`, reply); } catch {}
+    return this.local.addReply(id, reply);
+  }
+  
+  async addFollowUp(id, followUp) {
+    try { await ApiClient.post(`/follow-ups`, { correspondenceId: id, ...followUp }); } catch {}
+    return this.local.addFollowUp(id, followUp);
+  }
+  
+  async queueForSync(action, data) {
+    const outbox = Utils.loadLocal(CONFIG.OUTBOX_KEY, []);
+    outbox.push({ id: Utils.uuid(), action, data, createdAt: Utils.now(), clientId: Utils.uuid() });
+    Utils.saveLocal(CONFIG.OUTBOX_KEY, outbox);
+  }
+  
+  async syncOutbox() {
+    const outbox = Utils.loadLocal(CONFIG.OUTBOX_KEY, []);
+    if (outbox.length === 0) return;
+    Utils.toast(`مزامنة ${outbox.length} عنصر...`, 'info');
+    const remaining = [];
+    for (const item of outbox) {
+      try {
+        if (item.action === 'create') await ApiClient.post('/correspondence', item.data);
+      } catch { remaining.push(item); }
+    }
+    Utils.saveLocal(CONFIG.OUTBOX_KEY, remaining);
+    if (remaining.length === 0) Utils.toast('تمت المزامنة بنجاح', 'success');
+  }
+}
+
+// اختيار الخدمة
+const correspondenceService = CONFIG.USE_BACKEND ? new ApiCorrespondenceService() : new LocalCorrespondenceService();
+
+// ============================================================
+// AUTHENTICATION - نظام المصادقة
+// ============================================================
+const Auth = {
+  getCurrentUser() {
+    return Utils.loadLocal(CONFIG.USER_KEY, null);
+  },
+  
+  login(username, password) {
+    // Demo mode - في الوضع الحقيقي يتم الاتصال بالـ Backend
+    const users = Utils.loadLocal('deir_albalah_users', [
+      { id: '1', username: 'admin', password: 'admin123', fullName: 'المدير العام', role: 'super_admin', sectorId: null },
+      { id: '2', username: 'east', password: 'east123', fullName: 'مدير القاطع الشرقي', role: 'sector_admin', sectorId: 'east' },
+      { id: '3', username: 'west', password: 'west123', fullName: 'مدير القاطع الغربي', role: 'sector_admin', sectorId: 'west' },
+      { id: '4', username: 'north', password: 'north123', fullName: 'مدير القاطع الشمالي', role: 'sector_admin', sectorId: 'north' },
+      { id: '5', username: 'south', password: 'south123', fullName: 'مدير القاطع الجنوبي', role: 'sector_admin', sectorId: 'south' },
+    ]);
+    
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) throw new Error('بيانات الدخول غير صحيحة');
+    
+    const session = { ...user, loginAt: Utils.now() };
+    delete session.password;
+    Utils.saveLocal(CONFIG.USER_KEY, session);
+    return session;
+  },
+  
+  logout() {
+    localStorage.removeItem(CONFIG.USER_KEY);
+    localStorage.removeItem('auth_token');
+    Router.navigate('login');
+  },
+  
+  hasPermission(permission) {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    const perms = {
+      super_admin: ['all'],
+      general_admin: ['all_sectors', 'manage_users', 'view_reports'],
+      sector_admin: ['manage_sector', 'view_sector', 'manage_staff'],
+      sector_staff: ['view_sector', 'create_correspondence'],
+    };
+    const userPerms = perms[user.role] || [];
+    return userPerms.includes('all') || userPerms.includes(permission);
+  },
+};
+
+// ============================================================
+// EXPORT - التصدير
+// ============================================================
+const Exporter = {
+  async toPDF(record) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    
+    doc.setFont('helvetica');
+    doc.setFontSize(16);
+    doc.text(CONFIG.ORG, 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Reference: ${record.referenceNumber}`, 105, 30, { align: 'center' });
+    doc.text(`Date: ${Utils.formatShortDate(record.createdAt)}`, 105, 38, { align: 'center' });
+    
+    doc.setFontSize(14);
+    doc.text(`Subject: ${record.subject}`, 20, 55);
+    
+    doc.setFontSize(11);
+    const lines = doc.splitTextToSize(record.content || '', 170);
+    doc.text(lines, 20, 70);
+    
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 20, 280);
+    doc.text(CONFIG.ORG, 105, 285, { align: 'center' });
+    
+    doc.save(`${record.referenceNumber}.pdf`);
+  },
+  
+  toTXT(record) {
+    const text = `${CONFIG.ORG}
+================================
+رقم المرجع: ${record.referenceNumber}
+التاريخ: ${Utils.formatDate(record.createdAt)}
+القطاع: ${SECTORS.find(s => s.id === record.sectorId)?.name || ''}
+الأولوية: ${record.priority}
+المرسل: ${record.sender || '-'}
+================================
+الموضوع: ${record.subject}
+
+${record.content}
+
+================================
+${record.replies?.map(r => `\n--- رد (${Utils.formatDate(r.createdAt)}) ---\n${r.content}`).join('\n') || ''}
+================================
+© 2026 ${CONFIG.ORG}`;
+    
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${record.referenceNumber}.txt`; a.click();
+    URL.revokeObjectURL(url);
+  },
+  
+  toExcel(records) {
+    const data = records.map(r => ({
+      'الرقم المرجعي': r.referenceNumber,
+      'التاريخ': Utils.formatShortDate(r.createdAt),
+      'القطاع': SECTORS.find(s => s.id === r.sectorId)?.name || '',
+      'الموضوع': r.subject,
+      'المحتوى': r.content,
+      'الأولوية': r.priority,
+      'المرسل': r.sender || '',
+      'الحالة': r.isArchived ? 'مؤرشف' : 'نشط',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'المراسلات');
+    XLSX.writeFile(wb, `correspondence_${Date.now()}.xlsx`);
+  },
+  
+  async toQR(record) {
+    const data = JSON.stringify({
+      ref: record.referenceNumber,
+      subject: record.subject,
+      date: record.createdAt,
+      sector: record.sectorId,
+      org: CONFIG.ORG,
+    });
+    const canvas = document.createElement('canvas');
+    await QRCode.toCanvas(canvas, data, { width: 300, margin: 2 });
+    const url = canvas.toDataURL();
+    const a = document.createElement('a');
+    a.href = url; a.download = `qr_${record.referenceNumber}.png`; a.click();
+  },
+  
+  shareWhatsApp(record) {
+    const text = `*${CONFIG.ORG}*\n\n📌 المرجع: ${record.referenceNumber}\n📅 التاريخ: ${Utils.formatShortDate(record.createdAt)}\n📝 الموضوع: ${record.subject}\n\n${record.content?.substring(0, 200)}...`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  },
+};
+
+// ============================================================
+// ROUTER - نظام التوجيه
+// ============================================================
+const Router = {
+  current: 'login',
+  params: {},
+  
+  navigate(route, params = {}) {
+    this.current = route;
+    this.params = params;
+    window.location.hash = route + (params.id ? `/${params.id}` : '');
+    App.render();
+  },
+  
+  init() {
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.slice(1) || 'login';
+      const [route, id] = hash.split('/');
+      this.current = route;
+      this.params = id ? { id } : {};
+      App.render();
+    });
+    
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const [route, id] = hash.split('/');
+      this.current = route;
+      this.params = id ? { id } : {};
+    }
+  }
+};
+
+// ============================================================
+// APP - التطبيق الرئيسي
+// ============================================================
+const App = {
+  render() {
+    const app = document.getElementById('app');
+    const user = Auth.getCurrentUser();
+    
+    if (!user && Router.current !== 'login' && Router.current !== 'settings') {
+      Router.navigate('login');
+      return;
+    }
+    
+    const routes = {
+      login: Views.login,
+      dashboard: Views.dashboard,
+      sector: Views.sector,
+      general: Views.general,
+      archive: Views.archive,
+      followups: Views.followups,
+      view: Views.viewCorrespondence,
+      settings: Views.settings,
+      migration: Views.migration,
+      users: Views.users,
+    };
+    
+    const view = routes[Router.current] || Views.dashboard;
+    app.innerHTML = view();
+    app.classList.add('fade-in');
+    
+    if (typeof view.afterRender === 'function') view.afterRender();
+  }
+};
+
+// ============================================================
+// VIEWS - الواجهات
+// ============================================================
+const Views = {
+  // ---------- LOGIN ----------
+  login() {
+    return `
+      <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md">
+          <div class="text-center mb-6">
+            <div class="text-6xl mb-3">🏢</div>
+            <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
+            <p class="text-gray-600 text-sm mt-2">نظام المراسلات الإدارية</p>
+          </div>
+          
+          <form id="loginForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">اسم المستخدم</label>
+              <input type="text" id="username" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label>
+              <input type="password" id="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">
+              🔐 تسجيل الدخول
+            </button>
+          </form>
+          
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <button onclick="Router.navigate('settings')" class="text-sm text-teal-700 hover:underline w-full text-center">
+              ⚙️ إعدادات الاتصال بالخادم
+            </button>
+          </div>
+          
+          <div class="mt-4 text-xs text-gray-500 text-center">
+            <p>بيانات تجريبية: admin / admin123</p>
+            <p class="mt-1">الإصدار ${CONFIG.VERSION}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  login_afterRender() {
+    document.getElementById('loginForm').onsubmit = (e) => {
+      e.preventDefault();
+      try {
+        const user = Auth.login(
+          document.getElementById('username').value,
+          document.getElementById('password').value
+        );
+        Utils.toast(`مرحباً ${user.fullName}`, 'success');
+        Router.navigate('dashboard');
+      } catch (err) {
+        Utils.toast(err.message, 'error');
+      }
+    };
+  },
+  
+  // ---------- DASHBOARD ----------
+  dashboard() {
+    const user = Auth.getCurrentUser();
+    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    const active = all.filter(r => !r.isArchived);
+    
+    const sectorStats = SECTORS.map(s => ({
+      ...s,
+      count: active.filter(r => r.sectorId === s.id).length,
+      today: active.filter(r => r.sectorId === s.id && 
+        new Date(r.createdAt).toDateString() === new Date().toDateString()).length,
+    }));
+    
+    const recent = [...active].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+    
+    return `
+      ${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="glass rounded-2xl shadow-xl p-6 mb-6">
+          <h1 class="text-3xl font-bold text-teal-800 mb-2">👋 أهلاً ${Utils.escapeHtml(user.fullName)}</h1>
+          <p class="text-gray-600">${ROLES[user.role]} ${user.sectorId ? '– ' + (SECTORS.find(s=>s.id===user.sectorId)?.name || '') : ''}</p>
+          <div class="flex items-center mt-3 text-sm">
+            <span class="sync-indicator ${navigator.onLine ? 'sync-online' : 'sync-offline'}"></span>
+            <span class="text-gray-600">${navigator.onLine ? 'متصل' : 'غير متصل'}</span>
+            ${CONFIG.USE_BACKEND ? '<span class="mr-4 text-teal-700 font-semibold">🔗 وضع الخادم</span>' : '<span class="mr-4 text-orange-700 font-semibold">💾 وضع محلي</span>'}
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          ${sectorStats.map(s => `
+            <button onclick="Router.navigate('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right">
+              <div class="${s.class} text-white rounded-xl p-3 inline-block text-3xl mb-2">${s.icon}</div>
+              <h3 class="font-bold text-gray-800">${s.name}</h3>
+              <div class="flex justify-between items-end mt-2">
+                <div>
+                  <div class="text-3xl font-bold text-teal-700">${s.count}</div>
+                  <div class="text-xs text-gray-500">مراسلة نشطة</div>
+                </div>
+                <div class="text-left">
+                  <div class="text-lg font-bold text-orange-600">${s.today}</div>
+                  <div class="text-xs text-gray-500">اليوم</div>
+                </div>
+              </div>
+            </button>
+          `).join('')}
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+          <button onclick="Router.navigate('general')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right sector-general text-white">
+            <div class="text-4xl mb-2">🏛️</div>
+            <h3 class="font-bold text-xl">الإدارة العامة</h3>
+            <p class="text-sm opacity-90 mt-1">عرض جميع المراسلات</p>
+          </button>
+          <button onclick="Router.navigate('archive')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-gray-700 to-gray-900 text-white">
+            <div class="text-4xl mb-2">📦</div>
+            <h3 class="font-bold text-xl">الأرشيف</h3>
+            <p class="text-sm opacity-90 mt-1">${all.filter(r=>r.isArchived).length} مراسلة مؤرشفة</p>
+          </button>
+          <button onclick="Router.navigate('followups')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+            <div class="text-4xl mb-2">📋</div>
+            <h3 class="font-bold text-xl">المتابعة</h3>
+            <p class="text-sm opacity-90 mt-1">${all.reduce((a,r)=>a+(r.followUps?.length||0),0)} مهمة متابعة</p>
+          </button>
+        </div>
+        
+        <div class="glass rounded-2xl shadow-xl p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">🕐 آخر المراسلات</h2>
+          ${recent.length === 0 ? '<p class="text-center text-gray-500 py-8">لا توجد مراسلات بعد</p>' : 
+            recent.map(r => this.correspondenceCard(r)).join('')}
+        </div>
+        
+        <div class="text-center text-xs text-white/70 mt-8 pb-4">
+          <p>© 2026 ${CONFIG.ORG} – جميع الحقوق محفوظة</p>
+          <p class="mt-1">تطوير: ${CONFIG.DEV}</p>
+        </div>
+      </div>
+    `;
+  },
+  
+  // ---------- SECTOR VIEW ----------
+  sector() {
+    const sectorId = Router.params.id;
+    const sector = SECTORS.find(s => s.id === sectorId);
+    if (!sector) return '<div class="p-8 text-white text-center">القطاع غير موجود</div>';
+    
+    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.sectorId === sectorId && !r.isArchived);
+    
+    return `
+      ${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="${sector.class} text-white rounded-2xl shadow-xl p-6 mb-6">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div class="text-5xl mb-2">${sector.icon}</div>
+              <h1 class="text-3xl font-bold">${sector.name}</h1>
+              <p class="opacity-90 mt-1">${all.length} مراسلة نشطة</p>
+            </div>
+            <button onclick="UI.openCreateModal('${sectorId}')" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition">
+              ➕ مراسلة جديدة
+            </button>
+          </div>
+        </div>
+        
+        <div class="glass rounded-2xl shadow-xl p-4 mb-4">
+          <div class="grid md:grid-cols-3 gap-3">
+            <input type="text" id="searchInput" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+            <select id="priorityFilter" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <option value="">كل الأولويات</option>
+              <option value="high">عالية</option>
+              <option value="normal">عادية</option>
+              <option value="low">منخفضة</option>
+            </select>
+            <select id="sortBy" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <option value="date">الأحدث</option>
+              <option value="priority">الأولوية</option>
+              <option value="subject">الموضوع</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="correspondenceList" class="space-y-3">
+          ${all.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات في هذا القاطع</div>' :
+            all.map(r => this.correspondenceCard(r)).join('')}
+        </div>
+      </div>
+      ${this.createModal(sectorId)}
+    `;
+  },
+  
+  sector_afterRender() {
+    const filterList = () => {
+      const sectorId = Router.params.id;
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const priority = document.getElementById('priorityFilter').value;
+      const sortBy = document.getElementById('sortBy').value;
+      
+      let list = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.sectorId === sectorId && !r.isArchived);
+      if (search) list = list.filter(r => (r.subject+r.content+r.referenceNumber+r.sender).toLowerCase().includes(search));
+      if (priority) list = list.filter(r => r.priority === priority);
+      
+      if (sortBy === 'priority') {
+        const order = { high: 0, normal: 1, low: 2 };
+        list.sort((a,b) => order[a.priority] - order[b.priority]);
+      } else if (sortBy === 'subject') {
+        list.sort((a,b) => a.subject.localeCompare(b.subject, 'ar'));
+      } else {
+        list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
+      
+      document.getElementById('correspondenceList').innerHTML = 
+        list.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد نتائج</div>' :
+        list.map(r => this.correspondenceCard(r)).join('');
+    };
+    
+    document.getElementById('searchInput').oninput = filterList;
+    document.getElementById('priorityFilter').onchange = filterList;
+    document.getElementById('sortBy').onchange = filterList;
+  },
+  
+  // ---------- GENERAL ADMIN ----------
+  general() {
+    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => !r.isArchived);
+    
+    return `
+      ${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="sector-general text-white rounded-2xl shadow-xl p-6 mb-6">
+          <h1 class="text-3xl font-bold">🏛️ الإدارة العامة</h1>
+          <p class="opacity-90 mt-1">عرض جميع المراسلات عبر القواطع</p>
+        </div>
+        
+        <div class="glass rounded-2xl shadow-xl p-4 mb-4">
+          <div class="grid md:grid-cols-4 gap-3">
+            <input type="text" id="generalSearch" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+            <select id="sectorFilter" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <option value="">كل القواطع</option>
+              ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+            <select id="generalPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <option value="">كل الأولويات</option>
+              <option value="high">عالية</option>
+              <option value="normal">عادية</option>
+              <option value="low">منخفضة</option>
+            </select>
+            <button onclick="Exporter.toExcel(Utils.loadLocal(CONFIG.STORAGE_KEY, []))" class="btn-primary px-4 py-2 rounded-xl font-bold">
+              📊 تصدير Excel
+            </button>
+          </div>
+        </div>
+        
+        <div id="generalList" class="space-y-3">
+          ${all.map(r => this.correspondenceCard(r)).join('')}
+        </div>
+      </div>
+    `;
+  },
+  
+  general_afterRender() {
+    const filter = () => {
+      const search = document.getElementById('generalSearch').value.toLowerCase();
+      const sector = document.getElementById('sectorFilter').value;
+      const priority = document.getElementById('generalPriority').value;
+      
+      let list = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => !r.isArchived);
+      if (search) list = list.filter(r => (r.subject+r.content+r.referenceNumber).toLowerCase().includes(search));
+      if (sector) list = list.filter(r => r.sectorId === sector);
+      if (priority) list = list.filter(r => r.priority === priority);
+      list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      document.getElementById('generalList').innerHTML = 
+        list.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد نتائج</div>' :
+        list.map(r => this.correspondenceCard(r)).join('');
+    };
+    
+    document.getElementById('generalSearch').oninput = filter;
+    document.getElementById('sectorFilter').onchange = filter;
+    document.getElementById('generalPriority').onchange = filter;
+  },
+  
+  // ---------- ARCHIVE ----------
+  archive() {
+    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.isArchived);
+    
+    return `
+      ${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="bg-gradient-to-br from-gray-700 to-gray-900 text-white rounded-2xl shadow-xl p-6 mb-6">
+          <h1 class="text-3xl font-bold">📦 الأرشيف</h1>
+          <p class="opacity-90 mt-1">${all.length} مراسلة مؤرشفة</p>
+        </div>
+        
+        <div class="space-y-3">
+          ${all.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">الأرشيف فارغ</div>' :
+            all.map(r => this.correspondenceCard(r, true)).join('')}
+        </div>
+      </div>
+    `;
+  },
+  
+  // ---------- FOLLOW-UPS ----------
+  followups() {
+    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    const withFollowUps = all.filter(r => r.followUps && r.followUps.length > 0);
+    
+    return `
+      ${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6">
+          <h1 class="text-3xl font-bold">📋 المتابعة</h1>
+          <p class="opacity-90 mt-1">${withFollowUps.length} مراسلة بها مهام متابعة</p>
+        </div>
+        
+        <div class="space-y-3">
+          ${withFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مهام متابعة</div>' :
+            withFollowUps.map(r => `
+              <div class="glass rounded-2xl shadow-lg p-5 card-hover">
+                <div class="flex justify-between items-start mb-3">
+                  <div>
+                    <div class="text-xs text-gray-500">${r.referenceNumber}</div>
+                    <h3 class="font-bold text-lg text-gray-800">${Utils.escapeHtml(r.subject)}</h3>
+                  </div>
+                  <button onclick="Router.navigate('view', {id:'${r.id}'})" class="text-teal-600 hover:text-teal-800 text-sm font-semibold">عرض ←</button>
+                </div>
+                <div class="space-y-2">
+                  ${r.followUps.map(f => `
+                    <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
+                      <div class="flex justify-between items-center">
+                        <span class="font-semibold text-gray-800">${Utils.escapeHtml(f.title || 'مهمة')}</span>
+                        <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">
+                          ${f.status === 'done' ? '✓ منجزة' : '⏳ قيد التنفيذ'}
+                        </span>
+                      </div>
+                      ${f.dueDate ? `<div class="text-xs text-gray-600 mt-1">📅 ${Utils.formatShortDate(f.dueDate)}</div>` : ''}
+                      ${f.notes ? `<div class="text-sm text-gray-700 mt-1">${Utils.escapeHtml(f.notes)}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+    `;
+  },
+  
+  // ---------- VIEW CORRESPONDENCE ----------
+  viewCorrespondence() {
+    const id = Router.params.id;
+    const record = Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r => r.id === id);
+    if (!record) return '<div class="p-8 text-white text-center">السجل غير موجود</div>';
+    
+    const sector = SECTORS.find(s => s.id === record.sectorId);
+    
+    return `
+      ${this.navbar()}
+      <div class="max-w-4xl mx-auto p-4 md:p-6">
+        <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold">→ رجوع</button>
+        
+        <div id="printArea" class="glass rounded-2xl shadow-xl p-6 md:p-8">
+          <div class="border-b-2 border-teal-600 pb-4 mb-6">
+            <div class="text-center">
+              <h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1>
+              <p class="text-gray-600 mt-1">نظام المراسلات الإدارية</p>
+            </div>
+          </div>
+          
+          <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <div class="text-xs text-gray-500">الرقم المرجعي</div>
+              <div class="font-bold text-lg text-teal-700">${record.referenceNumber}</div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">التاريخ</div>
+              <div class="font-semibold">${Utils.formatDate(record.createdAt)}</div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">القطاع</div>
+              <div class="font-semibold">${sector?.name || '-'}</div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">الأولوية</div>
+              <div class="font-semibold">
+                ${record.priority === 'high' ? '🔴 عالية' : record.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}
+              </div>
+            </div>
+            ${record.sender ? `
+              <div class="md:col-span-2">
+                <div class="text-xs text-gray-500">المرسل</div>
+                <div class="font-semibold">${Utils.escapeHtml(record.sender)}</div>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="mb-6">
+            <div class="text-xs text-gray-500 mb-1">الموضوع</div>
+            <h2 class="text-xl font-bold text-gray-800">${Utils.escapeHtml(record.subject)}</h2>
+          </div>
+          
+          <div class="mb-6">
+            <div class="text-xs text-gray-500 mb-1">المحتوى</div>
+            <div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${Utils.escapeHtml(record.content)}</div>
+          </div>
+          
+          ${record.replies?.length > 0 ? `
+            <div class="mb-6">
+              <h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${record.replies.length})</h3>
+              <div class="space-y-3">
+                ${record.replies.map(r => `
+                  <div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded">
+                    <div class="text-xs text-gray-500 mb-1">${Utils.formatDate(r.createdAt)} – ${Utils.escapeHtml(r.author || 'مستخدم')}</div>
+                    <div class="whitespace-pre-wrap">${Utils.escapeHtml(r.content)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          ${record.followUps?.length > 0 ? `
+            <div class="mb-6">
+              <h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
+              <div class="space-y-2">
+                ${record.followUps.map(f => `
+                  <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
+                    <div class="font-semibold">${Utils.escapeHtml(f.title || 'مهمة')}</div>
+                    ${f.dueDate ? `<div class="text-xs text-gray-600">📅 ${Utils.formatShortDate(f.dueDate)}</div>` : ''}
+                    ${f.notes ? `<div class="text-sm text-gray-700">${Utils.escapeHtml(f.notes)}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="text-center text-xs text-gray-400 mt-8 pt-4 border-t">
+            <p>© 2026 ${CONFIG.ORG}</p>
+          </div>
+        </div>
+        
+        <div class="glass rounded-2xl shadow-xl p-4 mt-4 no-print">
+          <h3 class="font-bold mb-3">⚡ إجراءات</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <button onclick="Exporter.toPDF(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📄 PDF</button>
+            <button onclick="Exporter.toTXT(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📝 TXT</button>
+            <button onclick="Exporter.toQR(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">🔳 QR</button>
+            <button onclick="Exporter.shareWhatsApp(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📱 WhatsApp</button>
+            <button onclick="UI.openReplyModal('${id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">💬 إضافة رد</button>
+            <button onclick="UI.openFollowUpModal('${id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📋 متابعة</button>
+            ${record.isArchived ? 
+              `<button onclick="UI.restoreRecord('${id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📤 استعادة</button>` :
+              `<button onclick="UI.archiveRecord('${id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📦 أرشفة</button>`
+            }
+            <button onclick="UI.deleteRecord('${id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm">🗑️ حذف</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  // ---------- SETTINGS ----------
+  settings() {
+    return `
+      <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-2xl">
+          <h1 class="text-2xl font-bold text-teal-800 mb-6">⚙️ إعدادات النظام</h1>
+          
+          <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-xl">
+              <h3 class="font-bold mb-2">🔗 الاتصال بالخادم</h3>
+              <label class="flex items-center gap-2 mb-3">
+                <input type="checkbox" id="useBackend" ${CONFIG.USE_BACKEND ? 'checked' : ''} class="w-5 h-5">
+                <span>تفعيل الاتصال بالـ Backend</span>
+              </label>
+              <input type="text" id="apiUrl" value="${CONFIG.API_URL}" placeholder="https://api.example.com/api" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <p class="text-xs text-gray-500 mt-2">عند التفعيل، سيتم استخدام الخادم بدلاً من التخزين المحلي</p>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-xl">
+              <h3 class="font-bold mb-2 text-blue-800">💾 النسخ الاحتياطي</h3>
+              <div class="flex gap-2 flex-wrap">
+                <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">📥 تصدير JSON</button>
+                <label class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer">
+                  📤 استيراد JSON
+                  <input type="file" accept=".json" onchange="UI.importBackup(event)" class="hidden">
+                </label>
+              </div>
+            </div>
+            
+            <div class="bg-purple-50 p-4 rounded-xl">
+              <h3 class="font-bold mb-2 text-purple-800">🔄 نقل البيانات</h3>
+              <p class="text-sm text-gray-700 mb-2">نقل البيانات المحلية إلى الخادم</p>
+              <button onclick="Router.navigate('migration')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold">فتح أداة النقل</button>
+            </div>
+            
+            <div class="bg-yellow-50 p-4 rounded-xl">
+              <h3 class="font-bold mb-2 text-yellow-800">👥 إدارة المستخدمين</h3>
+              <button onclick="Router.navigate('users')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">إدارة المستخدمين</button>
+            </div>
+            
+            <div class="flex gap-2">
+              <button onclick="UI.saveSettings()" class="btn-primary flex-1 py-3 rounded-xl font-bold">💾 حفظ الإعدادات</button>
+              <button onclick="Router.navigate(Auth.getCurrentUser() ? 'dashboard' : 'login')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">رجوع</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  // ---------- MIGRATION ----------
+  migration() {
+    return `
+      ${this.navbar()}
+      <div class="max-w-4xl mx-auto p-4 md:p-6">
+        <div class="glass rounded-2xl shadow-xl p-6">
+          <h1 class="text-2xl font-bold text-teal-800 mb-4">🔄 نقل البيانات إلى الخادم</h1>
+          
+          <div class="bg-yellow-50 border-r-4 border-yellow-500 p-4 rounded mb-4">
+            <p class="font-semibold text-yellow-800">⚠️ تنبيه هام</p>
+            <p class="text-sm text-yellow-700 mt-1">تأكد من تفعيل الاتصال بالخادم في الإعدادات قبل البدء. سيتم إنشاء نسخة احتياطية تلقائياً.</p>
+          </div>
+          
+          <div id="migrationStatus" class="bg-gray-50 p-4 rounded-xl mb-4">
+            <p class="text-gray-600">جاهز للنقل...</p>
+          </div>
+          
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="UI.runMigration()" class="btn-primary px-6 py-3 rounded-xl font-bold">🚀 بدء النقل</button>
+            <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold">💾 نسخة احتياطية أولاً</button>
+            <button onclick="Router.navigate('settings')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">رجوع</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  // ---------- USERS ----------
+  users() {
+    const users = Utils.loadLocal('deir_albalah_users', []);
+    
+    return `
+      ${this.navbar()}
+      <div class="max-w-4xl mx-auto p-4 md:p-6">
+        <div class="glass rounded-2xl shadow-xl p-6">
+          <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h1 class="text-2xl font-bold text-teal-800">👥 إدارة المستخدمين</h1>
+            <button onclick="UI.openUserModal()" class="btn-primary px-4 py-2 rounded-xl font-bold">➕ مستخدم جديد</button>
+          </div>
+          
+          <div class="space-y-2">
+            ${users.map(u => `
+              <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center flex-wrap gap-2">
+                <div>
+                  <div class="font-bold text-gray-800">${Utils.escapeHtml(u.fullName)}</div>
+                  <div class="text-sm text-gray-600">@${Utils.escapeHtml(u.username)} • ${ROLES[u.role]}</div>
+                  ${u.sectorId ? `<div class="text-xs text-teal-700">${SECTORS.find(s=>s.id===u.sectorId)?.name || ''}</div>` : ''}
+                </div>
+                <button onclick="UI.deleteUser('${u.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️ حذف</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      ${this.userModal()}
+    `;
+  },
+  
+  // ---------- NAVBAR ----------
+  navbar() {
+    const user = Auth.getCurrentUser();
+    if (!user) return '';
+    
+    return `
+      <nav class="glass shadow-lg sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🏢</span>
+            <div>
+              <div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div>
+              <div class="text-xs text-gray-600 hidden md:block">${user.fullName}</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-1 md:gap-2 flex-wrap">
+            <button onclick="Router.navigate('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold">🏠 الرئيسية</button>
+            <div class="relative group">
+              <button class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold">🏢 القواطع ▾</button>
+              <div class="absolute left-0 mt-1 bg-white rounded-xl shadow-2xl py-2 hidden group-hover:block min-w-[200px]">
+                ${SECTORS.map(s => `
+                  <button onclick="Router.navigate('sector', {id:'${s.id}'})" class="w-full text-right px-4 py-2 hover:bg-gray-50 text-sm">
+                    ${s.icon} ${s.name}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            <button onclick="Router.navigate('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline">🏛️ الإدارة</button>
+            <button onclick="Router.navigate('archive')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline">📦 الأرشيف</button>
+            <button onclick="Router.navigate('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline">📋 متابعة</button>
+            <button onclick="Router.navigate('settings')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold">⚙️</button>
+            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">🚪 خروج</button>
+          </div>
+        </div>
+      </nav>
+    `;
+  },
+  
+  // ---------- CORRESPONDENCE CARD ----------
+  correspondenceCard(r, showRestore = false) {
+    const sector = SECTORS.find(s => s.id === r.sectorId);
+    const priorityClass = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
+    
+    return `
+      <div onclick="Router.navigate('view', {id:'${r.id}'})" class="glass rounded-xl shadow-lg p-4 card-hover cursor-pointer ${priorityClass}">
+        <div class="flex justify-between items-start gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
+              <span>${r.referenceNumber}</span>
+              <span>•</span>
+              <span>${Utils.formatShortDate(r.createdAt)}</span>
+              ${sector ? `<span>•</span><span>${sector.icon} ${sector.name}</span>` : ''}
+            </div>
+            <h3 class="font-bold text-gray-800 truncate">${Utils.escapeHtml(r.subject)}</h3>
+            <p class="text-sm text-gray-600 mt-1 line-clamp-2">${Utils.escapeHtml(r.content?.substring(0, 150) || '')}</p>
+            <div class="flex gap-2 mt-2 flex-wrap text-xs">
+              ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
+              ${r.replies?.length > 0 ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">💬 ${r.replies.length}</span>` : ''}
+              ${r.followUps?.length > 0 ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded">📋 ${r.followUps.length}</span>` : ''}
+              ${r.isArchived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  
+  // ---------- CREATE MODAL ----------
+  createModal(sectorId) {
+    return `
+      <div id="createModal" class="modal-overlay hidden">
+        <div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-teal-800">➕ مراسلة جديدة</h2>
+            <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-2xl text-gray-500 hover:text-gray-800">×</button>
+          </div>
+          
+          <form id="createForm" class="space-y-4">
+            <input type="hidden" id="formSectorId" value="${sectorId}">
+            
+            <div>
+              <label class="block text-sm font-semibold mb-1">القطاع *</label>
+              <select id="formSector" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" required>
+                ${SECTORS.map(s => `<option value="${s.id}" ${s.id===sectorId?'selected':''}>${s.name}</option>`).join('')}
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-1">الموضوع *</label>
+              <input type="text" id="formSubject" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-semibold mb-1">المرسل</label>
+                <input type="text" id="formSender" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1">الأولوية</label>
+                <select id="formPriority" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                  <option value="normal">عادية</option>
+                  <option value="high">عالية</option>
+                  <option value="low">منخفضة</option>
+                </select>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-1">المحتوى *</label>
+              <textarea id="formContent" required rows="6" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea>
+            </div>
+            
+            <div class="flex gap-2">
+              <button type="submit" class="btn-primary flex-1 py-3 rounded-xl font-bold">💾 حفظ</button>
+              <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  },
+  
+  userModal() {
+    return `
+      <div id="userModal" class="modal-overlay hidden">
+        <div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-md">
+          <h2 class="text-xl font-bold text-teal-800 mb-4">➕ مستخدم جديد</h2>
+          <form id="userForm" class="space-y-3">
+            <input type="text" id="uFullName" placeholder="الاسم الكامل" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
+            <input type="text" id="uUsername" placeholder="اسم المستخدم" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
+            <input type="password" id="uPassword" placeholder="كلمة المرور" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
+            <select id="uRole" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
+              ${Object.entries(ROLES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}
+            </select>
+            <select id="uSector" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
+              <option value="">بدون قطاع (للإدارة)</option>
+              ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+            <div class="flex gap-2">
+              <button type="submit" class="btn-primary flex-1 py-2 rounded-xl font-bold">حفظ</button>
+              <button type="button" onclick="document.getElementById('userModal').classList.add('hidden')" class="bg-gray-300 px-4 py-2 rounded-xl font-bold">إلغاء</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  },
+};
+
+// ============================================================
+// UI INTERACTIONS - تفاعلات الواجهة
+// ============================================================
+const UI = {
+  openCreateModal(sectorId) {
+    document.getElementById('createModal').classList.remove('hidden');
+    document.getElementById('createForm').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await correspondenceService.create({
+          sectorId: document.getElementById('formSector').value,
+          subject: document.getElementById('formSubject').value,
+          content: document.getElementById('formContent').value,
+          sender: document.getElementById('formSender').value,
+          priority: document.getElementById('formPriority').value,
+        });
+        Utils.toast('تم حفظ المراسلة', 'success');
+        document.getElementById('createModal').classList.add('hidden');
+        App.render();
+      } catch (err) {
+        Utils.toast(err.message, 'error');
+      }
+    };
+  },
+  
+  openReplyModal(id) {
+    const content = prompt('نص الرد:');
+    if (!content) return;
+    const author = prompt('اسم المرسل (اختياري):') || Auth.getCurrentUser().fullName;
+    correspondenceService.addReply(id, { content, author }).then(() => {
+      Utils.toast('تم إضافة الرد', 'success');
+      App.render();
+    });
+  },
+  
+  openFollowUpModal(id) {
+    const title = prompt('عنوان المهمة:');
+    if (!title) return;
+    const dueDate = prompt('تاريخ الاستحقاق (YYYY-MM-DD):') || null;
+    const notes = prompt('ملاحظات:') || '';
+    correspondenceService.addFollowUp(id, { title, dueDate, notes, status: 'pending' }).then(() => {
+      Utils.toast('تمت إضافة المتابعة', 'success');
+      App.render();
+    });
+  },
+  
+  async archiveRecord(id) {
+    if (!confirm('تأكيد الأرشفة؟')) return;
+    await correspondenceService.archive(id);
+    Utils.toast('تمت الأرشفة', 'success');
+    App.render();
+  },
+  
+  async restoreRecord(id) {
+    await correspondenceService.restore(id);
+    Utils.toast('تمت الاستعادة', 'success');
+    App.render();
+  },
+  
+  async deleteRecord(id) {
+    if (!confirm('⚠️ حذف نهائي؟ لا يمكن التراجع.')) return;
+    await correspondenceService.delete(id);
+    Utils.toast('تم الحذف', 'success');
+    history.back();
+  },
+  
+  saveSettings() {
+    const useBackend = document.getElementById('useBackend').checked;
+    const apiUrl = document.getElementById('apiUrl').value.trim();
+    localStorage.setItem('USE_BACKEND', useBackend);
+    localStorage.setItem('API_URL', apiUrl);
+    CONFIG.USE_BACKEND = useBackend;
+    CONFIG.API_URL = apiUrl;
+    Utils.toast('تم حفظ الإعدادات - سيتم إعادة التحميل', 'success');
+    setTimeout(() => location.reload(), 1000);
+  },
+  
+  exportBackup() {
+    const data = {
+      version: CONFIG.VERSION,
+      exportedAt: Utils.now(),
+      correspondence: Utils.loadLocal(CONFIG.STORAGE_KEY, []),
+      users: Utils.loadLocal('deir_albalah_users', []),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `backup_${Date.now()}.json`; a.click();
+    URL.revokeObjectURL(url);
+    Utils.toast('تم تصدير النسخة الاحتياطية', 'success');
+  },
+  
+  importBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.correspondence) Utils.saveLocal(CONFIG.STORAGE_KEY, data.correspondence);
+        if (data.users) Utils.saveLocal('deir_albalah_users', data.users);
+        Utils.toast('تم الاستيراد بنجاح', 'success');
+        App.render();
+      } catch (err) {
+        Utils.toast('ملف غير صالح', 'error');
+      }
+    };
+    reader.readAsText(file);
+  },
+  
+  async runMigration() {
+    const status = document.getElementById('migrationStatus');
+    const localData = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+    
+    if (!CONFIG.USE_BACKEND) {
+      status.innerHTML = '<p class="text-red-600">⚠️ يجب تفعيل الاتصال بالخادم أولاً من الإعدادات</p>';
+      return;
+    }
+    
+    status.innerHTML = `<p>📤 جاري نقل ${localData.length} مراسلة...</p>`;
+    let success = 0, failed = 0;
+    
+    for (const record of localData) {
+      try {
+        await ApiClient.post('/correspondence', record);
+        success++;
+        status.innerHTML = `<p class="text-green-600">✓ ${success} تم نقلها | ${failed} فشلت</p>`;
+      } catch (e) {
+        failed++;
+        status.innerHTML = `<p class="text-orange-600">✓ ${success} تم نقلها | ${failed} فشلت (${e.message})</p>`;
+      }
+    }
+    
+    status.innerHTML = `<p class="text-teal-700 font-bold">✅ اكتمل النقل: ${success} نجحت، ${failed} فشلت</p>`;
+  },
+  
+  openUserModal() {
+    document.getElementById('userModal').classList.remove('hidden');
+    document.getElementById('userForm').onsubmit = (e) => {
+      e.preventDefault();
+      const users = Utils.loadLocal('deir_albalah_users', []);
+      users.push({
+        id: Utils.uuid(),
+        fullName: document.getElementById('uFullName').value,
+        username: document.getElementById('uUsername').value,
+        password: document.getElementById('uPassword').value,
+        role: document.getElementById('uRole').value,
+        sectorId: document.getElementById('uSector').value || null,
+      });
+      Utils.saveLocal('deir_albalah_users', users);
+      Utils.toast('تمت الإضافة', 'success');
+      App.render();
+    };
+  },
+  
+  deleteUser(id) {
+    if (!confirm('حذف المستخدم؟')) return;
+    const users = Utils.loadLocal('deir_albalah_users', []).filter(u => u.id !== id);
+    Utils.saveLocal('deir_albalah_users', users);
+    Utils.toast('تم الحذف', 'success');
+    App.render();
+  },
+};
+
+// ============================================================
+// PWA & OFFLINE SUPPORT
+// ============================================================
+window.addEventListener('online', () => {
+  Utils.toast('✅ عاد الاتصال', 'success');
+  if (CONFIG.USE_BACKEND && correspondenceService.syncOutbox) {
+    correspondenceService.syncOutbox();
+  }
+  App.render();
+});
+
+window.addEventListener('offline', () => {
+  Utils.toast('⚠️ انقطع الاتصال - الوضع المحلي', 'warning');
+  App.render();
+});
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+Router.init();
+App.render();
+
+// Initialize default admin if no users exist
+if (!Utils.loadLocal('deir_albalah_users', null)) {
+  Utils.saveLocal('deir_albalah_users', [
+    { id: '1', username: 'admin', password: 'admin123', fullName: 'المدير العام', role: 'super_admin', sectorId: null },
+    { id: '2', username: 'east', password: 'east123', fullName: 'مدير القاطع الشرقي', role: 'sector_admin', sectorId: 'east' },
+    { id: '3', username: 'west', password: 'west123', fullName: 'مدير القاطع الغربي', role: 'sector_admin', sectorId: 'west' },
+    { id: '4', username: 'north', password: 'north123', fullName: 'مدير القاطع الشمالي', role: 'sector_admin', sectorId: 'north' },
+    { id: '5', username: 'south', password: 'south123', fullName: 'مدير القاطع الجنوبي', role: 'sector_admin', sectorId: 'south' },
+  ]);
+}
+
+console.log(`%c${CONFIG.APP_NAME} v${CONFIG.VERSION}`, 'color:#0f766e;font-size:20px;font-weight:bold');
+console.log(`%c© 2026 ${CONFIG.ORG}`, 'color:#666');
+console.log(`%cDeveloper: ${CONFIG.DEV}`, 'color:#666');
+</script>
+
+</body>
+</html>
