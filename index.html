@@ -26,21 +26,19 @@
   .sync-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 6px; }
   .sync-online { background: #16a34a; box-shadow: 0 0 8px #16a34a; }
   .sync-offline { background: #dc2626; box-shadow: 0 0 8px #dc2626; }
-  .sync-syncing { background: #f59e0b; animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-  .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; transition: all 0.2s; }
+  .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; transition: all 0.2s; cursor: pointer; border: none; }
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,118,110,0.4); }
   .sector-east { background: linear-gradient(135deg, #f59e0b, #d97706); }
   .sector-west { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
   .sector-north { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
   .sector-south { background: linear-gradient(135deg, #ef4444, #b91c1c); }
   .sector-general { background: linear-gradient(135deg, #0f766e, #134e4a); }
-  .tab-active { background: white; color: #0f766e; font-weight: 700; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   input, textarea, select { font-family: 'Cairo', sans-serif; }
   .scrollbar::-webkit-scrollbar { width: 8px; }
   .scrollbar::-webkit-scrollbar-thumb { background: #0f766e; border-radius: 4px; }
   @media print { .no-print { display: none !important; } }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -49,24 +47,23 @@
 
 <script>
 // ============================================================
-// CONFIGURATION - إعدادات التطبيق
+// CONFIGURATION
 // ============================================================
 const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '2.0.1',
+  VERSION: '2.0.2',
   USE_BACKEND: localStorage.getItem('USE_BACKEND') === 'true',
   API_URL: localStorage.getItem('API_URL') || 'http://localhost:5000/api',
   STORAGE_KEY: 'deir_albalah_correspondence',
   USER_KEY: 'deir_albalah_user',
   USERS_KEY: 'deir_albalah_users',
   OUTBOX_KEY: 'deir_albalah_outbox',
-  SETTINGS_KEY: 'deir_albalah_settings',
 };
 
 const SECTORS = [
-  { id: 'east', name: 'القاطع الشرقي', code: 'EAST', class: 'sector-east', icon: '🌅' },
+  { id: 'east', name: 'القاطع الشرقي', code: 'EAST', class: 'sector-east', icon: '' },
   { id: 'west', name: 'القاطع الغربي', code: 'WEST', class: 'sector-west', icon: '🌊' },
   { id: 'north', name: 'القاطع الشمالي', code: 'NORTH', class: 'sector-north', icon: '🏔️' },
   { id: 'south', name: 'القاطع الجنوبي', code: 'SOUTH', class: 'sector-south', icon: '☀️' },
@@ -88,7 +85,7 @@ const DEFAULT_USERS = [
 ];
 
 // ============================================================
-// UTILITIES - أدوات مساعدة
+// UTILITIES
 // ============================================================
 const Utils = {
   uuid: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -127,7 +124,7 @@ const Utils = {
       console.log(`✓ Saved to ${key}`);
       return true;
     } catch (e) {
-      console.error(`✗ Failed to save ${key}:`, e);
+      console.error(` Failed to save ${key}:`, e);
       return false;
     }
   },
@@ -137,10 +134,10 @@ const Utils = {
       const d = localStorage.getItem(key); 
       if (d) {
         const parsed = JSON.parse(d);
-        console.log(`✓ Loaded ${key}:`, Array.isArray(parsed) ? `${parsed.length} items` : parsed);
+        console.log(`✓ Loaded ${key}:`, Array.isArray(parsed) ? `${parsed.length} items` : typeof parsed);
         return parsed;
       }
-      console.log(`⚠ ${key} not found, using default`);
+      console.log(` ${key} not found, using default`);
       return def; 
     } catch (e) { 
       console.error(`✗ Failed to load ${key}:`, e);
@@ -158,58 +155,52 @@ const Utils = {
   },
 };
 
-// Initialize default users on first load
+// Initialize default users
 console.log('🚀 Initializing application...');
 const existingUsers = Utils.loadLocal(CONFIG.USERS_KEY, null);
 if (!existingUsers || existingUsers.length === 0) {
   console.log('📝 No users found, creating default users...');
   Utils.saveLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
-  console.log('✓ Default users created');
 } else {
   console.log(`✓ Found ${existingUsers.length} existing users`);
 }
 
 // ============================================================
-// API CLIENT - عميل API
+// AUTHENTICATION
 // ============================================================
-const ApiClient = {
-  async request(method, path, data = null, options = {}) {
-    const token = localStorage.getItem('auth_token');
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    
-    try {
-      const res = await fetch(`${CONFIG.API_URL}${path}`, {
-        method,
-        headers,
-        body: data ? JSON.stringify(data) : null,
-        ...options,
-      });
-      
-      if (res.status === 401) {
-        Auth.logout();
-        throw new Error('انتهت الجلسة، يرجى تسجيل الدخول');
-      }
-      
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.message || 'خطأ في الاتصال');
-      return json;
-    } catch (err) {
-      if (err.message.includes('Failed to fetch')) {
-        throw new Error('لا يوجد اتصال بالخادم');
-      }
-      throw err;
-    }
+const Auth = {
+  getCurrentUser() {
+    return Utils.loadLocal(CONFIG.USER_KEY, null);
   },
   
-  get: (p) => this.request('GET', p),
-  post: (p, d) => this.request('POST', p, d),
-  put: (p, d) => this.request('PUT', p, d),
-  delete: (p) => this.request('DELETE', p),
+  login(username, password) {
+    console.log('🔐 Login attempt:', { username, password });
+    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
+    console.log('📋 Available users:', users.map(u => `${u.username}/${u.password}`));
+    
+    const user = users.find(u => u.username === username && u.password === password);
+    
+    if (!user) {
+      console.error('✗ Login failed: Invalid credentials');
+      throw new Error('بيانات الدخول غير صحيحة');
+    }
+    
+    console.log('✓ Login successful:', user.fullName);
+    const session = { ...user, loginAt: Utils.now() };
+    delete session.password;
+    Utils.saveLocal(CONFIG.USER_KEY, session);
+    return session;
+  },
+  
+  logout() {
+    localStorage.removeItem(CONFIG.USER_KEY);
+    localStorage.removeItem('auth_token');
+    Router.navigate('login');
+  },
 };
 
 // ============================================================
-// SERVICE ABSTRACTION - طبقة التجريد
+// SERVICE
 // ============================================================
 class LocalCorrespondenceService {
   getAll(filters = {}) {
@@ -293,190 +284,31 @@ class LocalCorrespondenceService {
   }
 }
 
-class ApiCorrespondenceService {
-  constructor() { this.local = new LocalCorrespondenceService(); }
-  
-  async getAll(filters = {}) {
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([k,v]) => v !== undefined && params.append(k, v));
-      return await ApiClient.get(`/correspondence?${params}`);
-    } catch (e) {
-      Utils.toast('تعذر الاتصال بالخادم - عرض البيانات المحلية', 'warning');
-      return this.local.getAll(filters);
-    }
-  }
-  
-  async getById(id) {
-    try { return await ApiClient.get(`/correspondence/${id}`); }
-    catch { return this.local.getById(id); }
-  }
-  
-  async create(record) {
-    if (!navigator.onLine) {
-      await this.queueForSync('create', record);
-      return this.local.create(record);
-    }
-    try {
-      const created = await ApiClient.post('/correspondence', record);
-      await this.local.create(created);
-      return created;
-    } catch (e) {
-      await this.queueForSync('create', record);
-      return this.local.create(record);
-    }
-  }
-  
-  async update(id, updates) {
-    try {
-      const updated = await ApiClient.put(`/correspondence/${id}`, updates);
-      await this.local.update(id, updated);
-      return updated;
-    } catch { return this.local.update(id, updates); }
-  }
-  
-  async archive(id) {
-    try { await ApiClient.post(`/correspondence/${id}/archive`); } catch {}
-    return this.local.archive(id);
-  }
-  
-  async restore(id) {
-    try { await ApiClient.post(`/correspondence/${id}/restore`); } catch {}
-    return this.local.restore(id);
-  }
-  
-  async delete(id) {
-    try { await ApiClient.delete(`/correspondence/${id}`); } catch {}
-    return this.local.delete(id);
-  }
-  
-  async addReply(id, reply) {
-    try { await ApiClient.post(`/correspondence/${id}/replies`, reply); } catch {}
-    return this.local.addReply(id, reply);
-  }
-  
-  async addFollowUp(id, followUp) {
-    try { await ApiClient.post(`/follow-ups`, { correspondenceId: id, ...followUp }); } catch {}
-    return this.local.addFollowUp(id, followUp);
-  }
-  
-  async queueForSync(action, data) {
-    const outbox = Utils.loadLocal(CONFIG.OUTBOX_KEY, []);
-    outbox.push({ id: Utils.uuid(), action, data, createdAt: Utils.now(), clientId: Utils.uuid() });
-    Utils.saveLocal(CONFIG.OUTBOX_KEY, outbox);
-  }
-  
-  async syncOutbox() {
-    const outbox = Utils.loadLocal(CONFIG.OUTBOX_KEY, []);
-    if (outbox.length === 0) return;
-    Utils.toast(`مزامنة ${outbox.length} عنصر...`, 'info');
-    const remaining = [];
-    for (const item of outbox) {
-      try {
-        if (item.action === 'create') await ApiClient.post('/correspondence', item.data);
-      } catch { remaining.push(item); }
-    }
-    Utils.saveLocal(CONFIG.OUTBOX_KEY, remaining);
-    if (remaining.length === 0) Utils.toast('تمت المزامنة بنجاح', 'success');
-  }
-}
-
-const correspondenceService = CONFIG.USE_BACKEND ? new ApiCorrespondenceService() : new LocalCorrespondenceService();
+const correspondenceService = new LocalCorrespondenceService();
 
 // ============================================================
-// AUTHENTICATION - نظام المصادقة
-// ============================================================
-const Auth = {
-  getCurrentUser() {
-    return Utils.loadLocal(CONFIG.USER_KEY, null);
-  },
-  
-  login(username, password) {
-    console.log('🔐 Login attempt:', { username, password });
-    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
-    console.log('📋 Available users:', users.map(u => u.username));
-    
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (!user) {
-      console.error('✗ Login failed: Invalid credentials');
-      throw new Error('بيانات الدخول غير صحيحة');
-    }
-    
-    console.log('✓ Login successful:', user.fullName);
-    const session = { ...user, loginAt: Utils.now() };
-    delete session.password;
-    Utils.saveLocal(CONFIG.USER_KEY, session);
-    return session;
-  },
-  
-  logout() {
-    localStorage.removeItem(CONFIG.USER_KEY);
-    localStorage.removeItem('auth_token');
-    Router.navigate('login');
-  },
-  
-  hasPermission(permission) {
-    const user = this.getCurrentUser();
-    if (!user) return false;
-    const perms = {
-      super_admin: ['all'],
-      general_admin: ['all_sectors', 'manage_users', 'view_reports'],
-      sector_admin: ['manage_sector', 'view_sector', 'manage_staff'],
-      sector_staff: ['view_sector', 'create_correspondence'],
-    };
-    const userPerms = perms[user.role] || [];
-    return userPerms.includes('all') || userPerms.includes(permission);
-  },
-};
-
-// ============================================================
-// EXPORT - التصدير
+// EXPORT
 // ============================================================
 const Exporter = {
   async toPDF(record) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    
     doc.setFont('helvetica');
     doc.setFontSize(16);
     doc.text(CONFIG.ORG, 105, 20, { align: 'center' });
     doc.setFontSize(12);
     doc.text(`Reference: ${record.referenceNumber}`, 105, 30, { align: 'center' });
     doc.text(`Date: ${Utils.formatShortDate(record.createdAt)}`, 105, 38, { align: 'center' });
-    
     doc.setFontSize(14);
     doc.text(`Subject: ${record.subject}`, 20, 55);
-    
     doc.setFontSize(11);
     const lines = doc.splitTextToSize(record.content || '', 170);
     doc.text(lines, 20, 70);
-    
-    doc.setFontSize(9);
-    doc.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 20, 280);
-    doc.text(CONFIG.ORG, 105, 285, { align: 'center' });
-    
     doc.save(`${record.referenceNumber}.pdf`);
   },
   
   toTXT(record) {
-    const text = `${CONFIG.ORG}
-================================
-رقم المرجع: ${record.referenceNumber}
-التاريخ: ${Utils.formatDate(record.createdAt)}
-القطاع: ${SECTORS.find(s => s.id === record.sectorId)?.name || ''}
-الأولوية: ${record.priority}
-المرسل: ${record.sender || '-'}
-================================
-الموضوع: ${record.subject}
-
-${record.content}
-
-================================
-${record.replies?.map(r => `\n--- رد (${Utils.formatDate(r.createdAt)}) ---\n${r.content}`).join('\n') || ''}
-================================
-© 2026 ${CONFIG.ORG}`;
-    
+    const text = `${CONFIG.ORG}\n================================\nرقم المرجع: ${record.referenceNumber}\nالتاريخ: ${Utils.formatDate(record.createdAt)}\nالقطاع: ${SECTORS.find(s => s.id === record.sectorId)?.name || ''}\nالأولوية: ${record.priority}\nالمرسل: ${record.sender || '-'}\n================================\nالموضوع: ${record.subject}\n\n${record.content}\n\n================================\n© 2026 ${CONFIG.ORG}`;
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -502,13 +334,7 @@ ${record.replies?.map(r => `\n--- رد (${Utils.formatDate(r.createdAt)}) ---\n$
   },
   
   async toQR(record) {
-    const data = JSON.stringify({
-      ref: record.referenceNumber,
-      subject: record.subject,
-      date: record.createdAt,
-      sector: record.sectorId,
-      org: CONFIG.ORG,
-    });
+    const data = JSON.stringify({ ref: record.referenceNumber, subject: record.subject, date: record.createdAt, sector: record.sectorId, org: CONFIG.ORG });
     const canvas = document.createElement('canvas');
     await QRCode.toCanvas(canvas, data, { width: 300, margin: 2 });
     const url = canvas.toDataURL();
@@ -523,7 +349,7 @@ ${record.replies?.map(r => `\n--- رد (${Utils.formatDate(r.createdAt)}) ---\n$
 };
 
 // ============================================================
-// ROUTER - نظام التوجيه
+// ROUTER
 // ============================================================
 const Router = {
   current: 'login',
@@ -555,7 +381,7 @@ const Router = {
 };
 
 // ============================================================
-// APP - التطبيق الرئيسي
+// APP
 // ============================================================
 const App = {
   render() {
@@ -563,8 +389,7 @@ const App = {
     const user = Auth.getCurrentUser();
     
     if (!user && Router.current !== 'login' && Router.current !== 'settings') {
-      Router.navigate('login');
-      return;
+      Router.current = 'login';
     }
     
     const routes = {
@@ -580,16 +405,22 @@ const App = {
       users: Views.users,
     };
     
-    const view = routes[Router.current] || Views.dashboard;
-    app.innerHTML = view();
+    const viewFn = routes[Router.current] || Views.dashboard;
+    const html = viewFn();
+    app.innerHTML = html;
     app.classList.add('fade-in');
     
-    if (typeof view.afterRender === 'function') view.afterRender();
+    // Attach event listeners after DOM is ready
+    setTimeout(() => {
+      if (Router.current === 'login') Views.attachLoginHandlers();
+      if (Router.current === 'sector') Views.attachSectorHandlers();
+      if (Router.current === 'general') Views.attachGeneralHandlers();
+    }, 50);
   }
 };
 
 // ============================================================
-// VIEWS - الواجهات
+// VIEWS
 // ============================================================
 const Views = {
   login() {
@@ -597,21 +428,21 @@ const Views = {
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md">
           <div class="text-center mb-6">
-            <div class="text-6xl mb-3">🏢</div>
+            <div class="text-6xl mb-3"></div>
             <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
             <p class="text-gray-600 text-sm mt-2">نظام المراسلات الإدارية</p>
           </div>
           
-          <form id="loginForm" class="space-y-4">
+          <form id="loginForm" class="space-y-4" onsubmit="return false;">
             <div>
               <label class="block text-sm font-semibold mb-2 text-gray-700">اسم المستخدم</label>
-              <input type="text" id="username" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin">
+              <input type="text" id="username" required autocomplete="username" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin" value="">
             </div>
             <div>
               <label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label>
-              <input type="password" id="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
+              <input type="password" id="password" required autocomplete="current-password" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••" value="">
             </div>
-            <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">
+            <button type="button" id="loginBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">
               🔐 تسجيل الدخول
             </button>
           </form>
@@ -623,7 +454,7 @@ const Views = {
           </div>
           
           <div class="mt-4 text-xs text-gray-500 text-center">
-            <p>بيانات تجريبية: admin / admin123</p>
+            <p>بيانات تجريبية: <strong>admin</strong> / <strong>admin123</strong></p>
             <p class="mt-1">الإصدار ${CONFIG.VERSION}</p>
           </div>
         </div>
@@ -631,20 +462,51 @@ const Views = {
     `;
   },
   
-  login_afterRender() {
-    document.getElementById('loginForm').onsubmit = (e) => {
-      e.preventDefault();
+  attachLoginHandlers() {
+    console.log('🔧 Attaching login handlers...');
+    const btn = document.getElementById('loginBtn');
+    const form = document.getElementById('loginForm');
+    
+    if (!btn) {
+      console.error('✗ Login button not found!');
+      return;
+    }
+    
+    console.log('✓ Login button found, attaching handler');
+    
+    const doLogin = () => {
+      console.log('🔘 Login button clicked');
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      
+      console.log('📝 Form values:', { username, passwordLength: password.length });
+      
+      if (!username || !password) {
+        Utils.toast('يرجى إدخال اسم المستخدم وكلمة المرور', 'warning');
+        return;
+      }
+      
       try {
-        const user = Auth.login(
-          document.getElementById('username').value,
-          document.getElementById('password').value
-        );
+        const user = Auth.login(username, password);
         Utils.toast(`مرحباً ${user.fullName}`, 'success');
-        Router.navigate('dashboard');
+        setTimeout(() => Router.navigate('dashboard'), 500);
       } catch (err) {
+        console.error('✗ Login error:', err);
         Utils.toast(err.message, 'error');
       }
     };
+    
+    btn.addEventListener('click', doLogin);
+    
+    // Also handle Enter key
+    form.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doLogin();
+      }
+    });
+    
+    console.log('✓ Login handlers attached');
   },
   
   dashboard() {
@@ -655,8 +517,7 @@ const Views = {
     const sectorStats = SECTORS.map(s => ({
       ...s,
       count: active.filter(r => r.sectorId === s.id).length,
-      today: active.filter(r => r.sectorId === s.id && 
-        new Date(r.createdAt).toDateString() === new Date().toDateString()).length,
+      today: active.filter(r => r.sectorId === s.id && new Date(r.createdAt).toDateString() === new Date().toDateString()).length,
     }));
     
     const recent = [...active].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
@@ -742,7 +603,7 @@ const Views = {
               <h1 class="text-3xl font-bold">${sector.name}</h1>
               <p class="opacity-90 mt-1">${all.length} مراسلة نشطة</p>
             </div>
-            <button onclick="UI.openCreateModal('${sectorId}')" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition">
+            <button onclick="UI.openCreateModal('${sectorId}')" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition cursor-pointer">
               ➕ مراسلة جديدة
             </button>
           </div>
@@ -750,7 +611,7 @@ const Views = {
         
         <div class="glass rounded-2xl shadow-xl p-4 mb-4">
           <div class="grid md:grid-cols-3 gap-3">
-            <input type="text" id="searchInput" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+            <input type="text" id="searchInput" placeholder=" بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
             <select id="priorityFilter" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
               <option value="">كل الأولويات</option>
               <option value="high">عالية</option>
@@ -774,7 +635,7 @@ const Views = {
     `;
   },
   
-  sector_afterRender() {
+  attachSectorHandlers() {
     const filterList = () => {
       const sectorId = Router.params.id;
       const search = document.getElementById('searchInput').value.toLowerCase();
@@ -782,7 +643,7 @@ const Views = {
       const sortBy = document.getElementById('sortBy').value;
       
       let list = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.sectorId === sectorId && !r.isArchived);
-      if (search) list = list.filter(r => (r.subject+r.content+r.referenceNumber+r.sender).toLowerCase().includes(search));
+      if (search) list = list.filter(r => (r.subject+r.content+r.referenceNumber+(r.sender||'')).toLowerCase().includes(search));
       if (priority) list = list.filter(r => r.priority === priority);
       
       if (sortBy === 'priority') {
@@ -799,9 +660,12 @@ const Views = {
         list.map(r => this.correspondenceCard(r)).join('');
     };
     
-    document.getElementById('searchInput').oninput = filterList;
-    document.getElementById('priorityFilter').onchange = filterList;
-    document.getElementById('sortBy').onchange = filterList;
+    const s = document.getElementById('searchInput');
+    const p = document.getElementById('priorityFilter');
+    const so = document.getElementById('sortBy');
+    if (s) s.oninput = filterList;
+    if (p) p.onchange = filterList;
+    if (so) so.onchange = filterList;
   },
   
   general() {
@@ -828,7 +692,7 @@ const Views = {
               <option value="normal">عادية</option>
               <option value="low">منخفضة</option>
             </select>
-            <button onclick="Exporter.toExcel(Utils.loadLocal(CONFIG.STORAGE_KEY, []))" class="btn-primary px-4 py-2 rounded-xl font-bold">
+            <button onclick="Exporter.toExcel(Utils.loadLocal(CONFIG.STORAGE_KEY, []))" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">
               📊 تصدير Excel
             </button>
           </div>
@@ -841,7 +705,7 @@ const Views = {
     `;
   },
   
-  general_afterRender() {
+  attachGeneralHandlers() {
     const filter = () => {
       const search = document.getElementById('generalSearch').value.toLowerCase();
       const sector = document.getElementById('sectorFilter').value;
@@ -858,9 +722,12 @@ const Views = {
         list.map(r => this.correspondenceCard(r)).join('');
     };
     
-    document.getElementById('generalSearch').oninput = filter;
-    document.getElementById('sectorFilter').onchange = filter;
-    document.getElementById('generalPriority').onchange = filter;
+    const s = document.getElementById('generalSearch');
+    const sf = document.getElementById('sectorFilter');
+    const p = document.getElementById('generalPriority');
+    if (s) s.oninput = filter;
+    if (sf) sf.onchange = filter;
+    if (p) p.onchange = filter;
   },
   
   archive() {
@@ -903,7 +770,7 @@ const Views = {
                     <div class="text-xs text-gray-500">${r.referenceNumber}</div>
                     <h3 class="font-bold text-lg text-gray-800">${Utils.escapeHtml(r.subject)}</h3>
                   </div>
-                  <button onclick="Router.navigate('view', {id:'${r.id}'})" class="text-teal-600 hover:text-teal-800 text-sm font-semibold">عرض ←</button>
+                  <button onclick="Router.navigate('view', {id:'${r.id}'})" class="text-teal-600 hover:text-teal-800 text-sm font-semibold cursor-pointer">عرض ←</button>
                 </div>
                 <div class="space-y-2">
                   ${r.followUps.map(f => `
@@ -911,7 +778,7 @@ const Views = {
                       <div class="flex justify-between items-center">
                         <span class="font-semibold text-gray-800">${Utils.escapeHtml(f.title || 'مهمة')}</span>
                         <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">
-                          ${f.status === 'done' ? '✓ منجزة' : '⏳ قيد التنفيذ'}
+                          ${f.status === 'done' ? '✓ منجزة' : ' قيد التنفيذ'}
                         </span>
                       </div>
                       ${f.dueDate ? `<div class="text-xs text-gray-600 mt-1">📅 ${Utils.formatShortDate(f.dueDate)}</div>` : ''}
@@ -936,7 +803,7 @@ const Views = {
     return `
       ${this.navbar()}
       <div class="max-w-4xl mx-auto p-4 md:p-6">
-        <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold">→ رجوع</button>
+        <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
         
         <div id="printArea" class="glass rounded-2xl shadow-xl p-6 md:p-8">
           <div class="border-b-2 border-teal-600 pb-4 mb-6">
@@ -985,7 +852,7 @@ const Views = {
           
           ${record.replies?.length > 0 ? `
             <div class="mb-6">
-              <h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${record.replies.length})</h3>
+              <h3 class="font-bold text-lg text-gray-800 mb-3"> الردود (${record.replies.length})</h3>
               <div class="space-y-3">
                 ${record.replies.map(r => `
                   <div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded">
@@ -999,7 +866,7 @@ const Views = {
           
           ${record.followUps?.length > 0 ? `
             <div class="mb-6">
-              <h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
+              <h3 class="font-bold text-lg text-gray-800 mb-3"> المتابعة</h3>
               <div class="space-y-2">
                 ${record.followUps.map(f => `
                   <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
@@ -1018,19 +885,19 @@ const Views = {
         </div>
         
         <div class="glass rounded-2xl shadow-xl p-4 mt-4 no-print">
-          <h3 class="font-bold mb-3">⚡ إجراءات</h3>
+          <h3 class="font-bold mb-3"> إجراءات</h3>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <button onclick="Exporter.toPDF(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📄 PDF</button>
-            <button onclick="Exporter.toTXT(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📝 TXT</button>
-            <button onclick="Exporter.toQR(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">🔳 QR</button>
-            <button onclick="Exporter.shareWhatsApp(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📱 WhatsApp</button>
-            <button onclick="UI.openReplyModal('${id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">💬 إضافة رد</button>
-            <button onclick="UI.openFollowUpModal('${id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📋 متابعة</button>
+            <button onclick="Exporter.toPDF(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📄 PDF</button>
+            <button onclick="Exporter.toTXT(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
+            <button onclick="Exporter.toQR(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> QR</button>
+            <button onclick="Exporter.shareWhatsApp(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
+            <button onclick="UI.openReplyModal('${id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 إضافة رد</button>
+            <button onclick="UI.openFollowUpModal('${id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
             ${record.isArchived ? 
-              `<button onclick="UI.restoreRecord('${id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📤 استعادة</button>` :
-              `<button onclick="UI.archiveRecord('${id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm">📦 أرشفة</button>`
+              `<button onclick="UI.restoreRecord('${id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` :
+              `<button onclick="UI.archiveRecord('${id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`
             }
-            <button onclick="UI.deleteRecord('${id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm">🗑️ حذف</button>
+            <button onclick="UI.deleteRecord('${id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
           </div>
         </div>
       </div>
@@ -1057,7 +924,7 @@ const Views = {
             <div class="bg-blue-50 p-4 rounded-xl">
               <h3 class="font-bold mb-2 text-blue-800">💾 النسخ الاحتياطي</h3>
               <div class="flex gap-2 flex-wrap">
-                <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">📥 تصدير JSON</button>
+                <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer">📥 تصدير JSON</button>
                 <label class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer">
                   📤 استيراد JSON
                   <input type="file" accept=".json" onchange="UI.importBackup(event)" class="hidden">
@@ -1065,20 +932,14 @@ const Views = {
               </div>
             </div>
             
-            <div class="bg-purple-50 p-4 rounded-xl">
-              <h3 class="font-bold mb-2 text-purple-800">🔄 نقل البيانات</h3>
-              <p class="text-sm text-gray-700 mb-2">نقل البيانات المحلية إلى الخادم</p>
-              <button onclick="Router.navigate('migration')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold">فتح أداة النقل</button>
-            </div>
-            
             <div class="bg-yellow-50 p-4 rounded-xl">
               <h3 class="font-bold mb-2 text-yellow-800">👥 إدارة المستخدمين</h3>
-              <button onclick="Router.navigate('users')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">إدارة المستخدمين</button>
+              <button onclick="Router.navigate('users')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer">إدارة المستخدمين</button>
             </div>
             
             <div class="flex gap-2">
-              <button onclick="UI.saveSettings()" class="btn-primary flex-1 py-3 rounded-xl font-bold">💾 حفظ الإعدادات</button>
-              <button onclick="Router.navigate(Auth.getCurrentUser() ? 'dashboard' : 'login')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">رجوع</button>
+              <button onclick="UI.saveSettings()" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ الإعدادات</button>
+              <button onclick="Router.navigate(Auth.getCurrentUser() ? 'dashboard' : 'login')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">رجوع</button>
             </div>
           </div>
         </div>
@@ -1092,20 +953,13 @@ const Views = {
       <div class="max-w-4xl mx-auto p-4 md:p-6">
         <div class="glass rounded-2xl shadow-xl p-6">
           <h1 class="text-2xl font-bold text-teal-800 mb-4">🔄 نقل البيانات إلى الخادم</h1>
-          
-          <div class="bg-yellow-50 border-r-4 border-yellow-500 p-4 rounded mb-4">
-            <p class="font-semibold text-yellow-800">⚠️ تنبيه هام</p>
-            <p class="text-sm text-yellow-700 mt-1">تأكد من تفعيل الاتصال بالخادم في الإعدادات قبل البدء. سيتم إنشاء نسخة احتياطية تلقائياً.</p>
-          </div>
-          
           <div id="migrationStatus" class="bg-gray-50 p-4 rounded-xl mb-4">
             <p class="text-gray-600">جاهز للنقل...</p>
           </div>
-          
           <div class="flex gap-2 flex-wrap">
-            <button onclick="UI.runMigration()" class="btn-primary px-6 py-3 rounded-xl font-bold">🚀 بدء النقل</button>
-            <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold">💾 نسخة احتياطية أولاً</button>
-            <button onclick="Router.navigate('settings')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">رجوع</button>
+            <button onclick="UI.runMigration()" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer">🚀 بدء النقل</button>
+            <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold cursor-pointer">💾 نسخة احتياطية أولاً</button>
+            <button onclick="Router.navigate('settings')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">رجوع</button>
           </div>
         </div>
       </div>
@@ -1121,7 +975,7 @@ const Views = {
         <div class="glass rounded-2xl shadow-xl p-6">
           <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
             <h1 class="text-2xl font-bold text-teal-800">👥 إدارة المستخدمين</h1>
-            <button onclick="UI.openUserModal()" class="btn-primary px-4 py-2 rounded-xl font-bold">➕ مستخدم جديد</button>
+            <button onclick="UI.openUserModal()" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">➕ مستخدم جديد</button>
           </div>
           
           <div class="space-y-2">
@@ -1132,7 +986,7 @@ const Views = {
                   <div class="text-sm text-gray-600">@${Utils.escapeHtml(u.username)} • ${ROLES[u.role]}</div>
                   ${u.sectorId ? `<div class="text-xs text-teal-700">${SECTORS.find(s=>s.id===u.sectorId)?.name || ''}</div>` : ''}
                 </div>
-                <button onclick="UI.deleteUser('${u.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️ حذف</button>
+                <button onclick="UI.deleteUser('${u.id}')" class="text-red-600 hover:text-red-800 text-sm cursor-pointer">🗑️ حذف</button>
               </div>
             `).join('')}
           </div>
@@ -1158,29 +1012,29 @@ const Views = {
           </div>
           
           <div class="flex items-center gap-1 md:gap-2 flex-wrap">
-            <button onclick="Router.navigate('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold">🏠 الرئيسية</button>
+            <button onclick="Router.navigate('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer"> الرئيسية</button>
             <div class="relative group">
-              <button class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold">🏢 القواطع ▾</button>
+              <button class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏢 القواطع ▾</button>
               <div class="absolute left-0 mt-1 bg-white rounded-xl shadow-2xl py-2 hidden group-hover:block min-w-[200px]">
                 ${SECTORS.map(s => `
-                  <button onclick="Router.navigate('sector', {id:'${s.id}'})" class="w-full text-right px-4 py-2 hover:bg-gray-50 text-sm">
+                  <button onclick="Router.navigate('sector', {id:'${s.id}'})" class="w-full text-right px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer">
                     ${s.icon} ${s.name}
                   </button>
                 `).join('')}
               </div>
             </div>
-            <button onclick="Router.navigate('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline">🏛️ الإدارة</button>
-            <button onclick="Router.navigate('archive')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline">📦 الأرشيف</button>
-            <button onclick="Router.navigate('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline">📋 متابعة</button>
-            <button onclick="Router.navigate('settings')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold">⚙️</button>
-            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">🚪 خروج</button>
+            <button onclick="Router.navigate('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">🏛️ الإدارة</button>
+            <button onclick="Router.navigate('archive')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">📦 الأرشيف</button>
+            <button onclick="Router.navigate('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">📋 متابعة</button>
+            <button onclick="Router.navigate('settings')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">⚙️</button>
+            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
           </div>
         </div>
       </nav>
     `;
   },
   
-  correspondenceCard(r, showRestore = false) {
+  correspondenceCard(r) {
     const sector = SECTORS.find(s => s.id === r.sectorId);
     const priorityClass = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
     
@@ -1214,12 +1068,10 @@ const Views = {
         <div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-teal-800">➕ مراسلة جديدة</h2>
-            <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-2xl text-gray-500 hover:text-gray-800">×</button>
+            <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-2xl text-gray-500 hover:text-gray-800 cursor-pointer">×</button>
           </div>
           
-          <form id="createForm" class="space-y-4">
-            <input type="hidden" id="formSectorId" value="${sectorId}">
-            
+          <form id="createForm" class="space-y-4" onsubmit="return false;">
             <div>
               <label class="block text-sm font-semibold mb-1">القطاع *</label>
               <select id="formSector" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" required>
@@ -1253,8 +1105,8 @@ const Views = {
             </div>
             
             <div class="flex gap-2">
-              <button type="submit" class="btn-primary flex-1 py-3 rounded-xl font-bold">💾 حفظ</button>
-              <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+              <button type="button" id="saveCorrespondenceBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ</button>
+              <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
             </div>
           </form>
         </div>
@@ -1267,7 +1119,7 @@ const Views = {
       <div id="userModal" class="modal-overlay hidden">
         <div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-md">
           <h2 class="text-xl font-bold text-teal-800 mb-4">➕ مستخدم جديد</h2>
-          <form id="userForm" class="space-y-3">
+          <form id="userForm" class="space-y-3" onsubmit="return false;">
             <input type="text" id="uFullName" placeholder="الاسم الكامل" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
             <input type="text" id="uUsername" placeholder="اسم المستخدم" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
             <input type="password" id="uPassword" placeholder="كلمة المرور" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
@@ -1279,8 +1131,8 @@ const Views = {
               ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
             </select>
             <div class="flex gap-2">
-              <button type="submit" class="btn-primary flex-1 py-2 rounded-xl font-bold">حفظ</button>
-              <button type="button" onclick="document.getElementById('userModal').classList.add('hidden')" class="bg-gray-300 px-4 py-2 rounded-xl font-bold">إلغاء</button>
+              <button type="button" id="saveUserBtn" class="btn-primary flex-1 py-2 rounded-xl font-bold cursor-pointer">حفظ</button>
+              <button type="button" onclick="document.getElementById('userModal').classList.add('hidden')" class="bg-gray-300 px-4 py-2 rounded-xl font-bold cursor-pointer">إلغاء</button>
             </div>
           </form>
         </div>
@@ -1290,28 +1142,34 @@ const Views = {
 };
 
 // ============================================================
-// UI INTERACTIONS - تفاعلات الواجهة
+// UI INTERACTIONS
 // ============================================================
 const UI = {
   openCreateModal(sectorId) {
-    document.getElementById('createModal').classList.remove('hidden');
-    document.getElementById('createForm').onsubmit = async (e) => {
-      e.preventDefault();
-      try {
-        await correspondenceService.create({
-          sectorId: document.getElementById('formSector').value,
-          subject: document.getElementById('formSubject').value,
-          content: document.getElementById('formContent').value,
-          sender: document.getElementById('formSender').value,
-          priority: document.getElementById('formPriority').value,
-        });
-        Utils.toast('تم حفظ المراسلة', 'success');
-        document.getElementById('createModal').classList.add('hidden');
-        App.render();
-      } catch (err) {
-        Utils.toast(err.message, 'error');
+    const modal = document.getElementById('createModal');
+    if (modal) modal.classList.remove('hidden');
+    
+    setTimeout(() => {
+      const btn = document.getElementById('saveCorrespondenceBtn');
+      if (btn) {
+        btn.onclick = async () => {
+          try {
+            await correspondenceService.create({
+              sectorId: document.getElementById('formSector').value,
+              subject: document.getElementById('formSubject').value,
+              content: document.getElementById('formContent').value,
+              sender: document.getElementById('formSender').value,
+              priority: document.getElementById('formPriority').value,
+            });
+            Utils.toast('تم حفظ المراسلة', 'success');
+            document.getElementById('createModal').classList.add('hidden');
+            App.render();
+          } catch (err) {
+            Utils.toast(err.message, 'error');
+          }
+        };
       }
-    };
+    }, 100);
   },
   
   openReplyModal(id) {
@@ -1349,7 +1207,7 @@ const UI = {
   },
   
   async deleteRecord(id) {
-    if (!confirm('⚠️ حذف نهائي؟ لا يمكن التراجع.')) return;
+    if (!confirm('️ حذف نهائي؟ لا يمكن التراجع.')) return;
     await correspondenceService.delete(id);
     Utils.toast('تم الحذف', 'success');
     history.back();
@@ -1399,49 +1257,30 @@ const UI = {
     reader.readAsText(file);
   },
   
-  async runMigration() {
-    const status = document.getElementById('migrationStatus');
-    const localData = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    
-    if (!CONFIG.USE_BACKEND) {
-      status.innerHTML = '<p class="text-red-600">⚠️ يجب تفعيل الاتصال بالخادم أولاً من الإعدادات</p>';
-      return;
-    }
-    
-    status.innerHTML = `<p>📤 جاري نقل ${localData.length} مراسلة...</p>`;
-    let success = 0, failed = 0;
-    
-    for (const record of localData) {
-      try {
-        await ApiClient.post('/correspondence', record);
-        success++;
-        status.innerHTML = `<p class="text-green-600">✓ ${success} تم نقلها | ${failed} فشلت</p>`;
-      } catch (e) {
-        failed++;
-        status.innerHTML = `<p class="text-orange-600">✓ ${success} تم نقلها | ${failed} فشلت (${e.message})</p>`;
-      }
-    }
-    
-    status.innerHTML = `<p class="text-teal-700 font-bold">✅ اكتمل النقل: ${success} نجحت، ${failed} فشلت</p>`;
-  },
-  
   openUserModal() {
-    document.getElementById('userModal').classList.remove('hidden');
-    document.getElementById('userForm').onsubmit = (e) => {
-      e.preventDefault();
-      const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
-      users.push({
-        id: Utils.uuid(),
-        fullName: document.getElementById('uFullName').value,
-        username: document.getElementById('uUsername').value,
-        password: document.getElementById('uPassword').value,
-        role: document.getElementById('uRole').value,
-        sectorId: document.getElementById('uSector').value || null,
-      });
-      Utils.saveLocal(CONFIG.USERS_KEY, users);
-      Utils.toast('تمت الإضافة', 'success');
-      App.render();
-    };
+    const modal = document.getElementById('userModal');
+    if (modal) modal.classList.remove('hidden');
+    
+    setTimeout(() => {
+      const btn = document.getElementById('saveUserBtn');
+      if (btn) {
+        btn.onclick = () => {
+          const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
+          users.push({
+            id: Utils.uuid(),
+            fullName: document.getElementById('uFullName').value,
+            username: document.getElementById('uUsername').value,
+            password: document.getElementById('uPassword').value,
+            role: document.getElementById('uRole').value,
+            sectorId: document.getElementById('uSector').value || null,
+          });
+          Utils.saveLocal(CONFIG.USERS_KEY, users);
+          Utils.toast('تمت الإضافة', 'success');
+          document.getElementById('userModal').classList.add('hidden');
+          App.render();
+        };
+      }
+    }, 100);
   },
   
   deleteUser(id) {
@@ -1452,22 +1291,6 @@ const UI = {
     App.render();
   },
 };
-
-// ============================================================
-// PWA & OFFLINE SUPPORT
-// ============================================================
-window.addEventListener('online', () => {
-  Utils.toast('✅ عاد الاتصال', 'success');
-  if (CONFIG.USE_BACKEND && correspondenceService.syncOutbox) {
-    correspondenceService.syncOutbox();
-  }
-  App.render();
-});
-
-window.addEventListener('offline', () => {
-  Utils.toast('⚠️ انقطع الاتصال - الوضع المحلي', 'warning');
-  App.render();
-});
 
 // ============================================================
 // INITIALIZATION
