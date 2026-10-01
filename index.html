@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0f766e">
 <title>مراسلات إدارة إيواءات دير البلح</title>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2YXYr9mF2LEg2KfZhNil2YrYp9mF2LEg2KfZhdmC2KzYp9mE2K3ZiiIsInNob3J0X25hbWUiOiLZhdmC2KzYp9mFIiwiZGVzY3JpcHRpb24iOiJOesK4YW0g2YXYr9mF2LEg2KfZhNil2YrYp9mF2LEg2KfZhdmC2KzYp9mE2K3ZiiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGY3NjZlIiwidGhlbWVfY29sb3IiOiIjMGY3NjZlIiwib3JpZW50YXRpb24iOiJhbnkiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCc+PHRleHQgeT0nLjllbScgZm9udC1zaXplPSc5MCc+8J+TjTwvdGV4dD48L3N2Zz4iLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2YXYr9mF2LEg2KfZhNil2YrYp9mF2LEg2KfZhdmC2KzYp9mE2K3ZiiIsInNob3J0X25hbWUiOiLZhdmC2KzYp9mFIiwiZGVzY3JpcHRpb24iOiJOesK4YW0g2YXYr9mF2LEg2KfZhNil2YrYp9mF2LEg2KfZhdmC2KzYp9mE2K3ZiiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGY3NjZlIiwidGhlbWVfY29sb3IiOiIjMGY3NjZlIn0=">
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -29,6 +29,7 @@
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
   .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; transition: all 0.2s; cursor: pointer; border: none; }
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,118,110,0.4); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .sector-east { background: linear-gradient(135deg, #f59e0b, #d97706); }
   .sector-west { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
   .sector-north { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
@@ -39,6 +40,8 @@
   .scrollbar::-webkit-scrollbar-thumb { background: #0f766e; border-radius: 4px; }
   @media print { .no-print { display: none !important; } }
   .hidden { display: none !important; }
+  .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #0f766e; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -53,17 +56,19 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '2.0.2',
-  USE_BACKEND: localStorage.getItem('USE_BACKEND') === 'true',
-  API_URL: localStorage.getItem('API_URL') || 'http://localhost:5000/api',
+  VERSION: '3.0.0',
+  
+  // Supabase Configuration - استبدل هذه القيم بمفاتيح مشروعك
+  SUPABASE_URL: localStorage.getItem('SUPABASE_URL') || 'https://YOUR_PROJECT.supabase.co',
+  SUPABASE_ANON_KEY: localStorage.getItem('SUPABASE_ANON_KEY') || 'YOUR_ANON_KEY',
+  
+  USE_SUPABASE: localStorage.getItem('USE_SUPABASE') === 'true',
   STORAGE_KEY: 'deir_albalah_correspondence',
   USER_KEY: 'deir_albalah_user',
-  USERS_KEY: 'deir_albalah_users',
-  OUTBOX_KEY: 'deir_albalah_outbox',
 };
 
 const SECTORS = [
-  { id: 'east', name: 'القاطع الشرقي', code: 'EAST', class: 'sector-east', icon: '' },
+  { id: 'east', name: 'القاطع الشرقي', code: 'EAST', class: 'sector-east', icon: '🌅' },
   { id: 'west', name: 'القاطع الغربي', code: 'WEST', class: 'sector-west', icon: '🌊' },
   { id: 'north', name: 'القاطع الشمالي', code: 'NORTH', class: 'sector-north', icon: '🏔️' },
   { id: 'south', name: 'القاطع الجنوبي', code: 'SOUTH', class: 'sector-south', icon: '☀️' },
@@ -76,13 +81,18 @@ const ROLES = {
   sector_staff: 'موظف قاطع',
 };
 
-const DEFAULT_USERS = [
-  { id: '1', username: 'admin', password: 'admin123', fullName: 'المدير العام', role: 'super_admin', sectorId: null },
-  { id: '2', username: 'east', password: 'east123', fullName: 'مدير القاطع الشرقي', role: 'sector_admin', sectorId: 'east' },
-  { id: '3', username: 'west', password: 'west123', fullName: 'مدير القاطع الغربي', role: 'sector_admin', sectorId: 'west' },
-  { id: '4', username: 'north', password: 'north123', fullName: 'مدير القاطع الشمالي', role: 'sector_admin', sectorId: 'north' },
-  { id: '5', username: 'south', password: 'south123', fullName: 'مدير القاطع الجنوبي', role: 'sector_admin', sectorId: 'south' },
-];
+// ============================================================
+// SUPABASE CLIENT
+// ============================================================
+let supabase = null;
+try {
+  if (CONFIG.USE_SUPABASE && CONFIG.SUPABASE_URL !== 'https://YOUR_PROJECT.supabase.co') {
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    console.log('✓ Supabase client initialized');
+  }
+} catch (e) {
+  console.error(' Supabase init failed:', e);
+}
 
 // ============================================================
 // UTILITIES
@@ -121,10 +131,9 @@ const Utils = {
   saveLocal: (key, data) => {
     try {
       localStorage.setItem(key, JSON.stringify(data));
-      console.log(`✓ Saved to ${key}`);
       return true;
     } catch (e) {
-      console.error(` Failed to save ${key}:`, e);
+      console.error(`Failed to save ${key}:`, e);
       return false;
     }
   },
@@ -132,15 +141,8 @@ const Utils = {
   loadLocal: (key, def = null) => {
     try { 
       const d = localStorage.getItem(key); 
-      if (d) {
-        const parsed = JSON.parse(d);
-        console.log(`✓ Loaded ${key}:`, Array.isArray(parsed) ? `${parsed.length} items` : typeof parsed);
-        return parsed;
-      }
-      console.log(` ${key} not found, using default`);
-      return def; 
+      return d ? JSON.parse(d) : def;
     } catch (e) { 
-      console.error(`✗ Failed to load ${key}:`, e);
       return def; 
     }
   },
@@ -155,196 +157,246 @@ const Utils = {
   },
 };
 
-// Initialize default users
-console.log('🚀 Initializing application...');
-const existingUsers = Utils.loadLocal(CONFIG.USERS_KEY, null);
-if (!existingUsers || existingUsers.length === 0) {
-  console.log('📝 No users found, creating default users...');
-  Utils.saveLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
-} else {
-  console.log(`✓ Found ${existingUsers.length} existing users`);
-}
-
 // ============================================================
-// AUTHENTICATION
+// AUTHENTICATION SERVICE
 // ============================================================
-const Auth = {
-  getCurrentUser() {
-    return Utils.loadLocal(CONFIG.USER_KEY, null);
+const AuthService = {
+  currentUser: null,
+  
+  async getCurrentUser() {
+    if (!supabase) return Utils.loadLocal(CONFIG.USER_KEY, null);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*, sectors(name_ar, code)')
+      .eq('id', user.id)
+      .single();
+    
+    this.currentUser = profile;
+    return profile;
   },
   
-  login(username, password) {
-    console.log('🔐 Login attempt:', { username, password });
-    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
-    console.log('📋 Available users:', users.map(u => `${u.username}/${u.password}`));
+  async login(email, password) {
+    if (!supabase) throw new Error('Supabase غير مهيأ');
     
-    const user = users.find(u => u.username === username && u.password === password);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     
-    if (!user) {
-      console.error('✗ Login failed: Invalid credentials');
-      throw new Error('بيانات الدخول غير صحيحة');
-    }
+    if (error) throw new Error(error.message);
     
-    console.log('✓ Login successful:', user.fullName);
-    const session = { ...user, loginAt: Utils.now() };
-    delete session.password;
-    Utils.saveLocal(CONFIG.USER_KEY, session);
-    return session;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*, sectors(name_ar, code)')
+      .eq('id', data.user.id)
+      .single();
+    
+    this.currentUser = profile;
+    return profile;
   },
   
-  logout() {
+  async signup(email, password, metadata) {
+    if (!supabase) throw new Error('Supabase غير مهيأ');
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: metadata },
+    });
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  
+  async logout() {
+    if (supabase) await supabase.auth.signOut();
+    this.currentUser = null;
     localStorage.removeItem(CONFIG.USER_KEY);
-    localStorage.removeItem('auth_token');
     Router.navigate('login');
+  },
+  
+  hasPermission(permission) {
+    if (!this.currentUser) return false;
+    const perms = {
+      super_admin: ['all'],
+      general_admin: ['all_sectors', 'manage_users', 'view_reports'],
+      sector_admin: ['manage_sector', 'view_sector'],
+      sector_staff: ['view_sector', 'create_correspondence'],
+    };
+    const userPerms = perms[this.currentUser.role] || [];
+    return userPerms.includes('all') || userPerms.includes(permission);
   },
 };
 
 // ============================================================
-// SERVICE
+// DATA SERVICE (Supabase + Local Fallback)
 // ============================================================
-class LocalCorrespondenceService {
-  getAll(filters = {}) {
-    let data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    if (filters.sectorId) data = data.filter(d => d.sectorId === filters.sectorId);
-    if (filters.search) {
-      const s = filters.search.toLowerCase();
-      data = data.filter(d => 
-        (d.subject || '').toLowerCase().includes(s) ||
-        (d.content || '').toLowerCase().includes(s) ||
-        (d.referenceNumber || '').toLowerCase().includes(s) ||
-        (d.sender || '').toLowerCase().includes(s)
-      );
+const DataService = {
+  async getCorrespondence(filters = {}) {
+    if (!supabase) {
+      let data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+      if (filters.sectorId) data = data.filter(d => d.sector_id === filters.sectorId);
+      if (filters.search) {
+        const s = filters.search.toLowerCase();
+        data = data.filter(d => (d.subject + d.content + d.reference_number).toLowerCase().includes(s));
+      }
+      return data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
     }
-    if (filters.priority) data = data.filter(d => d.priority === filters.priority);
-    if (filters.archived !== undefined) data = data.filter(d => !!d.isArchived === filters.archived);
-    return Promise.resolve(data.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
-  }
-  
-  getById(id) {
-    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    return Promise.resolve(data.find(d => d.id === id));
-  }
-  
-  async create(record) {
-    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    const newRec = {
-      ...record,
-      id: Utils.uuid(),
-      referenceNumber: record.referenceNumber || Utils.generateRef(SECTORS.find(s => s.id === record.sectorId)?.code || 'XX'),
-      createdAt: Utils.now(),
-      updatedAt: Utils.now(),
-      isArchived: false,
-      replies: [],
-      attachments: [],
-      followUps: [],
-      notes: [],
-    };
-    data.push(newRec);
-    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
-    return newRec;
-  }
-  
-  async update(id, updates) {
-    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    const idx = data.findIndex(d => d.id === id);
-    if (idx === -1) throw new Error('السجل غير موجود');
-    data[idx] = { ...data[idx], ...updates, updatedAt: Utils.now() };
-    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
-    return data[idx];
-  }
-  
-  async archive(id) { return this.update(id, { isArchived: true }); }
-  async restore(id) { return this.update(id, { isArchived: false }); }
-  
-  async delete(id) {
-    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(d => d.id !== id);
-    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
-  }
-  
-  async addReply(id, reply) {
-    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    const rec = data.find(d => d.id === id);
-    if (!rec) throw new Error('السجل غير موجود');
-    rec.replies = rec.replies || [];
-    rec.replies.push({ id: Utils.uuid(), ...reply, createdAt: Utils.now() });
-    rec.updatedAt = Utils.now();
-    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
-    return rec;
-  }
-  
-  async addFollowUp(id, followUp) {
-    const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    const rec = data.find(d => d.id === id);
-    if (!rec) throw new Error('السجل غير موجود');
-    rec.followUps = rec.followUps || [];
-    rec.followUps.push({ id: Utils.uuid(), ...followUp, createdAt: Utils.now() });
-    rec.updatedAt = Utils.now();
-    Utils.saveLocal(CONFIG.STORAGE_KEY, data);
-    return rec;
-  }
-}
-
-const correspondenceService = new LocalCorrespondenceService();
-
-// ============================================================
-// EXPORT
-// ============================================================
-const Exporter = {
-  async toPDF(record) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    doc.setFont('helvetica');
-    doc.setFontSize(16);
-    doc.text(CONFIG.ORG, 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`Reference: ${record.referenceNumber}`, 105, 30, { align: 'center' });
-    doc.text(`Date: ${Utils.formatShortDate(record.createdAt)}`, 105, 38, { align: 'center' });
-    doc.setFontSize(14);
-    doc.text(`Subject: ${record.subject}`, 20, 55);
-    doc.setFontSize(11);
-    const lines = doc.splitTextToSize(record.content || '', 170);
-    doc.text(lines, 20, 70);
-    doc.save(`${record.referenceNumber}.pdf`);
+    
+    let query = supabase.from('correspondence').select('*, sectors(name_ar, code), profiles(full_name)');
+    if (filters.sectorId) query = query.eq('sector_id', filters.sectorId);
+    if (filters.is_archived !== undefined) query = query.eq('is_archived', filters.is_archived);
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data;
   },
   
-  toTXT(record) {
-    const text = `${CONFIG.ORG}\n================================\nرقم المرجع: ${record.referenceNumber}\nالتاريخ: ${Utils.formatDate(record.createdAt)}\nالقطاع: ${SECTORS.find(s => s.id === record.sectorId)?.name || ''}\nالأولوية: ${record.priority}\nالمرسل: ${record.sender || '-'}\n================================\nالموضوع: ${record.subject}\n\n${record.content}\n\n================================\n© 2026 ${CONFIG.ORG}`;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${record.referenceNumber}.txt`; a.click();
-    URL.revokeObjectURL(url);
+  async createCorrespondence(record) {
+    if (!supabase) {
+      const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+      const newRec = {
+        ...record,
+        id: Utils.uuid(),
+        reference_number: record.reference_number || Utils.generateRef(SECTORS.find(s => s.id === record.sector_id)?.code || 'XX'),
+        created_at: Utils.now(),
+        is_archived: false,
+      };
+      data.push(newRec);
+      Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+      return newRec;
+    }
+    
+    const { data, error } = await supabase
+      .from('correspondence')
+      .insert([{
+        reference_number: record.reference_number || Utils.generateRef(SECTORS.find(s => s.id === record.sector_id)?.code || 'XX'),
+        subject: record.subject,
+        content: record.content,
+        sender_id: AuthService.currentUser?.id,
+        sender_name: AuthService.currentUser?.full_name,
+        sector_id: record.sector_id,
+        priority: record.priority || 'normal',
+      }])
+      .select()
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data;
   },
   
-  toExcel(records) {
-    const data = records.map(r => ({
-      'الرقم المرجعي': r.referenceNumber,
-      'التاريخ': Utils.formatShortDate(r.createdAt),
-      'القطاع': SECTORS.find(s => s.id === r.sectorId)?.name || '',
-      'الموضوع': r.subject,
-      'المحتوى': r.content,
-      'الأولوية': r.priority,
-      'المرسل': r.sender || '',
-      'الحالة': r.isArchived ? 'مؤرشف' : 'نشط',
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'المراسلات');
-    XLSX.writeFile(wb, `correspondence_${Date.now()}.xlsx`);
+  async updateCorrespondence(id, updates) {
+    if (!supabase) {
+      const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+      const idx = data.findIndex(d => d.id === id);
+      if (idx === -1) throw new Error('السجل غير موجود');
+      data[idx] = { ...data[idx], ...updates, updated_at: Utils.now() };
+      Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+      return data[idx];
+    }
+    
+    const { data, error } = await supabase
+      .from('correspondence')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data;
   },
   
-  async toQR(record) {
-    const data = JSON.stringify({ ref: record.referenceNumber, subject: record.subject, date: record.createdAt, sector: record.sectorId, org: CONFIG.ORG });
-    const canvas = document.createElement('canvas');
-    await QRCode.toCanvas(canvas, data, { width: 300, margin: 2 });
-    const url = canvas.toDataURL();
-    const a = document.createElement('a');
-    a.href = url; a.download = `qr_${record.referenceNumber}.png`; a.click();
+  async archiveCorrespondence(id) {
+    return this.updateCorrespondence(id, { is_archived: true, status: 'archived' });
   },
   
-  shareWhatsApp(record) {
-    const text = `*${CONFIG.ORG}*\n\n📌 المرجع: ${record.referenceNumber}\n📅 التاريخ: ${Utils.formatShortDate(record.createdAt)}\n📝 الموضوع: ${record.subject}\n\n${record.content?.substring(0, 200)}...`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  async restoreCorrespondence(id) {
+    return this.updateCorrespondence(id, { is_archived: false, status: 'active' });
+  },
+  
+  async deleteCorrespondence(id) {
+    if (!supabase) {
+      const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(d => d.id !== id);
+      Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+      return;
+    }
+    
+    const { error } = await supabase.from('correspondence').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  },
+  
+  async addReply(correspondenceId, content) {
+    if (!supabase) {
+      const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+      const rec = data.find(d => d.id === correspondenceId);
+      rec.replies = rec.replies || [];
+      rec.replies.push({ id: Utils.uuid(), content, author: AuthService.currentUser?.full_name, created_at: Utils.now() });
+      Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+      return rec;
+    }
+    
+    const { data, error } = await supabase
+      .from('replies')
+      .insert([{
+        correspondence_id: correspondenceId,
+        user_id: AuthService.currentUser?.id,
+        author_name: AuthService.currentUser?.full_name,
+        content,
+      }])
+      .select()
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  
+  async addFollowUp(correspondenceId, followUp) {
+    if (!supabase) {
+      const data = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
+      const rec = data.find(d => d.id === correspondenceId);
+      rec.follow_ups = rec.follow_ups || [];
+      rec.follow_ups.push({ id: Utils.uuid(), ...followUp, created_at: Utils.now() });
+      Utils.saveLocal(CONFIG.STORAGE_KEY, data);
+      return rec;
+    }
+    
+    const { data, error } = await supabase
+      .from('follow_ups')
+      .insert([{
+        correspondence_id: correspondenceId,
+        user_id: AuthService.currentUser?.id,
+        ...followUp,
+      }])
+      .select()
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  
+  async getReplies(correspondenceId) {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('replies')
+      .select('*')
+      .eq('correspondence_id', correspondenceId)
+      .order('created_at', { ascending: true });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  
+  async getFollowUps(correspondenceId) {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('follow_ups')
+      .select('*')
+      .eq('correspondence_id', correspondenceId);
+    if (error) throw new Error(error.message);
+    return data;
   },
 };
 
@@ -384,9 +436,9 @@ const Router = {
 // APP
 // ============================================================
 const App = {
-  render() {
+  async render() {
     const app = document.getElementById('app');
-    const user = Auth.getCurrentUser();
+    const user = await AuthService.getCurrentUser();
     
     if (!user && Router.current !== 'login' && Router.current !== 'settings') {
       Router.current = 'login';
@@ -401,16 +453,14 @@ const App = {
       followups: Views.followups,
       view: Views.viewCorrespondence,
       settings: Views.settings,
-      migration: Views.migration,
       users: Views.users,
     };
     
     const viewFn = routes[Router.current] || Views.dashboard;
-    const html = viewFn();
+    const html = typeof viewFn === 'function' ? viewFn() : '<div>Page not found</div>';
     app.innerHTML = html;
     app.classList.add('fade-in');
     
-    // Attach event listeners after DOM is ready
     setTimeout(() => {
       if (Router.current === 'login') Views.attachLoginHandlers();
       if (Router.current === 'sector') Views.attachSectorHandlers();
@@ -428,34 +478,46 @@ const Views = {
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md">
           <div class="text-center mb-6">
-            <div class="text-6xl mb-3"></div>
+            <div class="text-6xl mb-3">🏢</div>
             <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
             <p class="text-gray-600 text-sm mt-2">نظام المراسلات الإدارية</p>
+            <div class="mt-2 text-xs">
+              ${CONFIG.USE_SUPABASE ? '<span class="text-green-600 font-bold">🔗 متصل بـ Supabase</span>' : '<span class="text-orange-600 font-bold">💾 وضع تجريبي محلي</span>'}
+            </div>
           </div>
+          
+          <div id="loginError" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
           
           <form id="loginForm" class="space-y-4" onsubmit="return false;">
             <div>
-              <label class="block text-sm font-semibold mb-2 text-gray-700">اسم المستخدم</label>
-              <input type="text" id="username" required autocomplete="username" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin" value="">
+              <label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label>
+              <input type="email" id="loginEmail" required autocomplete="email" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin@example.com">
             </div>
             <div>
               <label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label>
-              <input type="password" id="password" required autocomplete="current-password" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••" value="">
+              <input type="password" id="loginPassword" required autocomplete="current-password" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
             </div>
             <button type="button" id="loginBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">
               🔐 تسجيل الدخول
             </button>
           </form>
           
+          ${!CONFIG.USE_SUPABASE ? `
+            <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-800">
+              <p class="font-bold mb-1">بيانات تجريبية (وضع محلي):</p>
+              <p>البريد: <strong>admin@demo.com</strong></p>
+              <p>كلمة المرور: <strong>password</strong></p>
+            </div>
+          ` : ''}
+          
           <div class="mt-6 pt-6 border-t border-gray-200">
-            <button onclick="Router.navigate('settings')" class="text-sm text-teal-700 hover:underline w-full text-center">
-              ⚙️ إعدادات الاتصال بالخادم
+            <button onclick="Router.navigate('settings')" class="text-sm text-teal-700 hover:underline w-full text-center cursor-pointer">
+              ⚙️ إعدادات الاتصال
             </button>
           </div>
           
           <div class="mt-4 text-xs text-gray-500 text-center">
-            <p>بيانات تجريبية: <strong>admin</strong> / <strong>admin123</strong></p>
-            <p class="mt-1">الإصدار ${CONFIG.VERSION}</p>
+            <p>الإصدار ${CONFIG.VERSION}</p>
           </div>
         </div>
       </div>
@@ -463,119 +525,101 @@ const Views = {
   },
   
   attachLoginHandlers() {
-    console.log('🔧 Attaching login handlers...');
     const btn = document.getElementById('loginBtn');
-    const form = document.getElementById('loginForm');
+    const errorDiv = document.getElementById('loginError');
     
-    if (!btn) {
-      console.error('✗ Login button not found!');
-      return;
-    }
+    if (!btn) return;
     
-    console.log('✓ Login button found, attaching handler');
-    
-    const doLogin = () => {
-      console.log('🔘 Login button clicked');
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
+    const doLogin = async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
       
-      console.log('📝 Form values:', { username, passwordLength: password.length });
-      
-      if (!username || !password) {
-        Utils.toast('يرجى إدخال اسم المستخدم وكلمة المرور', 'warning');
-        return;
-      }
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> جاري تسجيل الدخول...';
+      errorDiv.classList.add('hidden');
       
       try {
-        const user = Auth.login(username, password);
-        Utils.toast(`مرحباً ${user.fullName}`, 'success');
+        let user;
+        
+        if (CONFIG.USE_SUPABASE && supabase) {
+          user = await AuthService.login(email, password);
+        } else {
+          // Demo mode
+          if (email === 'admin@demo.com' && password === 'password') {
+            user = {
+              id: 'demo-admin',
+              username: 'admin',
+              full_name: 'المدير العام',
+              role: 'super_admin',
+              sector_id: null,
+              sectors: null,
+            };
+            Utils.saveLocal(CONFIG.USER_KEY, user);
+          } else {
+            throw new Error('بيانات الدخول غير صحيحة');
+          }
+        }
+        
+        Utils.toast(`مرحباً ${user.full_name}`, 'success');
         setTimeout(() => Router.navigate('dashboard'), 500);
       } catch (err) {
-        console.error('✗ Login error:', err);
+        errorDiv.textContent = err.message;
+        errorDiv.classList.remove('hidden');
         Utils.toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🔐 تسجيل الدخول';
       }
     };
     
     btn.addEventListener('click', doLogin);
     
-    // Also handle Enter key
-    form.addEventListener('keypress', (e) => {
+    document.getElementById('loginForm').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         doLogin();
       }
     });
-    
-    console.log('✓ Login handlers attached');
   },
   
   dashboard() {
-    const user = Auth.getCurrentUser();
-    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    const active = all.filter(r => !r.isArchived);
-    
-    const sectorStats = SECTORS.map(s => ({
-      ...s,
-      count: active.filter(r => r.sectorId === s.id).length,
-      today: active.filter(r => r.sectorId === s.id && new Date(r.createdAt).toDateString() === new Date().toDateString()).length,
-    }));
-    
-    const recent = [...active].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+    const user = AuthService.currentUser || Utils.loadLocal(CONFIG.USER_KEY, {});
     
     return `
       ${this.navbar()}
       <div class="max-w-7xl mx-auto p-4 md:p-6">
         <div class="glass rounded-2xl shadow-xl p-6 mb-6">
-          <h1 class="text-3xl font-bold text-teal-800 mb-2">👋 أهلاً ${Utils.escapeHtml(user.fullName)}</h1>
-          <p class="text-gray-600">${ROLES[user.role]} ${user.sectorId ? '– ' + (SECTORS.find(s=>s.id===user.sectorId)?.name || '') : ''}</p>
+          <h1 class="text-3xl font-bold text-teal-800 mb-2"> أهلاً ${Utils.escapeHtml(user.full_name || user.fullName)}</h1>
+          <p class="text-gray-600">${ROLES[user.role] || 'مستخدم'} ${user.sector_id ? '– ' + (SECTORS.find(s=>s.id===user.sector_id)?.name || '') : ''}</p>
           <div class="flex items-center mt-3 text-sm">
             <span class="sync-indicator ${navigator.onLine ? 'sync-online' : 'sync-offline'}"></span>
             <span class="text-gray-600">${navigator.onLine ? 'متصل' : 'غير متصل'}</span>
-            ${CONFIG.USE_BACKEND ? '<span class="mr-4 text-teal-700 font-semibold">🔗 وضع الخادم</span>' : '<span class="mr-4 text-orange-700 font-semibold">💾 وضع محلي</span>'}
+            ${CONFIG.USE_SUPABASE ? '<span class="mr-4 text-teal-700 font-semibold"> Supabase</span>' : '<span class="mr-4 text-orange-700 font-semibold">💾 محلي</span>'}
           </div>
         </div>
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          ${sectorStats.map(s => `
-            <button onclick="Router.navigate('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right">
+          ${SECTORS.map(s => `
+            <button onclick="Router.navigate('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right cursor-pointer">
               <div class="${s.class} text-white rounded-xl p-3 inline-block text-3xl mb-2">${s.icon}</div>
               <h3 class="font-bold text-gray-800">${s.name}</h3>
-              <div class="flex justify-between items-end mt-2">
-                <div>
-                  <div class="text-3xl font-bold text-teal-700">${s.count}</div>
-                  <div class="text-xs text-gray-500">مراسلة نشطة</div>
-                </div>
-                <div class="text-left">
-                  <div class="text-lg font-bold text-orange-600">${s.today}</div>
-                  <div class="text-xs text-gray-500">اليوم</div>
-                </div>
-              </div>
             </button>
           `).join('')}
         </div>
         
         <div class="grid md:grid-cols-3 gap-4 mb-6">
-          <button onclick="Router.navigate('general')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right sector-general text-white">
+          <button onclick="Router.navigate('general')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right sector-general text-white cursor-pointer">
             <div class="text-4xl mb-2">🏛️</div>
             <h3 class="font-bold text-xl">الإدارة العامة</h3>
-            <p class="text-sm opacity-90 mt-1">عرض جميع المراسلات</p>
           </button>
-          <button onclick="Router.navigate('archive')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-gray-700 to-gray-900 text-white">
+          <button onclick="Router.navigate('archive')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-gray-700 to-gray-900 text-white cursor-pointer">
             <div class="text-4xl mb-2">📦</div>
             <h3 class="font-bold text-xl">الأرشيف</h3>
-            <p class="text-sm opacity-90 mt-1">${all.filter(r=>r.isArchived).length} مراسلة مؤرشفة</p>
           </button>
-          <button onclick="Router.navigate('followups')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+          <button onclick="Router.navigate('followups')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-purple-600 to-pink-600 text-white cursor-pointer">
             <div class="text-4xl mb-2">📋</div>
             <h3 class="font-bold text-xl">المتابعة</h3>
-            <p class="text-sm opacity-90 mt-1">${all.reduce((a,r)=>a+(r.followUps?.length||0),0)} مهمة متابعة</p>
           </button>
-        </div>
-        
-        <div class="glass rounded-2xl shadow-xl p-6">
-          <h2 class="text-xl font-bold text-gray-800 mb-4">🕐 آخر المراسلات</h2>
-          ${recent.length === 0 ? '<p class="text-center text-gray-500 py-8">لا توجد مراسلات بعد</p>' : 
-            recent.map(r => this.correspondenceCard(r)).join('')}
         </div>
         
         <div class="text-center text-xs text-white/70 mt-8 pb-4">
@@ -591,8 +635,6 @@ const Views = {
     const sector = SECTORS.find(s => s.id === sectorId);
     if (!sector) return '<div class="p-8 text-white text-center">القطاع غير موجود</div>';
     
-    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.sectorId === sectorId && !r.isArchived);
-    
     return `
       ${this.navbar()}
       <div class="max-w-7xl mx-auto p-4 md:p-6">
@@ -601,7 +643,6 @@ const Views = {
             <div>
               <div class="text-5xl mb-2">${sector.icon}</div>
               <h1 class="text-3xl font-bold">${sector.name}</h1>
-              <p class="opacity-90 mt-1">${all.length} مراسلة نشطة</p>
             </div>
             <button onclick="UI.openCreateModal('${sectorId}')" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition cursor-pointer">
               ➕ مراسلة جديدة
@@ -611,7 +652,7 @@ const Views = {
         
         <div class="glass rounded-2xl shadow-xl p-4 mb-4">
           <div class="grid md:grid-cols-3 gap-3">
-            <input type="text" id="searchInput" placeholder=" بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+            <input type="text" id="searchInput" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
             <select id="priorityFilter" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
               <option value="">كل الأولويات</option>
               <option value="high">عالية</option>
@@ -621,14 +662,12 @@ const Views = {
             <select id="sortBy" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
               <option value="date">الأحدث</option>
               <option value="priority">الأولوية</option>
-              <option value="subject">الموضوع</option>
             </select>
           </div>
         </div>
         
         <div id="correspondenceList" class="space-y-3">
-          ${all.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات في هذا القاطع</div>' :
-            all.map(r => this.correspondenceCard(r)).join('')}
+          <div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div>
         </div>
       </div>
       ${this.createModal(sectorId)}
@@ -636,28 +675,15 @@ const Views = {
   },
   
   attachSectorHandlers() {
+    const sectorId = Router.params.id;
+    this.loadSectorData(sectorId);
+    
     const filterList = () => {
-      const sectorId = Router.params.id;
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const priority = document.getElementById('priorityFilter').value;
-      const sortBy = document.getElementById('sortBy').value;
-      
-      let list = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.sectorId === sectorId && !r.isArchived);
-      if (search) list = list.filter(r => (r.subject+r.content+r.referenceNumber+(r.sender||'')).toLowerCase().includes(search));
-      if (priority) list = list.filter(r => r.priority === priority);
-      
-      if (sortBy === 'priority') {
-        const order = { high: 0, normal: 1, low: 2 };
-        list.sort((a,b) => order[a.priority] - order[b.priority]);
-      } else if (sortBy === 'subject') {
-        list.sort((a,b) => a.subject.localeCompare(b.subject, 'ar'));
-      } else {
-        list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-      }
-      
-      document.getElementById('correspondenceList').innerHTML = 
-        list.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد نتائج</div>' :
-        list.map(r => this.correspondenceCard(r)).join('');
+      this.loadSectorData(sectorId, {
+        search: document.getElementById('searchInput').value.toLowerCase(),
+        priority: document.getElementById('priorityFilter').value,
+        sortBy: document.getElementById('sortBy').value,
+      });
     };
     
     const s = document.getElementById('searchInput');
@@ -668,9 +694,35 @@ const Views = {
     if (so) so.onchange = filterList;
   },
   
-  general() {
-    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => !r.isArchived);
+  async loadSectorData(sectorId, filters = {}) {
+    const listEl = document.getElementById('correspondenceList');
+    if (!listEl) return;
     
+    try {
+      let data = await DataService.getCorrespondence({ sectorId, is_archived: false });
+      
+      if (filters.search) {
+        const s = filters.search;
+        data = data.filter(r => (r.subject + r.content + r.reference_number).toLowerCase().includes(s));
+      }
+      if (filters.priority) data = data.filter(r => r.priority === filters.priority);
+      
+      if (filters.sortBy === 'priority') {
+        const order = { high: 0, normal: 1, low: 2 };
+        data.sort((a,b) => order[a.priority] - order[b.priority]);
+      } else {
+        data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+      
+      listEl.innerHTML = data.length === 0 
+        ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات</div>'
+        : data.map(r => this.correspondenceCard(r)).join('');
+    } catch (err) {
+      listEl.innerHTML = `<div class="glass rounded-2xl p-12 text-center text-red-500">خطأ: ${err.message}</div>`;
+    }
+  },
+  
+  general() {
     return `
       ${this.navbar()}
       <div class="max-w-7xl mx-auto p-4 md:p-6">
@@ -692,34 +744,28 @@ const Views = {
               <option value="normal">عادية</option>
               <option value="low">منخفضة</option>
             </select>
-            <button onclick="Exporter.toExcel(Utils.loadLocal(CONFIG.STORAGE_KEY, []))" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">
+            <button onclick="Exporter.toExcel()" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">
               📊 تصدير Excel
             </button>
           </div>
         </div>
         
         <div id="generalList" class="space-y-3">
-          ${all.map(r => this.correspondenceCard(r)).join('')}
+          <div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div>
         </div>
       </div>
     `;
   },
   
   attachGeneralHandlers() {
+    this.loadGeneralData();
+    
     const filter = () => {
-      const search = document.getElementById('generalSearch').value.toLowerCase();
-      const sector = document.getElementById('sectorFilter').value;
-      const priority = document.getElementById('generalPriority').value;
-      
-      let list = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => !r.isArchived);
-      if (search) list = list.filter(r => (r.subject+r.content+r.referenceNumber).toLowerCase().includes(search));
-      if (sector) list = list.filter(r => r.sectorId === sector);
-      if (priority) list = list.filter(r => r.priority === priority);
-      list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      document.getElementById('generalList').innerHTML = 
-        list.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد نتائج</div>' :
-        list.map(r => this.correspondenceCard(r)).join('');
+      this.loadGeneralData({
+        search: document.getElementById('generalSearch').value.toLowerCase(),
+        sector: document.getElementById('sectorFilter').value,
+        priority: document.getElementById('generalPriority').value,
+      });
     };
     
     const s = document.getElementById('generalSearch');
@@ -730,64 +776,50 @@ const Views = {
     if (p) p.onchange = filter;
   },
   
-  archive() {
-    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []).filter(r => r.isArchived);
+  async loadGeneralData(filters = {}) {
+    const listEl = document.getElementById('generalList');
+    if (!listEl) return;
     
+    try {
+      let data = await DataService.getCorrespondence({ is_archived: false });
+      
+      if (filters.search) data = data.filter(r => (r.subject + r.content).toLowerCase().includes(filters.search));
+      if (filters.sector) data = data.filter(r => r.sector_id === filters.sector);
+      if (filters.priority) data = data.filter(r => r.priority === filters.priority);
+      
+      data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+      
+      listEl.innerHTML = data.length === 0
+        ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد نتائج</div>'
+        : data.map(r => this.correspondenceCard(r)).join('');
+    } catch (err) {
+      listEl.innerHTML = `<div class="glass rounded-2xl p-12 text-center text-red-500">خطأ: ${err.message}</div>`;
+    }
+  },
+  
+  archive() {
     return `
       ${this.navbar()}
       <div class="max-w-7xl mx-auto p-4 md:p-6">
         <div class="bg-gradient-to-br from-gray-700 to-gray-900 text-white rounded-2xl shadow-xl p-6 mb-6">
           <h1 class="text-3xl font-bold">📦 الأرشيف</h1>
-          <p class="opacity-90 mt-1">${all.length} مراسلة مؤرشفة</p>
         </div>
-        
-        <div class="space-y-3">
-          ${all.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">الأرشيف فارغ</div>' :
-            all.map(r => this.correspondenceCard(r, true)).join('')}
+        <div id="archiveList" class="space-y-3">
+          <div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div>
         </div>
       </div>
     `;
   },
   
   followups() {
-    const all = Utils.loadLocal(CONFIG.STORAGE_KEY, []);
-    const withFollowUps = all.filter(r => r.followUps && r.followUps.length > 0);
-    
     return `
       ${this.navbar()}
       <div class="max-w-7xl mx-auto p-4 md:p-6">
         <div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6">
           <h1 class="text-3xl font-bold">📋 المتابعة</h1>
-          <p class="opacity-90 mt-1">${withFollowUps.length} مراسلة بها مهام متابعة</p>
         </div>
-        
-        <div class="space-y-3">
-          ${withFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مهام متابعة</div>' :
-            withFollowUps.map(r => `
-              <div class="glass rounded-2xl shadow-lg p-5 card-hover">
-                <div class="flex justify-between items-start mb-3">
-                  <div>
-                    <div class="text-xs text-gray-500">${r.referenceNumber}</div>
-                    <h3 class="font-bold text-lg text-gray-800">${Utils.escapeHtml(r.subject)}</h3>
-                  </div>
-                  <button onclick="Router.navigate('view', {id:'${r.id}'})" class="text-teal-600 hover:text-teal-800 text-sm font-semibold cursor-pointer">عرض ←</button>
-                </div>
-                <div class="space-y-2">
-                  ${r.followUps.map(f => `
-                    <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
-                      <div class="flex justify-between items-center">
-                        <span class="font-semibold text-gray-800">${Utils.escapeHtml(f.title || 'مهمة')}</span>
-                        <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">
-                          ${f.status === 'done' ? '✓ منجزة' : ' قيد التنفيذ'}
-                        </span>
-                      </div>
-                      ${f.dueDate ? `<div class="text-xs text-gray-600 mt-1">📅 ${Utils.formatShortDate(f.dueDate)}</div>` : ''}
-                      ${f.notes ? `<div class="text-sm text-gray-700 mt-1">${Utils.escapeHtml(f.notes)}</div>` : ''}
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
+        <div id="followupsList" class="space-y-3">
+          <div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div>
         </div>
       </div>
     `;
@@ -795,110 +827,12 @@ const Views = {
   
   viewCorrespondence() {
     const id = Router.params.id;
-    const record = Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r => r.id === id);
-    if (!record) return '<div class="p-8 text-white text-center">السجل غير موجود</div>';
-    
-    const sector = SECTORS.find(s => s.id === record.sectorId);
-    
     return `
       ${this.navbar()}
       <div class="max-w-4xl mx-auto p-4 md:p-6">
         <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
-        
-        <div id="printArea" class="glass rounded-2xl shadow-xl p-6 md:p-8">
-          <div class="border-b-2 border-teal-600 pb-4 mb-6">
-            <div class="text-center">
-              <h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1>
-              <p class="text-gray-600 mt-1">نظام المراسلات الإدارية</p>
-            </div>
-          </div>
-          
-          <div class="grid md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <div class="text-xs text-gray-500">الرقم المرجعي</div>
-              <div class="font-bold text-lg text-teal-700">${record.referenceNumber}</div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500">التاريخ</div>
-              <div class="font-semibold">${Utils.formatDate(record.createdAt)}</div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500">القطاع</div>
-              <div class="font-semibold">${sector?.name || '-'}</div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500">الأولوية</div>
-              <div class="font-semibold">
-                ${record.priority === 'high' ? '🔴 عالية' : record.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}
-              </div>
-            </div>
-            ${record.sender ? `
-              <div class="md:col-span-2">
-                <div class="text-xs text-gray-500">المرسل</div>
-                <div class="font-semibold">${Utils.escapeHtml(record.sender)}</div>
-              </div>
-            ` : ''}
-          </div>
-          
-          <div class="mb-6">
-            <div class="text-xs text-gray-500 mb-1">الموضوع</div>
-            <h2 class="text-xl font-bold text-gray-800">${Utils.escapeHtml(record.subject)}</h2>
-          </div>
-          
-          <div class="mb-6">
-            <div class="text-xs text-gray-500 mb-1">المحتوى</div>
-            <div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${Utils.escapeHtml(record.content)}</div>
-          </div>
-          
-          ${record.replies?.length > 0 ? `
-            <div class="mb-6">
-              <h3 class="font-bold text-lg text-gray-800 mb-3"> الردود (${record.replies.length})</h3>
-              <div class="space-y-3">
-                ${record.replies.map(r => `
-                  <div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded">
-                    <div class="text-xs text-gray-500 mb-1">${Utils.formatDate(r.createdAt)} – ${Utils.escapeHtml(r.author || 'مستخدم')}</div>
-                    <div class="whitespace-pre-wrap">${Utils.escapeHtml(r.content)}</div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
-          
-          ${record.followUps?.length > 0 ? `
-            <div class="mb-6">
-              <h3 class="font-bold text-lg text-gray-800 mb-3"> المتابعة</h3>
-              <div class="space-y-2">
-                ${record.followUps.map(f => `
-                  <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
-                    <div class="font-semibold">${Utils.escapeHtml(f.title || 'مهمة')}</div>
-                    ${f.dueDate ? `<div class="text-xs text-gray-600">📅 ${Utils.formatShortDate(f.dueDate)}</div>` : ''}
-                    ${f.notes ? `<div class="text-sm text-gray-700">${Utils.escapeHtml(f.notes)}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
-          
-          <div class="text-center text-xs text-gray-400 mt-8 pt-4 border-t">
-            <p>© 2026 ${CONFIG.ORG}</p>
-          </div>
-        </div>
-        
-        <div class="glass rounded-2xl shadow-xl p-4 mt-4 no-print">
-          <h3 class="font-bold mb-3"> إجراءات</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <button onclick="Exporter.toPDF(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📄 PDF</button>
-            <button onclick="Exporter.toTXT(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
-            <button onclick="Exporter.toQR(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> QR</button>
-            <button onclick="Exporter.shareWhatsApp(Utils.loadLocal(CONFIG.STORAGE_KEY, []).find(r=>r.id==='${id}'))" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
-            <button onclick="UI.openReplyModal('${id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 إضافة رد</button>
-            <button onclick="UI.openFollowUpModal('${id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
-            ${record.isArchived ? 
-              `<button onclick="UI.restoreRecord('${id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` :
-              `<button onclick="UI.archiveRecord('${id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`
-            }
-            <button onclick="UI.deleteRecord('${id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
-          </div>
+        <div id="viewContent" class="glass rounded-2xl shadow-xl p-6 md:p-8">
+          <div class="text-center text-gray-500">جاري التحميل...</div>
         </div>
       </div>
     `;
@@ -908,58 +842,35 @@ const Views = {
     return `
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-2xl">
-          <h1 class="text-2xl font-bold text-teal-800 mb-6">⚙️ إعدادات النظام</h1>
+          <h1 class="text-2xl font-bold text-teal-800 mb-6">️ إعدادات النظام</h1>
           
           <div class="space-y-4">
             <div class="bg-gray-50 p-4 rounded-xl">
-              <h3 class="font-bold mb-2">🔗 الاتصال بالخادم</h3>
+              <h3 class="font-bold mb-2">🔗 اتصال Supabase</h3>
               <label class="flex items-center gap-2 mb-3">
-                <input type="checkbox" id="useBackend" ${CONFIG.USE_BACKEND ? 'checked' : ''} class="w-5 h-5">
-                <span>تفعيل الاتصال بالـ Backend</span>
+                <input type="checkbox" id="useSupabase" ${CONFIG.USE_SUPABASE ? 'checked' : ''} class="w-5 h-5">
+                <span>تفعيل Supabase</span>
               </label>
-              <input type="text" id="apiUrl" value="${CONFIG.API_URL}" placeholder="https://api.example.com/api" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <p class="text-xs text-gray-500 mt-2">عند التفعيل، سيتم استخدام الخادم بدلاً من التخزين المحلي</p>
+              <input type="text" id="supabaseUrl" value="${CONFIG.SUPABASE_URL}" placeholder="https://YOUR_PROJECT.supabase.co" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none mb-2">
+              <input type="text" id="supabaseKey" value="${CONFIG.SUPABASE_ANON_KEY}" placeholder="Your Anon Key" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <p class="text-xs text-gray-500 mt-2">احصل على المفاتيح من: Supabase Dashboard > Project Settings > API</p>
             </div>
             
             <div class="bg-blue-50 p-4 rounded-xl">
-              <h3 class="font-bold mb-2 text-blue-800">💾 النسخ الاحتياطي</h3>
-              <div class="flex gap-2 flex-wrap">
-                <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer">📥 تصدير JSON</button>
-                <label class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer">
-                  📤 استيراد JSON
-                  <input type="file" accept=".json" onchange="UI.importBackup(event)" class="hidden">
-                </label>
+              <h3 class="font-bold mb-2 text-blue-800">👤 حساب الأدمن التجريبي</h3>
+              <p class="text-sm text-gray-700 mb-2">عند تفعيل Supabase، أنشئ مستخدم جديد ببيانات:</p>
+              <div class="bg-white p-3 rounded text-sm">
+                <p><strong>البريد:</strong> admin@deir-albalah.ps</p>
+                <p><strong>كلمة المرور:</strong> password</p>
+                <p><strong>الاسم:</strong> المدير العام</p>
+                <p><strong>الدور:</strong> super_admin</p>
               </div>
-            </div>
-            
-            <div class="bg-yellow-50 p-4 rounded-xl">
-              <h3 class="font-bold mb-2 text-yellow-800">👥 إدارة المستخدمين</h3>
-              <button onclick="Router.navigate('users')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer">إدارة المستخدمين</button>
             </div>
             
             <div class="flex gap-2">
               <button onclick="UI.saveSettings()" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ الإعدادات</button>
-              <button onclick="Router.navigate(Auth.getCurrentUser() ? 'dashboard' : 'login')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">رجوع</button>
+              <button onclick="Router.navigate(AuthService.currentUser ? 'dashboard' : 'login')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">رجوع</button>
             </div>
-          </div>
-        </div>
-      </div>
-    `;
-  },
-  
-  migration() {
-    return `
-      ${this.navbar()}
-      <div class="max-w-4xl mx-auto p-4 md:p-6">
-        <div class="glass rounded-2xl shadow-xl p-6">
-          <h1 class="text-2xl font-bold text-teal-800 mb-4">🔄 نقل البيانات إلى الخادم</h1>
-          <div id="migrationStatus" class="bg-gray-50 p-4 rounded-xl mb-4">
-            <p class="text-gray-600">جاهز للنقل...</p>
-          </div>
-          <div class="flex gap-2 flex-wrap">
-            <button onclick="UI.runMigration()" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer">🚀 بدء النقل</button>
-            <button onclick="UI.exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold cursor-pointer">💾 نسخة احتياطية أولاً</button>
-            <button onclick="Router.navigate('settings')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">رجوع</button>
           </div>
         </div>
       </div>
@@ -967,37 +878,20 @@ const Views = {
   },
   
   users() {
-    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
-    
     return `
       ${this.navbar()}
       <div class="max-w-4xl mx-auto p-4 md:p-6">
         <div class="glass rounded-2xl shadow-xl p-6">
-          <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <h1 class="text-2xl font-bold text-teal-800">👥 إدارة المستخدمين</h1>
-            <button onclick="UI.openUserModal()" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">➕ مستخدم جديد</button>
-          </div>
-          
-          <div class="space-y-2">
-            ${users.map(u => `
-              <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center flex-wrap gap-2">
-                <div>
-                  <div class="font-bold text-gray-800">${Utils.escapeHtml(u.fullName)}</div>
-                  <div class="text-sm text-gray-600">@${Utils.escapeHtml(u.username)} • ${ROLES[u.role]}</div>
-                  ${u.sectorId ? `<div class="text-xs text-teal-700">${SECTORS.find(s=>s.id===u.sectorId)?.name || ''}</div>` : ''}
-                </div>
-                <button onclick="UI.deleteUser('${u.id}')" class="text-red-600 hover:text-red-800 text-sm cursor-pointer">🗑️ حذف</button>
-              </div>
-            `).join('')}
-          </div>
+          <h1 class="text-2xl font-bold text-teal-800 mb-4">👥 إدارة المستخدمين</h1>
+          <p class="text-gray-600">يتم إدارة المستخدمين عبر Supabase Dashboard > Authentication</p>
+          <a href="https://supabase.com/dashboard" target="_blank" class="inline-block mt-4 bg-teal-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-teal-700">فتح Supabase Dashboard</a>
         </div>
       </div>
-      ${this.userModal()}
     `;
   },
   
   navbar() {
-    const user = Auth.getCurrentUser();
+    const user = AuthService.currentUser || Utils.loadLocal(CONFIG.USER_KEY, {});
     if (!user) return '';
     
     return `
@@ -1007,7 +901,7 @@ const Views = {
             <span class="text-2xl">🏢</span>
             <div>
               <div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div>
-              <div class="text-xs text-gray-600 hidden md:block">${user.fullName}</div>
+              <div class="text-xs text-gray-600 hidden md:block">${user.full_name || user.fullName}</div>
             </div>
           </div>
           
@@ -1027,7 +921,7 @@ const Views = {
             <button onclick="Router.navigate('archive')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">📦 الأرشيف</button>
             <button onclick="Router.navigate('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">📋 متابعة</button>
             <button onclick="Router.navigate('settings')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">⚙️</button>
-            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
+            <button onclick="AuthService.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
           </div>
         </div>
       </nav>
@@ -1035,26 +929,31 @@ const Views = {
   },
   
   correspondenceCard(r) {
-    const sector = SECTORS.find(s => s.id === r.sectorId);
+    const sector = SECTORS.find(s => s.id === r.sector_id);
     const priorityClass = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
+    const ref = r.reference_number || r.referenceNumber;
+    const subject = r.subject;
+    const content = r.content;
+    const created = r.created_at || r.createdAt;
+    const senderName = r.sender_name || r.senderName || r.profiles?.full_name;
     
     return `
       <div onclick="Router.navigate('view', {id:'${r.id}'})" class="glass rounded-xl shadow-lg p-4 card-hover cursor-pointer ${priorityClass}">
         <div class="flex justify-between items-start gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
-              <span>${r.referenceNumber}</span>
+              <span>${ref}</span>
               <span>•</span>
-              <span>${Utils.formatShortDate(r.createdAt)}</span>
+              <span>${Utils.formatShortDate(created)}</span>
               ${sector ? `<span>•</span><span>${sector.icon} ${sector.name}</span>` : ''}
+              ${senderName ? `<span>•</span><span>👤 ${Utils.escapeHtml(senderName)}</span>` : ''}
             </div>
-            <h3 class="font-bold text-gray-800 truncate">${Utils.escapeHtml(r.subject)}</h3>
-            <p class="text-sm text-gray-600 mt-1 line-clamp-2">${Utils.escapeHtml(r.content?.substring(0, 150) || '')}</p>
+            <h3 class="font-bold text-gray-800 truncate">${Utils.escapeHtml(subject)}</h3>
+            <p class="text-sm text-gray-600 mt-1 line-clamp-2">${Utils.escapeHtml(content?.substring(0, 150) || '')}</p>
             <div class="flex gap-2 mt-2 flex-wrap text-xs">
               ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
-              ${r.replies?.length > 0 ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">💬 ${r.replies.length}</span>` : ''}
-              ${r.followUps?.length > 0 ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded">📋 ${r.followUps.length}</span>` : ''}
-              ${r.isArchived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
+              ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded"> عادية</span>' : ''}
+              ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded"> منخفضة</span>' : ''}
             </div>
           </div>
         </div>
@@ -1113,32 +1012,6 @@ const Views = {
       </div>
     `;
   },
-  
-  userModal() {
-    return `
-      <div id="userModal" class="modal-overlay hidden">
-        <div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-md">
-          <h2 class="text-xl font-bold text-teal-800 mb-4">➕ مستخدم جديد</h2>
-          <form id="userForm" class="space-y-3" onsubmit="return false;">
-            <input type="text" id="uFullName" placeholder="الاسم الكامل" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
-            <input type="text" id="uUsername" placeholder="اسم المستخدم" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
-            <input type="password" id="uPassword" placeholder="كلمة المرور" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
-            <select id="uRole" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
-              ${Object.entries(ROLES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}
-            </select>
-            <select id="uSector" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
-              <option value="">بدون قطاع (للإدارة)</option>
-              ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-            </select>
-            <div class="flex gap-2">
-              <button type="button" id="saveUserBtn" class="btn-primary flex-1 py-2 rounded-xl font-bold cursor-pointer">حفظ</button>
-              <button type="button" onclick="document.getElementById('userModal').classList.add('hidden')" class="bg-gray-300 px-4 py-2 rounded-xl font-bold cursor-pointer">إلغاء</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `;
-  },
 };
 
 // ============================================================
@@ -1153,12 +1026,15 @@ const UI = {
       const btn = document.getElementById('saveCorrespondenceBtn');
       if (btn) {
         btn.onclick = async () => {
+          btn.disabled = true;
+          btn.innerHTML = '<span class="loading-spinner"></span> جاري الحفظ...';
+          
           try {
-            await correspondenceService.create({
-              sectorId: document.getElementById('formSector').value,
+            await DataService.createCorrespondence({
+              sector_id: document.getElementById('formSector').value,
               subject: document.getElementById('formSubject').value,
               content: document.getElementById('formContent').value,
-              sender: document.getElementById('formSender').value,
+              sender_name: document.getElementById('formSender').value || AuthService.currentUser?.full_name,
               priority: document.getElementById('formPriority').value,
             });
             Utils.toast('تم حفظ المراسلة', 'success');
@@ -1166,129 +1042,57 @@ const UI = {
             App.render();
           } catch (err) {
             Utils.toast(err.message, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = '💾 حفظ';
           }
         };
       }
     }, 100);
   },
   
-  openReplyModal(id) {
-    const content = prompt('نص الرد:');
-    if (!content) return;
-    const author = prompt('اسم المرسل (اختياري):') || Auth.getCurrentUser().fullName;
-    correspondenceService.addReply(id, { content, author }).then(() => {
-      Utils.toast('تم إضافة الرد', 'success');
-      App.render();
-    });
-  },
-  
-  openFollowUpModal(id) {
-    const title = prompt('عنوان المهمة:');
-    if (!title) return;
-    const dueDate = prompt('تاريخ الاستحقاق (YYYY-MM-DD):') || null;
-    const notes = prompt('ملاحظات:') || '';
-    correspondenceService.addFollowUp(id, { title, dueDate, notes, status: 'pending' }).then(() => {
-      Utils.toast('تمت إضافة المتابعة', 'success');
-      App.render();
-    });
-  },
-  
-  async archiveRecord(id) {
-    if (!confirm('تأكيد الأرشفة؟')) return;
-    await correspondenceService.archive(id);
-    Utils.toast('تمت الأرشفة', 'success');
-    App.render();
-  },
-  
-  async restoreRecord(id) {
-    await correspondenceService.restore(id);
-    Utils.toast('تمت الاستعادة', 'success');
-    App.render();
-  },
-  
-  async deleteRecord(id) {
-    if (!confirm('️ حذف نهائي؟ لا يمكن التراجع.')) return;
-    await correspondenceService.delete(id);
-    Utils.toast('تم الحذف', 'success');
-    history.back();
-  },
-  
   saveSettings() {
-    const useBackend = document.getElementById('useBackend').checked;
-    const apiUrl = document.getElementById('apiUrl').value.trim();
-    localStorage.setItem('USE_BACKEND', useBackend);
-    localStorage.setItem('API_URL', apiUrl);
-    CONFIG.USE_BACKEND = useBackend;
-    CONFIG.API_URL = apiUrl;
+    const useSupabase = document.getElementById('useSupabase').checked;
+    const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+    const supabaseKey = document.getElementById('supabaseKey').value.trim();
+    
+    localStorage.setItem('USE_SUPABASE', useSupabase);
+    localStorage.setItem('SUPABASE_URL', supabaseUrl);
+    localStorage.setItem('SUPABASE_ANON_KEY', supabaseKey);
+    
+    CONFIG.USE_SUPABASE = useSupabase;
+    CONFIG.SUPABASE_URL = supabaseUrl;
+    CONFIG.SUPABASE_ANON_KEY = supabaseKey;
+    
     Utils.toast('تم حفظ الإعدادات - سيتم إعادة التحميل', 'success');
     setTimeout(() => location.reload(), 1000);
   },
-  
-  exportBackup() {
-    const data = {
-      version: CONFIG.VERSION,
-      exportedAt: Utils.now(),
-      correspondence: Utils.loadLocal(CONFIG.STORAGE_KEY, []),
-      users: Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `backup_${Date.now()}.json`; a.click();
-    URL.revokeObjectURL(url);
-    Utils.toast('تم تصدير النسخة الاحتياطية', 'success');
-  },
-  
-  importBackup(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = JSON.parse(e.target.result);
-        if (data.correspondence) Utils.saveLocal(CONFIG.STORAGE_KEY, data.correspondence);
-        if (data.users) Utils.saveLocal(CONFIG.USERS_KEY, data.users);
-        Utils.toast('تم الاستيراد بنجاح', 'success');
-        App.render();
-      } catch (err) {
-        Utils.toast('ملف غير صالح', 'error');
-      }
-    };
-    reader.readAsText(file);
-  },
-  
-  openUserModal() {
-    const modal = document.getElementById('userModal');
-    if (modal) modal.classList.remove('hidden');
-    
-    setTimeout(() => {
-      const btn = document.getElementById('saveUserBtn');
-      if (btn) {
-        btn.onclick = () => {
-          const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS);
-          users.push({
-            id: Utils.uuid(),
-            fullName: document.getElementById('uFullName').value,
-            username: document.getElementById('uUsername').value,
-            password: document.getElementById('uPassword').value,
-            role: document.getElementById('uRole').value,
-            sectorId: document.getElementById('uSector').value || null,
-          });
-          Utils.saveLocal(CONFIG.USERS_KEY, users);
-          Utils.toast('تمت الإضافة', 'success');
-          document.getElementById('userModal').classList.add('hidden');
-          App.render();
-        };
-      }
-    }, 100);
-  },
-  
-  deleteUser(id) {
-    if (!confirm('حذف المستخدم؟')) return;
-    const users = Utils.loadLocal(CONFIG.USERS_KEY, DEFAULT_USERS).filter(u => u.id !== id);
-    Utils.saveLocal(CONFIG.USERS_KEY, users);
-    Utils.toast('تم الحذف', 'success');
-    App.render();
+};
+
+// ============================================================
+// EXPORT
+// ============================================================
+const Exporter = {
+  async toExcel() {
+    try {
+      const records = await DataService.getCorrespondence({ is_archived: false });
+      const data = records.map(r => ({
+        'الرقم المرجعي': r.reference_number,
+        'التاريخ': Utils.formatShortDate(r.created_at),
+        'القطاع': SECTORS.find(s => s.id === r.sector_id)?.name || '',
+        'الموضوع': r.subject,
+        'المحتوى': r.content,
+        'الأولوية': r.priority,
+        'المرسل': r.sender_name || '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'المراسلات');
+      XLSX.writeFile(wb, `correspondence_${Date.now()}.xlsx`);
+      Utils.toast('تم التصدير', 'success');
+    } catch (err) {
+      Utils.toast(err.message, 'error');
+    }
   },
 };
 
@@ -1301,6 +1105,7 @@ App.render();
 console.log(`%c${CONFIG.APP_NAME} v${CONFIG.VERSION}`, 'color:#0f766e;font-size:20px;font-weight:bold');
 console.log(`%c© 2026 ${CONFIG.ORG}`, 'color:#666');
 console.log(`%cDeveloper: ${CONFIG.DEV}`, 'color:#666');
+console.log(`%cSupabase: ${CONFIG.USE_SUPABASE ? 'Enabled' : 'Disabled (Demo Mode)'}`, 'color:#0f766e');
 </script>
 
 </body>
