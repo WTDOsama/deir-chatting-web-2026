@@ -3,1079 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0f766e">
 <title>مراسلات إدارة إيواءات دير البلح</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
   * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
   body { background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); min-height: 100vh; margin: 0; }
   .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
-  .card-hover { transition: all 0.3s ease; }
-  .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
-  .priority-high { border-right: 4px solid #dc2626; }
-  .priority-normal { border-right: 4px solid #2563eb; }
-  .priority-low { border-right: 4px solid #16a34a; }
-  .fade-in { animation: fadeIn 0.4s ease-in; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  .sync-online { background: #16a34a; }
-  .sync-offline { background: #dc2626; }
-  .sync-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 6px; }
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-  .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; transition: all 0.2s; cursor: pointer; border: none; }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,118,110,0.4); }
-  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  .sector-east { background: linear-gradient(135deg, #f59e0b, #d97706); }
-  .sector-west { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-  .sector-north { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-  .sector-south { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-  .sector-general { background: linear-gradient(135deg, #0f766e, #134e4a); }
-  input, textarea, select, button { font-family: 'Cairo', sans-serif; }
+  .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; cursor: pointer; border: none; }
+  .btn-primary:hover { opacity: 0.9; }
   .hidden { display: none !important; }
-  .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #0f766e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <div id="app"></div>
 
 <script>
-// ============================================================
-// CONFIGURATION
-// ============================================================
 const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
-  ORG: 'إدارة إيواءات دير البلح',
-  DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '3.1.0',
-  SUPABASE_URL: localStorage.getItem('SB_URL') || '',
-  SUPABASE_KEY: localStorage.getItem('SB_KEY') || '',
-  USE_SUPABASE: localStorage.getItem('USE_SB') === 'true',
-  STORAGE_KEY: 'db_correspondence',
-  USER_KEY: 'db_user',
+  VERSION: '3.2.0',
+  SB_URL: localStorage.getItem('SB_URL') || '',
+  SB_KEY: localStorage.getItem('SB_KEY') || '',
+  USE_SB: localStorage.getItem('USE_SB') === 'true',
 };
 
-const SECTORS = [
-  { id: 'east', name: 'القاطع الشرقي', code: 'EAST', cls: 'sector-east', icon: '🌅' },
-  { id: 'west', name: 'القاطع الغربي', code: 'WEST', cls: 'sector-west', icon: '🌊' },
-  { id: 'north', name: 'القاطع الشمالي', code: 'NORTH', cls: 'sector-north', icon: '🏔️' },
-  { id: 'south', name: 'القاطع الجنوبي', code: 'SOUTH', cls: 'sector-south', icon: '☀️' },
-];
-
-const ROLES = {
-  super_admin: 'مدير عام للنظام',
-  general_admin: 'مدير عام',
-  sector_admin: 'مدير قاطع',
-  sector_staff: 'موظف قاطع',
-};
-
-// ============================================================
-// SUPABASE CLIENT
-// ============================================================
-let supabase = null;
-try {
-  if (CONFIG.USE_SUPABASE && CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY && CONFIG.SUPABASE_URL.includes('supabase')) {
-    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+let sb = null;
+if (CONFIG.USE_SB && CONFIG.SB_URL && CONFIG.SB_KEY) {
+  try {
+    sb = window.supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
     console.log('✓ Supabase connected');
-  } else {
-    console.log('ℹ Demo mode (local storage)');
+  } catch (e) {
+    console.error('Supabase error:', e);
   }
-} catch (e) {
-  console.error('Supabase init error:', e);
 }
 
-// ============================================================
-// UTILS
-// ============================================================
-const U = {
-  uuid: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  }),
-  now: () => new Date().toISOString(),
-  fmtDate: (iso) => {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  },
-  fmtShort: (iso) => {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' });
-  },
-  genRef: (code) => `DB-${code}-${new Date().getFullYear()}-${Math.floor(Math.random()*9000)+1000}`,
-  esc: (s) => s ? String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : '',
-  save: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
-  load: (k, d = null) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
-  toast: (msg, type = 'info') => {
-    const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600', warning: 'bg-yellow-600' };
-    const el = document.createElement('div');
-    el.className = `fixed top-4 left-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-2xl z-[200] fade-in`;
-    el.textContent = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 3500);
-  },
-};
-
-// ============================================================
-// AUTH
-// ============================================================
 const Auth = {
   user: null,
-  async load() {
-    if (!supabase) {
-      this.user = U.load(CONFIG.USER_KEY, null);
-      return this.user;
-    }
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { this.user = null; return null; }
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      this.user = profile;
-      return profile;
-    } catch (e) {
-      console.error('Auth load error:', e);
-      this.user = null;
-      return null;
-    }
-  },
   async login(email, password) {
-    if (!supabase) {
-      // Demo mode
+    if (!sb) {
       if (email === 'admin@deir-albalah.ps' && password === 'password') {
-        this.user = { id: 'demo', username: 'admin', full_name: 'المدير العام', role: 'super_admin', sector_id: null };
-        U.save(CONFIG.USER_KEY, this.user);
+        this.user = { id: 'demo', full_name: 'المدير العام', role: 'super_admin' };
         return this.user;
       }
-      throw new Error('بيانات الدخول غير صحيحة');
+      throw new Error('بيانات غير صحيحة');
     }
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
     this.user = profile;
     return profile;
   },
   async logout() {
-    if (supabase) await supabase.auth.signOut();
+    if (sb) await sb.auth.signOut();
     this.user = null;
-    localStorage.removeItem(CONFIG.USER_KEY);
-    Router.go('login');
+    render();
   },
 };
 
-// ============================================================
-// DATA SERVICE
-// ============================================================
-const DB = {
-  async list(filters = {}) {
-    if (!supabase) {
-      let data = U.load(CONFIG.STORAGE_KEY, []);
-      if (filters.sector_id) data = data.filter(d => d.sector_id === filters.sector_id);
-      if (filters.is_archived !== undefined) data = data.filter(d => !!d.is_archived === filters.is_archived);
-      if (filters.search) {
-        const s = filters.search.toLowerCase();
-        data = data.filter(d => (d.subject + ' ' + d.content + ' ' + d.reference_number).toLowerCase().includes(s));
-      }
-      if (filters.priority) data = data.filter(d => d.priority === filters.priority);
-      return data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-    }
-    let q = supabase.from('correspondence').select('*').order('created_at', { ascending: false });
-    if (filters.sector_id) q = q.eq('sector_id', filters.sector_id);
-    if (filters.is_archived !== undefined) q = q.eq('is_archived', filters.is_archived);
-    const { data, error } = await q;
-    if (error) throw new Error(error.message);
-    return data;
-  },
-  async create(rec) {
-    if (!supabase) {
-      const data = U.load(CONFIG.STORAGE_KEY, []);
-      const newRec = {
-        id: U.uuid(),
-        reference_number: rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX'),
-        subject: rec.subject,
-        content: rec.content,
-        sender_name: rec.sender_name || Auth.user?.full_name,
-        sector_id: rec.sector_id,
-        priority: rec.priority || 'normal',
-        is_archived: false,
-        created_at: U.now(),
-      };
-      data.push(newRec);
-      U.save(CONFIG.STORAGE_KEY, data);
-      return newRec;
-    }
-    const { data, error } = await supabase.from('correspondence').insert([{
-      reference_number: rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX'),
-      subject: rec.subject,
-      content: rec.content,
-      sender_name: rec.sender_name || Auth.user?.full_name,
-      sector_id: rec.sector_id,
-      priority: rec.priority || 'normal',
-    }]).select().single();
-    if (error) throw new Error(error.message);
-    return data;
-  },
-  async update(id, updates) {
-    if (!supabase) {
-      const data = U.load(CONFIG.STORAGE_KEY, []);
-      const idx = data.findIndex(d => d.id === id);
-      if (idx === -1) throw new Error('غير موجود');
-      data[idx] = { ...data[idx], ...updates, updated_at: U.now() };
-      U.save(CONFIG.STORAGE_KEY, data);
-      return data[idx];
-    }
-    const { data, error } = await supabase.from('correspondence').update(updates).eq('id', id).select().single();
-    if (error) throw new Error(error.message);
-    return data;
-  },
-  async archive(id) { return this.update(id, { is_archived: true }); },
-  async restore(id) { return this.update(id, { is_archived: false }); },
-  async remove(id) {
-    if (!supabase) {
-      U.save(CONFIG.STORAGE_KEY, U.load(CONFIG.STORAGE_KEY, []).filter(d => d.id !== id));
-      return;
-    }
-    const { error } = await supabase.from('correspondence').delete().eq('id', id);
-    if (error) throw new Error(error.message);
-  },
-  async addReply(corId, content) {
-    if (!supabase) {
-      const data = U.load(CONFIG.STORAGE_KEY, []);
-      const rec = data.find(d => d.id === corId);
-      if (!rec) throw new Error('غير موجود');
-      rec.replies = rec.replies || [];
-      rec.replies.push({ id: U.uuid(), content, author: Auth.user?.full_name, created_at: U.now() });
-      U.save(CONFIG.STORAGE_KEY, data);
-      return rec;
-    }
-    const { data, error } = await supabase.from('replies').insert([{
-      correspondence_id: corId, user_id: Auth.user?.id, author_name: Auth.user?.full_name, content
-    }]).select().single();
-    if (error) throw new Error(error.message);
-    return data;
-  },
-  async addFollowUp(corId, fu) {
-    if (!supabase) {
-      const data = U.load(CONFIG.STORAGE_KEY, []);
-      const rec = data.find(d => d.id === corId);
-      if (!rec) throw new Error('غير موجود');
-      rec.follow_ups = rec.follow_ups || [];
-      rec.follow_ups.push({ id: U.uuid(), ...fu, created_at: U.now() });
-      U.save(CONFIG.STORAGE_KEY, data);
-      return rec;
-    }
-    const { data, error } = await supabase.from('follow_ups').insert([{
-      correspondence_id: corId, user_id: Auth.user?.id, ...fu
-    }]).select().single();
-    if (error) throw new Error(error.message);
-    return data;
-  },
-  async getReplies(corId) {
-    if (!supabase) return [];
-    const { data } = await supabase.from('replies').select('*').eq('correspondence_id', corId).order('created_at');
-    return data || [];
-  },
-  async getFollowUps(corId) {
-    if (!supabase) return [];
-    const { data } = await supabase.from('follow_ups').select('*').eq('correspondence_id', corId);
-    return data || [];
-  },
-};
-
-// ============================================================
-// ROUTER
-// ============================================================
-const Router = {
-  route: 'login',
-  params: {},
-  go(route, params = {}) {
-    this.route = route;
-    this.params = params;
-    window.location.hash = route + (params.id ? '/' + params.id : '');
-    App.render();
-  },
-  init() {
-    const onHash = () => {
-      const h = window.location.hash.slice(1) || 'login';
-      const [r, id] = h.split('/');
-      this.route = r;
-      this.params = id ? { id } : {};
-      App.render();
-    };
-    window.addEventListener('hashchange', onHash);
-    onHash();
-  },
-};
-
-// ============================================================
-// APP
-// ============================================================
-const App = {
-  async render() {
-    const app = document.getElementById('app');
-    const user = await Auth.load();
-    
-    if (!user && !['login', 'settings'].includes(Router.route)) {
-      Router.route = 'login';
-    }
-    
-    const views = {
-      login: V.login,
-      dashboard: V.dashboard,
-      sector: V.sector,
-      general: V.general,
-      archive: V.archive,
-      followups: V.followups,
-      view: V.view,
-      settings: V.settings,
-      users: V.users,
-    };
-    
-    const fn = views[Router.route] || V.dashboard;
-    app.innerHTML = fn();
-    app.classList.add('fade-in');
-    
-    setTimeout(() => {
-      if (Router.route === 'login') V.bindLogin();
-      if (Router.route === 'sector') V.bindSector();
-      if (Router.route === 'general') V.bindGeneral();
-    }, 100);
-  },
-};
-
-// ============================================================
-// VIEWS
-// ============================================================
-const V = {
-  login() {
-    return `
+function render() {
+  const app = document.getElementById('app');
+  if (!Auth.user) {
+    app.innerHTML = `
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md">
           <div class="text-center mb-6">
             <div class="text-6xl mb-3">🏢</div>
             <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
             <p class="text-gray-600 text-sm mt-2">نظام المراسلات الإدارية</p>
-            <div class="mt-3 text-xs">
-              ${CONFIG.USE_SUPABASE && supabase ? '<span class="text-green-600 font-bold">🔗 متصل بـ Supabase</span>' : '<span class="text-orange-600 font-bold">💾 وضع تجريبي</span>'}
-            </div>
           </div>
-          
-          <div id="loginErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
-          
-          <form id="loginForm" class="space-y-4" onsubmit="return false;">
-            <div>
-              <label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label>
-              <input type="email" id="lgEmail" required autocomplete="email" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin@deir-albalah.ps">
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label>
-              <input type="password" id="lgPass" required autocomplete="current-password" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
-            </div>
-            <button type="button" id="lgBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">
-              🔐 تسجيل الدخول
-            </button>
+          <div id="err" class="hidden bg-red-100 text-red-700 p-3 rounded mb-4 text-sm"></div>
+          <form class="space-y-4" onsubmit="return false;">
+            <input type="email" id="em" placeholder="البريد الإلكتروني" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl">
+            <input type="password" id="pw" placeholder="كلمة المرور" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl">
+            <button type="button" id="btn" class="btn-primary w-full py-3 rounded-xl font-bold">🔐 تسجيل الدخول</button>
           </form>
-          
-          ${!CONFIG.USE_SUPABASE ? `
-            <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-800">
-              <p class="font-bold mb-1">بيانات تجريبية:</p>
-              <p>البريد: <strong>admin@deir-albalah.ps</strong></p>
-              <p>كلمة المرور: <strong>password</strong></p>
-            </div>
-          ` : ''}
-          
-          <div class="mt-6 pt-6 border-t border-gray-200">
-            <button onclick="Router.go('settings')" class="text-sm text-teal-700 hover:underline w-full text-center cursor-pointer">
-              ⚙️ إعدادات الاتصال
-            </button>
+          <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-800">
+            <p>تجريبي: <strong>admin@deir-albalah.ps</strong> / <strong>password</strong></p>
           </div>
-          
-          <div class="mt-4 text-xs text-gray-500 text-center">
-            <p>الإصدار ${CONFIG.VERSION}</p>
-            <p class="mt-1">© 2026 ${CONFIG.ORG}</p>
-          </div>
+          <button onclick="showSettings()" class="mt-4 text-sm text-teal-700 hover:underline w-full">⚙️ إعدادات الاتصال</button>
         </div>
       </div>
     `;
-  },
-  
-  bindLogin() {
-    const btn = document.getElementById('lgBtn');
-    const err = document.getElementById('loginErr');
-    if (!btn) return;
-    
-    const doLogin = async () => {
-      const email = document.getElementById('lgEmail').value.trim();
-      const pass = document.getElementById('lgPass').value;
-      if (!email || !pass) { U.toast('أدخل البريد وكلمة المرور', 'warning'); return; }
-      
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> جاري الدخول...';
-      err.classList.add('hidden');
-      
-      try {
-        const user = await Auth.login(email, pass);
-        U.toast(`مرحباً ${user.full_name}`, 'success');
-        setTimeout(() => Router.go('dashboard'), 400);
-      } catch (e) {
-        err.textContent = e.message;
-        err.classList.remove('hidden');
-        U.toast(e.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '🔐 تسجيل الدخول';
-      }
-    };
-    
-    btn.addEventListener('click', doLogin);
-    document.getElementById('loginForm').addEventListener('keypress', e => {
-      if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
-    });
-  },
-  
-  dashboard() {
-    const u = Auth.user || {};
-    return `
-      ${this.nav()}
-      <div class="max-w-7xl mx-auto p-4 md:p-6">
+    document.getElementById('btn').onclick = doLogin;
+  } else {
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto p-6">
         <div class="glass rounded-2xl shadow-xl p-6 mb-6">
-          <h1 class="text-3xl font-bold text-teal-800 mb-2">👋 أهلاً ${U.esc(u.full_name || 'مستخدم')}</h1>
-          <p class="text-gray-600">${ROLES[u.role] || ''} ${u.sector_id ? '– ' + (SECTORS.find(s=>s.id===u.sector_id)?.name || '') : ''}</p>
-          <div class="flex items-center mt-3 text-sm">
-            <span class="sync-dot ${navigator.onLine ? 'sync-online' : 'sync-offline'}"></span>
-            <span class="text-gray-600">${navigator.onLine ? 'متصل' : 'غير متصل'}</span>
-            ${supabase ? '<span class="mr-4 text-teal-700 font-semibold">🔗 Supabase</span>' : '<span class="mr-4 text-orange-700 font-semibold">💾 محلي</span>'}
-          </div>
+          <h1 class="text-3xl font-bold text-teal-800">👋 أهلاً ${Auth.user.full_name}</h1>
+          <p class="text-gray-600">${Auth.user.role}</p>
         </div>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          ${SECTORS.map(s => `
-            <button onclick="Router.go('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right cursor-pointer">
-              <div class="${s.cls} text-white rounded-xl p-3 inline-block text-3xl mb-2">${s.icon}</div>
-              <h3 class="font-bold text-gray-800">${s.name}</h3>
-            </button>
-          `).join('')}
-        </div>
-        
-        <div class="grid md:grid-cols-3 gap-4 mb-6">
-          <button onclick="Router.go('general')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right sector-general text-white cursor-pointer">
-            <div class="text-4xl mb-2">🏛️</div>
-            <h3 class="font-bold text-xl">الإدارة العامة</h3>
-          </button>
-          <button onclick="Router.go('archive')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-gray-700 to-gray-900 text-white cursor-pointer">
-            <div class="text-4xl mb-2">📦</div>
-            <h3 class="font-bold text-xl">الأرشيف</h3>
-          </button>
-          <button onclick="Router.go('followups')" class="glass rounded-2xl shadow-lg p-5 card-hover text-right bg-gradient-to-br from-purple-600 to-pink-600 text-white cursor-pointer">
-            <div class="text-4xl mb-2">📋</div>
-            <h3 class="font-bold text-xl">المتابعة</h3>
-          </button>
-        </div>
-        
-        <div class="text-center text-xs text-white/70 mt-8 pb-4">
-          <p>© 2026 ${CONFIG.ORG} – جميع الحقوق محفوظة</p>
-          <p class="mt-1">تطوير: ${CONFIG.DEV}</p>
-        </div>
+        <button onclick="Auth.logout()" class="bg-red-600 text-white px-6 py-3 rounded-xl font-bold">🚪 خروج</button>
       </div>
     `;
-  },
-  
-  sector() {
-    const sid = Router.params.id;
-    const s = SECTORS.find(x => x.id === sid);
-    if (!s) return '<div class="p-8 text-white text-center">القطاع غير موجود</div>';
-    return `
-      ${this.nav()}
-      <div class="max-w-7xl mx-auto p-4 md:p-6">
-        <div class="${s.cls} text-white rounded-2xl shadow-xl p-6 mb-6">
-          <div class="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <div class="text-5xl mb-2">${s.icon}</div>
-              <h1 class="text-3xl font-bold">${s.name}</h1>
-            </div>
-            <button onclick="UI.openCreate('${sid}')" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer">
-              ➕ مراسلة جديدة
-            </button>
-          </div>
-        </div>
-        <div class="glass rounded-2xl shadow-xl p-4 mb-4">
-          <div class="grid md:grid-cols-3 gap-3">
-            <input type="text" id="sSearch" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-            <select id="sPri" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <option value="">كل الأولويات</option>
-              <option value="high">عالية</option>
-              <option value="normal">عادية</option>
-              <option value="low">منخفضة</option>
-            </select>
-            <select id="sSort" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <option value="date">الأحدث</option>
-              <option value="priority">الأولوية</option>
-            </select>
-          </div>
-        </div>
-        <div id="sList" class="space-y-3"><div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div></div>
-      </div>
-      ${this.createModal(sid)}
-    `;
-  },
-  
-  async bindSector() {
-    const sid = Router.params.id;
-    const load = async () => {
-      const el = document.getElementById('sList');
-      if (!el) return;
-      try {
-        const search = document.getElementById('sSearch')?.value.toLowerCase() || '';
-        const pri = document.getElementById('sPri')?.value || '';
-        const sort = document.getElementById('sSort')?.value || 'date';
-        let data = await DB.list({ sector_id: sid, is_archived: false, search, priority: pri });
-        if (sort === 'priority') {
-          const o = { high: 0, normal: 1, low: 2 };
-          data.sort((a,b) => o[a.priority] - o[b.priority]);
-        } else {
-          data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-        }
-        el.innerHTML = data.length === 0 
-          ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات</div>'
-          : data.map(r => this.card(r)).join('');
-      } catch (e) {
-        el.innerHTML = `<div class="glass rounded-2xl p-12 text-center text-red-500">خطأ: ${e.message}</div>`;
-      }
-    };
-    await load();
-    const s = document.getElementById('sSearch'), p = document.getElementById('sPri'), so = document.getElementById('sSort');
-    if (s) s.oninput = load;
-    if (p) p.onchange = load;
-    if (so) so.onchange = load;
-  },
-  
-  general() {
-    return `
-      ${this.nav()}
-      <div class="max-w-7xl mx-auto p-4 md:p-6">
-        <div class="sector-general text-white rounded-2xl shadow-xl p-6 mb-6">
-          <h1 class="text-3xl font-bold">🏛️ الإدارة العامة</h1>
-          <p class="opacity-90 mt-1">عرض جميع المراسلات</p>
-        </div>
-        <div class="glass rounded-2xl shadow-xl p-4 mb-4">
-          <div class="grid md:grid-cols-4 gap-3">
-            <input type="text" id="gSearch" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-            <select id="gSec" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <option value="">كل القواطع</option>
-              ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-            </select>
-            <select id="gPri" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <option value="">كل الأولويات</option>
-              <option value="high">عالية</option>
-              <option value="normal">عادية</option>
-              <option value="low">منخفضة</option>
-            </select>
-            <button onclick="Exporter.excel()" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">📊 Excel</button>
-          </div>
-        </div>
-        <div id="gList" class="space-y-3"><div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div></div>
-      </div>
-    `;
-  },
-  
-  async bindGeneral() {
-    const load = async () => {
-      const el = document.getElementById('gList');
-      if (!el) return;
-      try {
-        const search = document.getElementById('gSearch')?.value.toLowerCase() || '';
-        const sec = document.getElementById('gSec')?.value || '';
-        const pri = document.getElementById('gPri')?.value || '';
-        let data = await DB.list({ is_archived: false, search, priority: pri });
-        if (sec) data = data.filter(r => r.sector_id === sec);
-        data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-        el.innerHTML = data.length === 0
-          ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد نتائج</div>'
-          : data.map(r => this.card(r)).join('');
-      } catch (e) {
-        el.innerHTML = `<div class="glass rounded-2xl p-12 text-center text-red-500">خطأ: ${e.message}</div>`;
-      }
-    };
-    await load();
-    const s = document.getElementById('gSearch'), sf = document.getElementById('gSec'), p = document.getElementById('gPri');
-    if (s) s.oninput = load;
-    if (sf) sf.onchange = load;
-    if (p) p.onchange = load;
-  },
-  
-  archive() {
-    return `
-      ${this.nav()}
-      <div class="max-w-7xl mx-auto p-4 md:p-6">
-        <div class="bg-gradient-to-br from-gray-700 to-gray-900 text-white rounded-2xl shadow-xl p-6 mb-6">
-          <h1 class="text-3xl font-bold">📦 الأرشيف</h1>
-        </div>
-        <div id="aList" class="space-y-3"><div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div></div>
-      </div>
-    `;
-  },
-  
-  async bindArchive() {
-    const el = document.getElementById('aList');
-    if (!el) return;
-    try {
-      const data = await DB.list({ is_archived: true });
-      el.innerHTML = data.length === 0
-        ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">الأرشيف فارغ</div>'
-        : data.map(r => this.card(r)).join('');
-    } catch (e) {
-      el.innerHTML = `<div class="glass rounded-2xl p-12 text-center text-red-500">خطأ: ${e.message}</div>`;
-    }
-  },
-  
-  followups() {
-    return `
-      ${this.nav()}
-      <div class="max-w-7xl mx-auto p-4 md:p-6">
-        <div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6">
-          <h1 class="text-3xl font-bold">📋 المتابعة</h1>
-        </div>
-        <div id="fList" class="space-y-3"><div class="glass rounded-2xl p-12 text-center text-gray-500">جاري التحميل...</div></div>
-      </div>
-    `;
-  },
-  
-  async bindFollowups() {
-    const el = document.getElementById('fList');
-    if (!el) return;
-    try {
-      const all = await DB.list({});
-      const withFu = all.filter(r => r.follow_ups && r.follow_ups.length > 0);
-      el.innerHTML = withFu.length === 0
-        ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مهام متابعة</div>'
-        : withFu.map(r => `
-          <div class="glass rounded-2xl shadow-lg p-5 card-hover">
-            <div class="flex justify-between items-start mb-3">
-              <div>
-                <div class="text-xs text-gray-500">${r.reference_number}</div>
-                <h3 class="font-bold text-lg text-gray-800">${U.esc(r.subject)}</h3>
-              </div>
-              <button onclick="Router.go('view', {id:'${r.id}'})" class="text-teal-600 text-sm font-semibold cursor-pointer">عرض ←</button>
-            </div>
-            <div class="space-y-2">
-              ${r.follow_ups.map(f => `
-                <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
-                  <div class="flex justify-between items-center">
-                    <span class="font-semibold text-gray-800">${U.esc(f.title || 'مهمة')}</span>
-                    <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">
-                      ${f.status === 'done' ? '✓ منجزة' : '⏳ قيد التنفيذ'}
-                    </span>
-                  </div>
-                  ${f.due_date ? `<div class="text-xs text-gray-600 mt-1">📅 ${U.fmtShort(f.due_date)}</div>` : ''}
-                  ${f.notes ? `<div class="text-sm text-gray-700 mt-1">${U.esc(f.notes)}</div>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `).join('');
-    } catch (e) {
-      el.innerHTML = `<div class="glass rounded-2xl p-12 text-center text-red-500">خطأ: ${e.message}</div>`;
-    }
-  },
-  
-  view() {
-    const id = Router.params.id;
-    return `
-      ${this.nav()}
-      <div class="max-w-4xl mx-auto p-4 md:p-6">
-        <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
-        <div id="viewContent" class="glass rounded-2xl shadow-xl p-6 md:p-8">
-          <div class="text-center text-gray-500">جاري التحميل...</div>
-        </div>
-      </div>
-    `;
-  },
-  
-  async bindView() {
-    const id = Router.params.id;
-    const el = document.getElementById('viewContent');
-    if (!el) return;
-    try {
-      const all = await DB.list({});
-      const r = all.find(x => x.id === id);
-      if (!r) { el.innerHTML = '<div class="text-center text-red-500">السجل غير موجود</div>'; return; }
-      const sector = SECTORS.find(s => s.id === r.sector_id);
-      const replies = await DB.getReplies(id);
-      const followUps = await DB.getFollowUps(id);
-      
-      el.innerHTML = `
-        <div class="border-b-2 border-teal-600 pb-4 mb-6">
-          <div class="text-center">
-            <h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1>
-            <p class="text-gray-600 mt-1">نظام المراسلات الإدارية</p>
-          </div>
-        </div>
-        <div class="grid md:grid-cols-2 gap-4 mb-6">
-          <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number}</div></div>
-          <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at)}</div></div>
-          <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${sector?.name || '-'}</div></div>
-          <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? ' عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
-          ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
-        </div>
-        <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject)}</h2></div>
-        <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content)}</div></div>
-        ${replies.length > 0 ? `
-          <div class="mb-6">
-            <h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${replies.length})</h3>
-            <div class="space-y-3">
-              ${replies.map(rp => `
-                <div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded">
-                  <div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author_name || 'مستخدم')}</div>
-                  <div class="whitespace-pre-wrap">${U.esc(rp.content)}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-        ${followUps.length > 0 ? `
-          <div class="mb-6">
-            <h3 class="font-bold text-lg text-gray-800 mb-3"> المتابعة</h3>
-            <div class="space-y-2">
-              ${followUps.map(f => `
-                <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
-                  <div class="font-semibold">${U.esc(f.title || 'مهمة')}</div>
-                  ${f.due_date ? `<div class="text-xs text-gray-600">📅 ${U.fmtShort(f.due_date)}</div>` : ''}
-                  ${f.notes ? `<div class="text-sm text-gray-700">${U.esc(f.notes)}</div>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-        <div class="text-center text-xs text-gray-400 mt-8 pt-4 border-t"><p>© 2026 ${CONFIG.ORG}</p></div>
-      `;
-      
-      // Actions bar
-      const actions = document.createElement('div');
-      actions.className = 'glass rounded-2xl shadow-xl p-4 mt-4 no-print';
-      actions.innerHTML = `
-        <h3 class="font-bold mb-3">⚡ إجراءات</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <button onclick="Exporter.txt('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
-          <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🔳 QR</button>
-          <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> WhatsApp</button>
-          <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 رد</button>
-          <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
-          ${r.is_archived 
-            ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>`
-            : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`
-          }
-          <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
-        </div>
-      `;
-      el.parentNode.insertBefore(actions, el.nextSibling);
-    } catch (e) {
-      el.innerHTML = `<div class="text-center text-red-500">خطأ: ${e.message}</div>`;
-    }
-  },
-  
-  settings() {
-    return `
-      <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-2xl">
-          <h1 class="text-2xl font-bold text-teal-800 mb-6">⚙️ إعدادات النظام</h1>
-          <div class="space-y-4">
-            <div class="bg-gray-50 p-4 rounded-xl">
-              <h3 class="font-bold mb-2">🔗 اتصال Supabase</h3>
-              <label class="flex items-center gap-2 mb-3">
-                <input type="checkbox" id="sbOn" ${CONFIG.USE_SUPABASE ? 'checked' : ''} class="w-5 h-5">
-                <span>تفعيل Supabase</span>
-              </label>
-              <input type="text" id="sbUrl" value="${CONFIG.SUPABASE_URL}" placeholder="https://xxxxx.supabase.co" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none mb-2">
-              <input type="text" id="sbKey" value="${CONFIG.SUPABASE_KEY}" placeholder="Anon Key (eyJhbGci...)" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <p class="text-xs text-gray-500 mt-2">من: Supabase Dashboard → Settings → API</p>
-            </div>
-            <div class="bg-blue-50 p-4 rounded-xl">
-              <h3 class="font-bold mb-2 text-blue-800">👤 حساب الأدمن</h3>
-              <div class="bg-white p-3 rounded text-sm">
-                <p><strong>البريد:</strong> admin@deir-albalah.ps</p>
-                <p><strong>كلمة المرور:</strong> password</p>
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <button onclick="UI.saveSettings()" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ</button>
-              <button onclick="Router.go(Auth.user ? 'dashboard' : 'login')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">رجوع</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  },
-  
-  users() {
-    return `
-      ${this.nav()}
-      <div class="max-w-4xl mx-auto p-4 md:p-6">
-        <div class="glass rounded-2xl shadow-xl p-6">
-          <h1 class="text-2xl font-bold text-teal-800 mb-4">👥 إدارة المستخدمين</h1>
-          <p class="text-gray-600 mb-4">يتم إدارة المستخدمين من Supabase Dashboard</p>
-          <a href="https://supabase.com/dashboard" target="_blank" class="inline-block bg-teal-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-teal-700">فتح Supabase Dashboard</a>
-        </div>
-      </div>
-    `;
-  },
-  
-  nav() {
-    const u = Auth.user || {};
-    if (!u.id) return '';
-    return `
-      <nav class="glass shadow-lg sticky top-0 z-50 no-print">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">🏢</span>
-            <div>
-              <div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div>
-              <div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)}</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-1 md:gap-2 flex-wrap">
-            <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏠 الرئيسية</button>
-            <div class="relative group">
-              <button class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏢 القواطع ▾</button>
-              <div class="absolute left-0 mt-1 bg-white rounded-xl shadow-2xl py-2 hidden group-hover:block min-w-[200px]">
-                ${SECTORS.map(s => `<button onclick="Router.go('sector', {id:'${s.id}'})" class="w-full text-right px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer">${s.icon} ${s.name}</button>`).join('')}
-              </div>
-            </div>
-            <button onclick="Router.go('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">🏛️ الإدارة</button>
-            <button onclick="Router.go('archive')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">📦 الأرشيف</button>
-            <button onclick="Router.go('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold hidden md:inline cursor-pointer">📋 متابعة</button>
-            <button onclick="Router.go('settings')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">⚙️</button>
-            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
-          </div>
-        </div>
-      </nav>
-    `;
-  },
-  
-  card(r) {
-    const s = SECTORS.find(x => x.id === r.sector_id);
-    const pc = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
-    return `
-      <div onclick="Router.go('view', {id:'${r.id}'})" class="glass rounded-xl shadow-lg p-4 card-hover cursor-pointer ${pc}">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
-            <span>${r.reference_number}</span><span>•</span>
-            <span>${U.fmtShort(r.created_at)}</span>
-            ${s ? `<span>•</span><span>${s.icon} ${s.name}</span>` : ''}
-            ${r.sender_name ? `<span>•</span><span>👤 ${U.esc(r.sender_name)}</span>` : ''}
-          </div>
-          <h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3>
-          <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
-          <div class="flex gap-2 mt-2 flex-wrap text-xs">
-            ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
-            ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
-            ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">🟢 منخفضة</span>' : ''}
-            ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
-          </div>
-        </div>
-      </div>
-    `;
-  },
-  
-  createModal(sid) {
-    return `
-      <div id="createModal" class="modal-overlay hidden">
-        <div class="glass rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-teal-800">➕ مراسلة جديدة</h2>
-            <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-2xl text-gray-500 cursor-pointer">×</button>
-          </div>
-          <form id="createForm" class="space-y-4" onsubmit="return false;">
-            <div>
-              <label class="block text-sm font-semibold mb-1">القطاع *</label>
-              <select id="fSec" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" required>
-                ${SECTORS.map(s => `<option value="${s.id}" ${s.id===sid?'selected':''}>${s.name}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-1">الموضوع *</label>
-              <input type="text" id="fSub" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-            </div>
-            <div class="grid md:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-sm font-semibold mb-1">المرسل</label>
-                <input type="text" id="fSen" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-sm font-semibold mb-1">الأولوية</label>
-                <select id="fPri" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                  <option value="normal">عادية</option>
-                  <option value="high">عالية</option>
-                  <option value="low">منخفضة</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-1">المحتوى *</label>
-              <textarea id="fCon" required rows="6" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea>
-            </div>
-            <div class="flex gap-2">
-              <button type="button" id="saveBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ</button>
-              <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `;
-  },
-};
+  }
+}
 
-// ============================================================
-// UI ACTIONS
-// ============================================================
-const UI = {
-  openCreate(sid) {
-    const m = document.getElementById('createModal');
-    if (m) m.classList.remove('hidden');
-    setTimeout(() => {
-      const btn = document.getElementById('saveBtn');
-      if (btn) {
-        btn.onclick = async () => {
-          btn.disabled = true;
-          btn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
-          try {
-            await DB.create({
-              sector_id: document.getElementById('fSec').value,
-              subject: document.getElementById('fSub').value,
-              content: document.getElementById('fCon').value,
-              sender_name: document.getElementById('fSen').value || Auth.user?.full_name,
-              priority: document.getElementById('fPri').value,
-            });
-            U.toast('تم الحفظ', 'success');
-            document.getElementById('createModal').classList.add('hidden');
-            App.render();
-          } catch (e) {
-            U.toast(e.message, 'error');
-          } finally {
-            btn.disabled = false;
-            btn.innerHTML = '💾 حفظ';
-          }
-        };
-      }
-    }, 100);
-  },
+async function doLogin() {
+  const em = document.getElementById('em').value;
+  const pw = document.getElementById('pw').value;
+  const err = document.getElementById('err');
+  const btn = document.getElementById('btn');
   
-  async reply(id) {
-    const content = prompt('نص الرد:');
-    if (!content) return;
-    try {
-      await DB.addReply(id, content);
-      U.toast('تم إضافة الرد', 'success');
-      App.render();
-    } catch (e) { U.toast(e.message, 'error'); }
-  },
+  btn.disabled = true;
+  btn.textContent = 'جاري الدخول...';
+  err.classList.add('hidden');
   
-  async followUp(id) {
-    const title = prompt('عنوان المهمة:');
-    if (!title) return;
-    const due = prompt('تاريخ الاستحقاق (YYYY-MM-DD):') || null;
-    const notes = prompt('ملاحظات:') || '';
-    try {
-      await DB.addFollowUp(id, { title, due_date: due, notes, status: 'pending' });
-      U.toast('تمت الإضافة', 'success');
-      App.render();
-    } catch (e) { U.toast(e.message, 'error'); }
-  },
-  
-  async archive(id) {
-    if (!confirm('تأكيد الأرشفة؟')) return;
-    try { await DB.archive(id); U.toast('تمت الأرشفة', 'success'); App.render(); }
-    catch (e) { U.toast(e.message, 'error'); }
-  },
-  
-  async restore(id) {
-    try { await DB.restore(id); U.toast('تمت الاستعادة', 'success'); App.render(); }
-    catch (e) { U.toast(e.message, 'error'); }
-  },
-  
-  async del(id) {
-    if (!confirm('⚠️ حذف نهائي؟')) return;
-    try { await DB.remove(id); U.toast('تم الحذف', 'success'); history.back(); }
-    catch (e) { U.toast(e.message, 'error'); }
-  },
-  
-  saveSettings() {
-    const on = document.getElementById('sbOn').checked;
-    const url = document.getElementById('sbUrl').value.trim();
-    const key = document.getElementById('sbKey').value.trim();
-    localStorage.setItem('USE_SB', on);
+  try {
+    await Auth.login(em, pw);
+    render();
+  } catch (e) {
+    err.textContent = e.message;
+    err.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔐 تسجيل الدخول';
+  }
+}
+
+function showSettings() {
+  const url = prompt('Supabase URL:', CONFIG.SB_URL);
+  const key = prompt('Supabase Anon Key:', CONFIG.SB_KEY);
+  if (url && key) {
     localStorage.setItem('SB_URL', url);
     localStorage.setItem('SB_KEY', key);
-    U.toast('تم الحفظ - سيتم إعادة التحميل', 'success');
-    setTimeout(() => location.reload(), 1000);
-  },
-};
+    localStorage.setItem('USE_SB', 'true');
+    location.reload();
+  }
+}
 
-// ============================================================
-// EXPORT
-// ============================================================
-const Exporter = {
-  async excel() {
-    try {
-      const data = await DB.list({ is_archived: false });
-      const rows = data.map(r => ({
-        'الرقم': r.reference_number,
-        'التاريخ': U.fmtShort(r.created_at),
-        'القطاع': SECTORS.find(s => s.id === r.sector_id)?.name || '',
-        'الموضوع': r.subject,
-        'المحتوى': r.content,
-        'الأولوية': r.priority,
-        'المرسل': r.sender_name || '',
-      }));
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'المراسلات');
-      XLSX.writeFile(wb, `correspondence_${Date.now()}.xlsx`);
-      U.toast('تم التصدير', 'success');
-    } catch (e) { U.toast(e.message, 'error'); }
-  },
-  async txt(id) {
-    const all = await DB.list({});
-    const r = all.find(x => x.id === id);
-    if (!r) return;
-    const text = `${CONFIG.ORG}\n================================\nالمرجع: ${r.reference_number}\nالتاريخ: ${U.fmtDate(r.created_at)}\nالقطاع: ${SECTORS.find(s => s.id === r.sector_id)?.name || ''}\nالأولوية: ${r.priority}\nالمرسل: ${r.sender_name || '-'}\n================================\nالموضوع: ${r.subject}\n\n${r.content}\n================================\n© 2026 ${CONFIG.ORG}`;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${r.reference_number}.txt`; a.click();
-    URL.revokeObjectURL(url);
-  },
-  async qr(id) {
-    const all = await DB.list({});
-    const r = all.find(x => x.id === id);
-    if (!r) return;
-    const data = JSON.stringify({ ref: r.reference_number, subject: r.subject, date: r.created_at, org: CONFIG.ORG });
-    const canvas = document.createElement('canvas');
-    await QRCode.toCanvas(canvas, data, { width: 300, margin: 2 });
-    const url = canvas.toDataURL();
-    const a = document.createElement('a');
-    a.href = url; a.download = `qr_${r.reference_number}.png`; a.click();
-  },
-  async wa(id) {
-    const all = await DB.list({});
-    const r = all.find(x => x.id === id);
-    if (!r) return;
-    const text = `*${CONFIG.ORG}*\n\n📌 ${r.reference_number}\n📅 ${U.fmtShort(r.created_at)}\n📝 ${r.subject}\n\n${(r.content || '').substring(0, 200)}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  },
-};
-
-// ============================================================
-// INIT
-// ============================================================
-window.addEventListener('online', () => { U.toast('✅ عاد الاتصال', 'success'); App.render(); });
-window.addEventListener('offline', () => { U.toast('⚠️ انقطع الاتصال', 'warning'); App.render(); });
-
-Router.init();
-
-console.log(`%c${CONFIG.APP_NAME} v${CONFIG.VERSION}`, 'color:#0f766e;font-size:20px;font-weight:bold');
-console.log(`%c© 2026 ${CONFIG.ORG}`, 'color:#666');
-console.log(`%cDeveloper: ${CONFIG.DEV}`, 'color:#666');
+render();
+console.log('✓ App loaded v' + CONFIG.VERSION);
 </script>
 </body>
 </html>
