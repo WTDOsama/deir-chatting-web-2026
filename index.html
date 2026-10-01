@@ -5,65 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مراسلات إدارة إيواءات دير البلح</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-  * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
+  * { font-family: 'Cairo', sans-serif; }
   body { background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); min-height: 100vh; margin: 0; }
   .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
-  .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; cursor: pointer; border: none; }
-  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; cursor: pointer; border: none; transition: all 0.3s; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,118,110,0.4); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .hidden { display: none !important; }
+  .fade-in { animation: fadeIn 0.4s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app" class="fade-in"></div>
 
 <script>
 const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
-  VERSION: '3.2.0',
-  SB_URL: localStorage.getItem('SB_URL') || '',
-  SB_KEY: localStorage.getItem('SB_KEY') || '',
-  USE_SB: localStorage.getItem('USE_SB') === 'true',
+  VERSION: '4.0.0',
 };
-
-let sb = null;
-if (CONFIG.USE_SB && CONFIG.SB_URL && CONFIG.SB_KEY) {
-  try {
-    sb = window.supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
-    console.log('✓ Supabase connected');
-  } catch (e) {
-    console.error('Supabase error:', e);
-  }
-}
 
 const Auth = {
   user: null,
   async login(email, password) {
-    if (!sb) {
-      if (email === 'admin@deir-albalah.ps' && password === 'password') {
-        this.user = { id: 'demo', full_name: 'المدير العام', role: 'super_admin' };
-        return this.user;
-      }
-      throw new Error('بيانات غير صحيحة');
+    // Demo mode - وضع تجريبي
+    if (email === 'admin@deir-albalah.ps' && password === 'password') {
+      this.user = { 
+        id: 'demo-1', 
+        username: 'admin', 
+        full_name: 'المدير العام', 
+        role: 'super_admin',
+        sector_id: null 
+      };
+      localStorage.setItem('db_user', JSON.stringify(this.user));
+      return this.user;
     }
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-    const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
-    this.user = profile;
-    return profile;
+    throw new Error('بيانات الدخول غير صحيحة');
   },
-  async logout() {
-    if (sb) await sb.auth.signOut();
+  logout() {
     this.user = null;
+    localStorage.removeItem('db_user');
     render();
   },
+  load() {
+    const saved = localStorage.getItem('db_user');
+    if (saved) {
+      try {
+        this.user = JSON.parse(saved);
+      } catch(e) {}
+    }
+    return this.user;
+  }
 };
 
 function render() {
+  Auth.load();
   const app = document.getElementById('app');
+  
   if (!Auth.user) {
+    // صفحة تسجيل الدخول
     app.innerHTML = `
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md">
@@ -72,68 +74,160 @@ function render() {
             <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
             <p class="text-gray-600 text-sm mt-2">نظام المراسلات الإدارية</p>
           </div>
-          <div id="err" class="hidden bg-red-100 text-red-700 p-3 rounded mb-4 text-sm"></div>
+          
+          <div id="errorMsg" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
+          
           <form class="space-y-4" onsubmit="return false;">
-            <input type="email" id="em" placeholder="البريد الإلكتروني" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl">
-            <input type="password" id="pw" placeholder="كلمة المرور" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl">
-            <button type="button" id="btn" class="btn-primary w-full py-3 rounded-xl font-bold">🔐 تسجيل الدخول</button>
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label>
+              <input type="email" id="emailInput" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin@deir-albalah.ps">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label>
+              <input type="password" id="passInput" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
+            </div>
+            <button type="button" id="loginBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">
+              🔐 تسجيل الدخول
+            </button>
           </form>
+          
           <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-800">
-            <p>تجريبي: <strong>admin@deir-albalah.ps</strong> / <strong>password</strong></p>
+            <p class="font-bold mb-1"> بيانات الدخول التجريبية:</p>
+            <p>البريد: <strong>admin@deir-albalah.ps</strong></p>
+            <p>كلمة المرور: <strong>password</strong></p>
           </div>
-          <button onclick="showSettings()" class="mt-4 text-sm text-teal-700 hover:underline w-full">⚙️ إعدادات الاتصال</button>
+          
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <button onclick="showSettings()" class="text-sm text-teal-700 hover:underline w-full text-center">
+              ️ إعدادات الاتصال
+            </button>
+          </div>
+          
+          <div class="mt-4 text-xs text-gray-500 text-center">
+            <p>الإصدار ${CONFIG.VERSION}</p>
+            <p class="mt-1">© 2026 إدارة إيواءات دير البلح</p>
+          </div>
         </div>
       </div>
     `;
-    document.getElementById('btn').onclick = doLogin;
+    
+    document.getElementById('loginBtn').onclick = handleLogin;
   } else {
+    // لوحة التحكم
     app.innerHTML = `
-      <div class="max-w-7xl mx-auto p-6">
-        <div class="glass rounded-2xl shadow-xl p-6 mb-6">
-          <h1 class="text-3xl font-bold text-teal-800">👋 أهلاً ${Auth.user.full_name}</h1>
-          <p class="text-gray-600">${Auth.user.role}</p>
+      <div class="min-h-screen bg-gradient-to-br from-teal-700 to-teal-900">
+        <nav class="glass shadow-lg sticky top-0 z-50">
+          <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">🏢</span>
+              <div>
+                <div class="font-bold text-teal-800">${CONFIG.APP_NAME}</div>
+                <div class="text-xs text-gray-600">${Auth.user.full_name}</div>
+              </div>
+            </div>
+            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">
+              🚪 خروج
+            </button>
+          </div>
+        </nav>
+        
+        <div class="max-w-7xl mx-auto p-6">
+          <div class="glass rounded-2xl shadow-xl p-6 mb-6">
+            <h1 class="text-3xl font-bold text-teal-800 mb-2">👋 أهلاً وسهلاً ${Auth.user.full_name}</h1>
+            <p class="text-gray-600">${Auth.user.role === 'super_admin' ? 'مدير عام للنظام' : Auth.user.role}</p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <button onclick="showSection('east')" class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-yellow-500 to-orange-600 text-white rounded-xl p-3 inline-block text-3xl mb-2">🌅</div>
+              <h3 class="font-bold text-gray-800">القاطع الشرقي</h3>
+            </button>
+            <button onclick="showSection('west')" class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl p-3 inline-block text-3xl mb-2">🌊</div>
+              <h3 class="font-bold text-gray-800">القاطع الغربي</h3>
+            </button>
+            <button onclick="showSection('north')" class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-purple-500 to-purple-700 text-white rounded-xl p-3 inline-block text-3xl mb-2">🏔️</div>
+              <h3 class="font-bold text-gray-800">القاطع الشمالي</h3>
+            </button>
+            <button onclick="showSection('south')" class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-red-500 to-red-700 text-white rounded-xl p-3 inline-block text-3xl mb-2">☀️</div>
+              <h3 class="font-bold text-gray-800">القاطع الجنوبي</h3>
+            </button>
+          </div>
+          
+          <div class="glass rounded-2xl shadow-xl p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📋 الإجراءات السريعة</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-3 rounded-xl font-semibold">➕ مراسلة جديدة</button>
+              <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold"> التقارير</button>
+              <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-xl font-semibold">📋 المتابعة</button>
+              <button class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-xl font-semibold">📦 الأرشيف</button>
+            </div>
+          </div>
+          
+          <div class="text-center text-xs text-white/70 mt-8 pb-4">
+            <p>© 2026 إدارة إيواءات دير البلح – جميع الحقوق محفوظة</p>
+            <p class="mt-1">تطوير: WTDOsama – وتد لبرمجة مواقع الويب</p>
+          </div>
         </div>
-        <button onclick="Auth.logout()" class="bg-red-600 text-white px-6 py-3 rounded-xl font-bold">🚪 خروج</button>
       </div>
     `;
   }
 }
 
-async function doLogin() {
-  const em = document.getElementById('em').value;
-  const pw = document.getElementById('pw').value;
-  const err = document.getElementById('err');
-  const btn = document.getElementById('btn');
+async function handleLogin() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passInput').value;
+  const errorMsg = document.getElementById('errorMsg');
+  const loginBtn = document.getElementById('loginBtn');
   
-  btn.disabled = true;
-  btn.textContent = 'جاري الدخول...';
-  err.classList.add('hidden');
+  if (!email || !password) {
+    showError('الرجاء إدخال البريد وكلمة المرور');
+    return;
+  }
+  
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = '<span style="display:inline-block;width:20px;height:20px;border:3px solid #f3f3f3;border-top:3px solid #0f766e;border-radius:50%;animation:spin 1s linear infinite"></span> جاري تسجيل الدخول...';
+  errorMsg.classList.add('hidden');
   
   try {
-    await Auth.login(em, pw);
+    await Auth.login(email, password);
     render();
-  } catch (e) {
-    err.textContent = e.message;
-    err.classList.remove('hidden');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🔐 تسجيل الدخول';
+  } catch (error) {
+    showError(error.message);
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = '🔐 تسجيل الدخول';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  if (el) {
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  } else {
+    alert(msg);
   }
 }
 
 function showSettings() {
-  const url = prompt('Supabase URL:', CONFIG.SB_URL);
-  const key = prompt('Supabase Anon Key:', CONFIG.SB_KEY);
-  if (url && key) {
-    localStorage.setItem('SB_URL', url);
-    localStorage.setItem('SB_KEY', key);
-    localStorage.setItem('USE_SB', 'true');
-    location.reload();
-  }
+  alert('الوضع الحالي: وضع تجريبي (محلي)\n\nلا حاجة لإعدادات إضافية.\nاستخدم البيانات الظاهرة لتسجيل الدخول.');
 }
 
+function showSection(sector) {
+  const sectors = {
+    east: 'القاطع الشرقي 🌅',
+    west: 'القاطع الغربي 🌊',
+    north: 'القاطع الشمالي 🏔️',
+    south: 'القاطع الجنوبي ☀️'
+  };
+  alert(`جاري فتح ${sectors[sector]}\n\n(هذه نسخة تجريبية - سيتم إضافة الميزات الكاملة قريباً)`);
+}
+
+// Initialize
 render();
-console.log('✓ App loaded v' + CONFIG.VERSION);
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded`);
 </script>
 </body>
 </html>
