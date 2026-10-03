@@ -610,9 +610,9 @@ const Views = {
     `;
   },
 
-view() {
-  const id = Router.params.id;
-  const r = DB.getById(id);
+async view() {
+    const id = Router.params.id;
+    const r = await DB.getById(id);
   if (!r) return '<div class="p-8 text-white text-center">السجل غير موجود</div>';
   const s = SECTORS.find(x => x.id === r.sector_id);
   
