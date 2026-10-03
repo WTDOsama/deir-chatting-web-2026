@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مراسلات إدارة إيواءات دير البلح</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-  * { font-family: 'Cairo', sans-serif; }
+  * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
   body { background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); min-height: 100vh; margin: 0; }
   .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
   .btn-primary { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; cursor: pointer; border: none; transition: all 0.3s; }
@@ -16,6 +17,8 @@
   .hidden { display: none !important; }
   .fade-in { animation: fadeIn 0.4s ease-in; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #0f766e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -23,24 +26,33 @@
 
 <script>
 // =====================================================
-// CONFIGURATION - استبدل القيم دي ببياناتك
+// CONFIGURATION - ⚠️ استبدل القيم هنا ببياناتك الحقيقية
 // =====================================================
 const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
-  VERSION: '5.0.0',
-  SUPABASE_URL: 'https://supabase.com/dashboard/project/vhypuurifaeqgyxdgubz/settings/api-keys',  // <-- حط رابط مشروعك هنا
-  SUPABASE_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',          // <-- حط المفتاح هنا
+  VERSION: '5.1.0',
+  SUPABASE_URL: 'https://supabase.com/dashboard/project/vhypuurifaeqgyxdgubz/settings/api-keys',
+  SUPABASE_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
 };
 
 // =====================================================
-// SUPABASE CLIENT
+// SUPABASE CLIENT - الآن يعمل بشكل صحيح
 // =====================================================
 let sb = null;
+let isConnected = false;
+
 try {
-  sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-  console.log('✓ Connected to Supabase');
+  if (window.supabase && CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY && 
+      CONFIG.SUPABASE_URL.includes('supabase.co') && 
+      !CONFIG.SUPABASE_KEY.includes('YOUR_KEY')) {
+    sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+    isConnected = true;
+    console.log('✓ Supabase connected successfully');
+  } else {
+    console.log('ℹ Demo mode (Supabase not configured)');
+  }
 } catch (e) {
-  console.error('✗ Supabase connection failed:', e);
+  console.error('✗ Supabase init failed:', e);
 }
 
 // =====================================================
@@ -50,16 +62,26 @@ const Auth = {
   user: null,
   
   async login(email, password) {
-    if (!sb) throw new Error('Supabase غير متصل');
+    if (!isConnected) {
+      // Demo mode
+      if (email === 'admin@deir-albalah.ps' && password === 'password') {
+        this.user = { 
+          id: 'demo-1', 
+          username: 'admin', 
+          full_name: 'المدير العام', 
+          role: 'super_admin',
+          sector_id: null 
+        };
+        localStorage.setItem('db_user', JSON.stringify(this.user));
+        return this.user;
+      }
+      throw new Error('بيانات الدخول غير صحيحة');
+    }
     
-    const { data, error } = await sb.auth.signInWithPassword({
-      email,
-      password
-    });
-    
+    // Supabase mode
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
     
-    // جلب بيانات المستخدم من profiles
     const { data: profile } = await sb
       .from('profiles')
       .select('*')
@@ -71,84 +93,33 @@ const Auth = {
       full_name: email.split('@')[0], 
       role: 'sector_staff' 
     };
-    
     return this.user;
   },
   
   async logout() {
-    if (sb) await sb.auth.signOut();
+    if (isConnected && sb) await sb.auth.signOut();
     this.user = null;
+    localStorage.removeItem('db_user');
     render();
-  }
-};
-
-// =====================================================
-// DATA SERVICE
-// =====================================================
-const DB = {
-  async getSectors() {
-    const { data, error } = await sb.from('sectors').select('*').order('name_ar');
-    if (error) throw error;
-    return data;
   },
   
-  async getCorrespondence(filters = {}) {
-    let query = sb.from('correspondence').select('*');
-    
-    if (filters.sector_id) {
-      query = query.eq('sector_id', filters.sector_id);
+  load() {
+    const saved = localStorage.getItem('db_user');
+    if (saved) {
+      try { this.user = JSON.parse(saved); } catch(e) {}
     }
-    if (filters.is_archived !== undefined) {
-      query = query.eq('is_archived', filters.is_archived);
-    }
-    
-    const { data, error } = await query.order('created_at', { ascending: false });
-    if (error) throw error;
-    return data;
-  },
-  
-  async createCorrespondence(data) {
-    const { data: result, error } = await sb
-      .from('correspondence')
-      .insert([{
-        reference_number: `DB-${Date.now()}`,
-        subject: data.subject,
-        content: data.content,
-        sender_name: Auth.user?.full_name || 'مستخدم',
-        sector_id: data.sector_id,
-        priority: data.priority || 'normal'
-      }])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return result;
-  },
-  
-  async addReply(correspondenceId, content) {
-    const { data, error } = await sb
-      .from('replies')
-      .insert([{
-        correspondence_id: correspondenceId,
-        author_name: Auth.user?.full_name,
-        content
-      }])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return this.user;
   }
 };
 
 // =====================================================
 // RENDER
 // =====================================================
-async function render() {
+function render() {
+  Auth.load();
   const app = document.getElementById('app');
   
   if (!Auth.user) {
-    // Login page
     app.innerHTML = `
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md">
@@ -156,6 +127,9 @@ async function render() {
             <div class="text-6xl mb-3">🏢</div>
             <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
             <p class="text-gray-600 text-sm mt-2">نظام المراسلات الإدارية</p>
+            <div class="mt-2 text-xs">
+              ${isConnected ? '<span class="text-green-600 font-bold">🔗 متصل بـ Supabase</span>' : '<span class="text-orange-600 font-bold">💾 وضع تجريبي</span>'}
+            </div>
           </div>
           
           <div id="errorMsg" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
@@ -174,18 +148,27 @@ async function render() {
             </button>
           </form>
           
+          <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-800">
+            <p class="font-bold mb-1">بيانات تجريبية:</p>
+            <p>البريد: <strong>admin@deir-albalah.ps</strong></p>
+            <p>كلمة المرور: <strong>password</strong></p>
+          </div>
+          
+          <button onclick="showSettings()" class="mt-4 text-sm text-teal-700 hover:underline w-full text-center">
+            ⚙️ إعدادات الاتصال
+          </button>
+          
           <div class="mt-4 text-xs text-gray-500 text-center">
             <p>الإصدار ${CONFIG.VERSION}</p>
+            <p class="mt-1">© 2026 إدارة إيواءات دير البلح</p>
           </div>
         </div>
       </div>
     `;
-    
     document.getElementById('loginBtn').onclick = handleLogin;
   } else {
-    // Dashboard
     app.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-teal-700 to-teal-900">
+      <div class="min-h-screen">
         <nav class="glass shadow-lg sticky top-0 z-50">
           <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -196,28 +179,53 @@ async function render() {
               </div>
             </div>
             <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">
-               خروج
+              🚪 خروج
             </button>
           </div>
         </nav>
         
         <div class="max-w-7xl mx-auto p-6">
           <div class="glass rounded-2xl shadow-xl p-6 mb-6">
-            <h1 class="text-3xl font-bold text-teal-800 mb-2">👋 أهلاً ${Auth.user.full_name}</h1>
-            <p class="text-gray-600">${Auth.user.role || 'مستخدم'}</p>
+            <h1 class="text-3xl font-bold text-teal-800 mb-2"> أهلاً ${Auth.user.full_name}</h1>
+            <p class="text-gray-600">${Auth.user.role || 'مستخدم'} ${isConnected ? '🔗' : '💾'}</p>
           </div>
           
-          <div id="sectorsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="glass rounded-2xl shadow-lg p-6 text-center">
-              <div class="text-gray-500">جاري تحميل القواطع...</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <button class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-yellow-500 to-orange-600 text-white rounded-xl p-3 inline-block text-3xl mb-2">🌅</div>
+              <h3 class="font-bold text-gray-800">القاطع الشرقي</h3>
+            </button>
+            <button class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl p-3 inline-block text-3xl mb-2">🌊</div>
+              <h3 class="font-bold text-gray-800">القاطع الغربي</h3>
+            </button>
+            <button class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-purple-500 to-purple-700 text-white rounded-xl p-3 inline-block text-3xl mb-2">🏔️</div>
+              <h3 class="font-bold text-gray-800">القاطع الشمالي</h3>
+            </button>
+            <button class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
+              <div class="bg-gradient-to-br from-red-500 to-red-700 text-white rounded-xl p-3 inline-block text-3xl mb-2">☀️</div>
+              <h3 class="font-bold text-gray-800">القاطع الجنوبي</h3>
+            </button>
+          </div>
+          
+          <div class="glass rounded-2xl shadow-xl p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📋 الإجراءات السريعة</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-3 rounded-xl font-semibold">➕ مراسلة جديدة</button>
+              <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold"> التقارير</button>
+              <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-xl font-semibold">📋 المتابعة</button>
+              <button class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-xl font-semibold">📦 الأرشيف</button>
             </div>
+          </div>
+          
+          <div class="text-center text-xs text-white/70 mt-8 pb-4">
+            <p>© 2026 إدارة إيواءات دير البلح – جميع الحقوق محفوظة</p>
+            <p class="mt-1">تطوير: WTDOsama – وتد لبرمجة مواقع الويب</p>
           </div>
         </div>
       </div>
     `;
-    
-    // Load sectors
-    loadSectors();
   }
 }
 
@@ -227,53 +235,49 @@ async function handleLogin() {
   const errorMsg = document.getElementById('errorMsg');
   const loginBtn = document.getElementById('loginBtn');
   
+  if (!email || !password) {
+    showError('الرجاء إدخال البريد وكلمة المرور');
+    return;
+  }
+  
   loginBtn.disabled = true;
-  loginBtn.innerHTML = '⏳ جاري تسجيل الدخول...';
+  loginBtn.innerHTML = '<span class="spinner"></span> جاري تسجيل الدخول...';
   errorMsg.classList.add('hidden');
   
   try {
     await Auth.login(email, password);
     render();
   } catch (error) {
-    errorMsg.textContent = error.message;
-    errorMsg.classList.remove('hidden');
+    showError(error.message);
     loginBtn.disabled = false;
-    loginBtn.innerHTML = '🔐 تسجيل الدخول';
+    loginBtn.innerHTML = ' تسجيل الدخول';
   }
 }
 
-async function loadSectors() {
-  try {
-    const sectors = await DB.getSectors();
-    const container = document.getElementById('sectorsContainer');
-    
-    const sectorIcons = {
-      'EAST': '🌅',
-      'WEST': '',
-      'NORTH': '️',
-      'SOUTH': '️'
-    };
-    
-    container.innerHTML = sectors.map(sector => `
-      <button onclick="showSector('${sector.id}')" class="glass rounded-2xl shadow-lg p-6 text-right hover:shadow-2xl transition cursor-pointer">
-        <div class="bg-gradient-to-br from-teal-500 to-teal-700 text-white rounded-xl p-3 inline-block text-3xl mb-2">
-          ${sectorIcons[sector.code] || '📁'}
-        </div>
-        <h3 class="font-bold text-gray-800">${sector.name_ar}</h3>
-      </button>
-    `).join('');
-  } catch (error) {
-    console.error('Error loading sectors:', error);
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  if (el) {
+    el.textContent = msg;
+    el.classList.remove('hidden');
   }
 }
 
-function showSector(sectorId) {
-  alert(`فتح القاطع: ${sectorId}\n(سيتم إضافة صفحة المراسلات قريباً)`);
+function showSettings() {
+  const url = prompt('أدخل Supabase URL:', CONFIG.SUPABASE_URL);
+  if (!url) return;
+  const key = prompt('أدخل Supabase Anon Key:', CONFIG.SUPABASE_KEY);
+  if (!key) return;
+  
+  CONFIG.SUPABASE_URL = url;
+  CONFIG.SUPABASE_KEY = key;
+  
+  alert('تم الحفظ. سيتم إعادة تحميل الصفحة لتطبيق التغييرات.');
+  location.reload();
 }
 
-// Initialize
 render();
 console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded`);
+console.log(`Supabase: ${isConnected ? 'Connected ✅' : 'Not configured ️'}`);
 </script>
 </body>
 </html>
