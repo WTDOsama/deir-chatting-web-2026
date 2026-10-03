@@ -34,6 +34,15 @@
   .chat-bubble.me { background: #0f766e; color: white; margin-left: auto; border-bottom-left-radius: 4px; }
   .chat-bubble.other { background: #e5e7eb; color: #1f2937; margin-right: auto; border-bottom-right-radius: 4px; }
   .attachment-chip { display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin: 2px; }
+  .attachment-card { background: white; border-radius: 12px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s; border: 1px solid #e5e7eb; }
+  .attachment-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-1px); }
+  .attachment-info { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+  .attachment-icon { font-size: 32px; flex-shrink: 0; }
+  .attachment-name { font-weight: 600; color: #1f2937; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .attachment-size { font-size: 12px; color: #6b7280; }
+  .download-btn { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; transition: all 0.2s; }
+  .download-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,118,110,0.4); }
+  .download-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 </style>
 </head>
 <body>
@@ -51,7 +60,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '10.0.0',
+  VERSION: '10.1.0',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -61,7 +70,7 @@ const CONFIG = {
 const SECTORS = [
   { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '🌅' },
   { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '🌊' },
-  { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '🏔️' },
+  { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '️' },
   { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '☀️' },
 ];
 
@@ -87,6 +96,9 @@ try {
   }
 } catch (e) { console.error('Supabase init failed:', e); }
 
+// =====================================================
+// UTILS
+// =====================================================
 const U = {
   uuid: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
@@ -107,16 +119,39 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '', other: '📎' }[type] || '📎'),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
-    if (mime.startsWith('image/')) return 'image';
-    if (mime.includes('excel') || mime.includes('spreadsheet') || name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return 'excel';
-    if (mime.includes('pdf') || mime.includes('document') || name.endsWith('.doc') || name.endsWith('.docx')) return 'document';
+    const lowerName = name.toLowerCase();
+    if (mime.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i.test(lowerName)) return 'image';
+    if (mime.includes('excel') || mime.includes('spreadsheet') || /\.(xlsx|xls|csv)$/i.test(lowerName)) return 'excel';
+    if (mime.includes('pdf') || lowerName.endsWith('.pdf')) return 'pdf';
+    if (mime.includes('word') || mime.includes('document') || /\.(doc|docx)$/i.test(lowerName)) return 'document';
+    if (mime.includes('zip') || mime.includes('compressed') || mime.includes('rar') || /\.(zip|rar|7z|tar|gz)$/i.test(lowerName)) return 'archive';
     return 'other';
   },
+  formatFileSize: (bytes) => {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  },
+  getDownloadLabel: (type) => {
+    const labels = {
+      image: 'تحميل الصورة',
+      excel: 'تحميل ملف Excel',
+      document: 'تحميل الملف',
+      pdf: 'تحميل PDF',
+      archive: 'تحميل الملف',
+      other: 'تحميل الملف'
+    };
+    return labels[type] || 'تحميل الملف';
+  }
 };
 
+// =====================================================
+// AUTH
+// =====================================================
 const Auth = {
   user: null,
   load() { this.user = U.load('db_user', null); return this.user; },
@@ -169,6 +204,9 @@ async function refreshNotifications() {
   if (badge) { badge.textContent = count || 0; badge.classList.toggle('hidden', !count); }
 }
 
+// =====================================================
+// DATA SERVICE
+// =====================================================
 const DB = {
   async getAll(filters = {}) {
     if (sbConnected) {
@@ -299,18 +337,11 @@ const DB = {
   async getById(id) {
     let record = appData.find(d => d.id === id);
     if (record) return record;
-
     if (sbConnected) {
       try {
-        const { data, error } = await sb
-          .from('correspondence')
-          .select('*, attachments(*)')
-          .eq('id', id)
-          .single();
+        const { data, error } = await sb.from('correspondence').select('*, attachments(*)').eq('id', id).single();
         if (!error && data) return data;
-      } catch (e) {
-        console.error('Error fetching record by ID:', e);
-      }
+      } catch (e) { console.error('Error fetching record by ID:', e); }
     }
     return U.load('db_correspondence', []).find(d => d.id === id);
   },
@@ -350,12 +381,18 @@ const DB = {
   },
 };
 
+// =====================================================
+// ROUTER
+// =====================================================
 const Router = {
   page: 'dashboard',
   params: {},
   go(page, params = {}) { this.page = page; this.params = params; render(); window.scrollTo(0, 0); }
 };
 
+// =====================================================
+// VIEWS
+// =====================================================
 const Views = {
   login() {
     return `
@@ -378,7 +415,7 @@ const Views = {
             <p>البريد: <strong>admin@deir-albalah.ps</strong></p>
             <p>كلمة المرور: <strong>password</strong></p>
           </div>
-          <button onclick="showSettings()" class="mt-4 text-sm text-teal-700 hover:underline w-full text-center cursor-pointer">⚙️ إعدادات الاتصال</button>
+          <button onclick="showSettings()" class="mt-4 text-sm text-teal-700 hover:underline w-full text-center cursor-pointer">️ إعدادات الاتصال</button>
           <div class="mt-4 text-xs text-gray-500 text-center"><p>الإصدار ${CONFIG.VERSION}</p><p class="mt-1">© 2026 ${CONFIG.ORG}</p></div>
         </div>
       </div>
@@ -398,7 +435,7 @@ const Views = {
         <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
           <div class="glass rounded-2xl shadow-xl p-6 mb-6">
             <h1 class="text-3xl font-bold text-teal-800 mb-2">👋 أهلاً ${U.esc(u.full_name)}</h1>
-            <p class="text-gray-600">${ROLES[u.role] || 'مستخدم'} ${sbConnected ? '🔗' : '💾'}</p>
+            <p class="text-gray-600">${ROLES[u.role] || 'مستخدم'} ${sbConnected ? '' : '💾'}</p>
             <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
               <div class="bg-teal-50 p-3 rounded-xl"><div class="text-2xl font-bold text-teal-700">${active.length}</div><div class="text-xs text-gray-600">مراسلة نشطة</div></div>
               <div class="bg-gray-50 p-3 rounded-xl"><div class="text-2xl font-bold text-gray-700">${archived.length}</div><div class="text-xs text-gray-600">مؤرشفة</div></div>
@@ -420,9 +457,9 @@ const Views = {
           <h2 class="text-xl font-bold text-white mb-3">📋 الإجراءات السريعة</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <button onclick="Router.go('create')" class="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">➕ مراسلة جديدة</button>
-            <button onclick="Router.go('general')" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 التقارير</button>
-            <button onclick="Router.go('followups')" class="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 المتابعة</button>
-            <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📦 الأرشيف</button>
+            <button onclick="Router.go('general')" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> التقارير</button>
+            <button onclick="Router.go('followups')" class="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> المتابعة</button>
+            <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> الأرشيف</button>
           </div>
           <div class="glass rounded-2xl shadow-xl p-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4">🕐 آخر المراسلات</h2>
@@ -457,7 +494,7 @@ const Views = {
           </div>
           <div class="glass rounded-2xl shadow-xl p-4 mb-4">
             <div class="grid md:grid-cols-3 gap-3">
-              <input type="text" id="sSearch" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <input type="text" id="sSearch" placeholder=" بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
               <select id="sPri" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
                 <option value="">كل الأولويات</option><option value="high">عالية</option><option value="normal">عادية</option><option value="low">منخفضة</option>
               </select>
@@ -494,7 +531,7 @@ const Views = {
               <select id="gPri" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
                 <option value="">كل الأولويات</option><option value="high">عالية</option><option value="normal">عادية</option><option value="low">منخفضة</option>
               </select>
-              <button onclick="Exporter.excel()" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">📊 Excel</button>
+              <button onclick="Exporter.excel()" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer"> Excel</button>
             </div>
           </div>
           <div id="gList" class="space-y-3">
@@ -547,7 +584,7 @@ const Views = {
                     <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
                       <div class="flex justify-between items-center">
                         <span class="font-semibold text-gray-800">${U.esc(f.title || 'مهمة')}</span>
-                        <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${f.status === 'done' ? '✓ منجزة' : '⏳ قيد التنفيذ'}</span>
+                        <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${f.status === 'done' ? '✓ منجزة' : ' قيد التنفيذ'}</span>
                       </div>
                       ${f.due_date ? `<div class="text-xs text-gray-600 mt-1">📅 ${U.fmtShort(f.due_date)}</div>` : ''}
                       ${f.notes ? `<div class="text-sm text-gray-700 mt-1">${U.esc(f.notes)}</div>` : ''}
@@ -588,7 +625,7 @@ const Views = {
               <div><label class="block text-sm font-semibold mb-1 text-gray-700">المحتوى *</label><textarea id="fCon" rows="8" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea></div>
               <div>
                 <label class="block text-sm font-semibold mb-1 text-gray-700">📎 المرفقات (صور، Excel، PDF)</label>
-                <input type="file" id="fFiles" multiple accept="image/*,.xlsx,.xls,.csv,.pdf,.doc,.docx" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                <input type="file" id="fFiles" multiple accept="image/*,.xlsx,.xls,.csv,.pdf,.doc,.docx,.zip,.rar" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
                 <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة</p>
                 <div id="filePreview" class="mt-2 flex flex-wrap gap-2"></div>
               </div>
@@ -627,7 +664,7 @@ const Views = {
               <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || 'غير محدد'}</div></div>
               <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at) || 'غير محدد'}</div></div>
               <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.icon || ''} ${s?.name || r.sector_id || 'غير محدد'}</div></div>
-              <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
+              <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : ' عادية'}</div></div>
               ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
             </div>
             
@@ -637,21 +674,30 @@ const Views = {
             ${r.attachments && r.attachments.length > 0 ? `
               <div class="mb-6 bg-blue-50 border-r-4 border-blue-500 p-4 rounded-xl">
                 <h3 class="font-bold text-gray-800 mb-3">📎 المرفقات (${r.attachments.length})</h3>
-                <div class="space-y-2">
-                  ${r.attachments.map(a => `
-                    <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow">
-                      <div class="flex items-center gap-2">
-                        <span class="text-2xl">${U.getFileIcon(a.file_type)}</span>
-                        <div>
-                          <div class="font-semibold text-gray-800">${U.esc(a.original_name)}</div>
-                          <div class="text-xs text-gray-500">${(a.size_bytes / 1024).toFixed(1)} KB</div>
+                <div class="space-y-3">
+                  ${r.attachments.map(a => {
+                    const fileType = a.file_type || U.getFileType(a.mime_type, a.original_name);
+                    const icon = U.getFileIcon(fileType);
+                    const label = U.getDownloadLabel(fileType);
+                    const size = U.formatFileSize(a.size_bytes);
+                    const downloadUrl = a.storage_path || a.data_url || '';
+                    const fileName = U.esc(a.original_name || 'ملف');
+                    return `
+                      <div class="attachment-card">
+                        <div class="attachment-info">
+                          <span class="attachment-icon">${icon}</span>
+                          <div style="min-width: 0;">
+                            <div class="attachment-name" title="${fileName}">${fileName}</div>
+                            <div class="attachment-size">${size}</div>
+                          </div>
                         </div>
+                        <button class="download-btn" onclick="downloadAttachment('${downloadUrl}', '${fileName.replace(/'/g, "\\'")}', '${fileType}')" data-url="${downloadUrl}" data-filename="${fileName}">
+                          <span>⬇️</span>
+                          <span>${label}</span>
+                        </button>
                       </div>
-                      <a href="${a.storage_path || a.data_url}" target="_blank" download="${U.esc(a.original_name)}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm cursor-pointer flex items-center gap-1">
-                        ⬇️ تحميل
-                      </a>
-                    </div>
-                  `).join('')}
+                    `;
+                  }).join('')}
                 </div>
               </div>
             ` : ''}
@@ -663,7 +709,7 @@ const Views = {
             ` : ''}
             
             ${r.follow_ups && r.follow_ups.length > 0 ? `
-              <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
+              <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3"> المتابعة</h3>
                 <div class="space-y-2">${r.follow_ups.map(f => `<div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded"><div class="font-semibold">${U.esc(f.title || 'مهمة')}</div>${f.due_date ? `<div class="text-xs text-gray-600">📅 ${U.fmtShort(f.due_date)}</div>` : ''}${f.notes ? `<div class="text-sm text-gray-700">${U.esc(f.notes)}</div>` : ''}</div>`).join('')}</div>
               </div>
             ` : ''}
@@ -676,7 +722,7 @@ const Views = {
               <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🔳 QR</button>
               <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
               <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 رد</button>
-              <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
+              <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> متابعة</button>
               ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`}
               <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
             </div>
@@ -760,7 +806,7 @@ const Views = {
           <h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3>
           <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
           <div class="flex gap-2 mt-2 flex-wrap text-xs">
-            ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
+            ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded"> عالية</span>' : ''}
             ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
             ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">🟢 منخفضة</span>' : ''}
             ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
@@ -774,6 +820,9 @@ const Views = {
   },
 };
 
+// =====================================================
+// UI ACTIONS
+// =====================================================
 const UI = {
   reply(id) {
     const content = prompt('نص الرد:');
@@ -849,15 +898,10 @@ const UI = {
   },
 };
 
+// =====================================================
+// EXPORT
+// =====================================================
 const Exporter = {
-  txt(id) {
-    const r = DB.getById(id); // Note: getById is async, but Exporter functions are called from onclick, so we might need to handle this or rely on appData. For simplicity, we'll keep it as is or make it async.
-    // To be safe, let's make it async
-  },
-};
-
-// Fix Exporter to handle async getById
-const ExporterFixed = {
   async txt(id) {
     const r = await DB.getById(id);
     if (!r) return;
@@ -899,9 +943,67 @@ const ExporterFixed = {
     U.toast('تم التصدير', 'success');
   },
 };
-// Reassign Exporter
-Object.assign(Exporter, ExporterFixed);
 
+// =====================================================
+// ATTACHMENT DOWNLOAD (NEW FEATURE)
+// =====================================================
+async function downloadAttachment(url, filename, fileType) {
+  if (!url) {
+    U.toast('الملف غير موجود', 'error');
+    return;
+  }
+  
+  const btn = event.currentTarget;
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> جاري التحميل...';
+  
+  try {
+    // Fetch the file as a blob to force download with correct filename
+    const response = await fetch(url, { 
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    if (!response.ok) {
+      throw new Error('فشل في تحميل الملف');
+    }
+    
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+    }, 100);
+    
+    U.toast(`✅ تم تحميل ${filename}`, 'success');
+  } catch (error) {
+    console.error('Download error:', error);
+    // Fallback: open in new tab
+    try {
+      window.open(url, '_blank');
+    } catch (e) {
+      U.toast('الملف غير موجود', 'error');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHTML;
+  }
+}
+
+// =====================================================
+// SETTINGS
+// =====================================================
 function showSettings() {
   const useSb = confirm('هل تريد تفعيل Supabase؟\n\nOK = نعم (سيطلب الرابط والمفتاح)\nCancel = لا (الوضع المحلي)');
   if (useSb) {
@@ -944,7 +1046,7 @@ async function loadChatMessages() {
 }
 
 // =====================================================
-// MAIN RENDER - مصحح لدعم الدوال غير المتزامنة (Async)
+// MAIN RENDER
 // =====================================================
 async function render() {
   Auth.load();
@@ -998,8 +1100,7 @@ async function render() {
     };
     
     const viewFn = views[Router.page] || views.dashboard;
-    // هذا هو السطر السحري الذي يحل مشكلة [object Promise]
-    const html = await viewFn(); 
+    const html = await viewFn();
     app.innerHTML = html;
     
     bindEvents();
@@ -1019,7 +1120,7 @@ function bindEvents() {
         if (selectedFiles.length > 0) {
           filePreview.innerHTML = selectedFiles.map(f => `
             <div class="attachment-chip">
-              ${U.getFileIcon(U.getFileType(f.type, f.name))} ${U.esc(f.name)} (${(f.size/1024).toFixed(1)} KB)
+              ${U.getFileIcon(U.getFileType(f.type, f.name))} ${U.esc(f.name)} (${U.formatFileSize(f.size)})
               <button type="button" onclick="this.parentElement.remove()" class="ml-1 text-red-600 hover:text-red-800">×</button>
             </div>
           `).join('');
