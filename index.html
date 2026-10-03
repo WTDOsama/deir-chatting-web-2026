@@ -888,7 +888,7 @@ async function loadChatMessages() {
 }
 
 // =====================================================
-// MAIN RENDER (محدث لسحب البيانات من Supabase قبل العرض)
+// MAIN RENDER - مصحح لعرض بيانات القطاع فقط
 // =====================================================
 async function render() {
   Auth.load();
@@ -910,19 +910,27 @@ async function render() {
   } else {
     whatsappBtn.classList.remove('hidden');
     
-    // 1. سحب البيانات الحديثة من Supabase إذا كان متصلاً
+    // 1. سحب البيانات من Supabase مع فلتر القطاع إذا كان المستخدم مدير قطاع
+    let filters = {};
+    if (sbConnected && Auth.user.role === 'sector_admin' && Auth.user.sector_id) {
+      filters.sector_id = Auth.user.sector_id;
+    }
+    
     if (sbConnected) {
       try {
-        appData = await DB.getAll({});
+        appData = await DB.getAll(filters);
       } catch (e) {
-        console.error("فشل جلب البيانات، العودة للوضع المحلي", e);
-        appData = U.load('db_correspondence', []);
+        console.error("فشل جلب البيانات", e);
+        appData = [];
       }
     } else {
       appData = U.load('db_correspondence', []);
+      if (Auth.user.role === 'sector_admin' && Auth.user.sector_id) {
+        appData = appData.filter(r => r.sector_id === Auth.user.sector_id);
+      }
     }
     
-    // 2. عرض الصفحات باستخدام البيانات الحديثة
+    // 2. عرض الصفحات
     const views = {
       dashboard: () => Views.dashboard(appData),
       sector: () => Views.sector(appData),
@@ -951,9 +959,16 @@ function bindEvents() {
     if (fileInput) {
       fileInput.onchange = async (e) => {
         selectedFiles = Array.from(e.target.files);
-        filePreview.innerHTML = selectedFiles.map(f => `
-          <div class="attachment-chip">${U.getFileIcon(U.getFileType(f.type, f.name))} ${U.esc(f.name)} (${(f.size/1024).toFixed(1)} KB)</div>
-        `).join('');
+        if (selectedFiles.length > 0) {
+          filePreview.innerHTML = selectedFiles.map(f => `
+            <div class="attachment-chip">
+              ${U.getFileIcon(U.getFileType(f.type, f.name))} ${U.esc(f.name)} (${(f.size/1024).toFixed(1)} KB)
+              <button type="button" onclick="this.parentElement.remove()" class="ml-1 text-red-600 hover:text-red-800">×</button>
+            </div>
+          `).join('');
+        } else {
+          filePreview.innerHTML = '';
+        }
       };
     }
     
@@ -965,30 +980,28 @@ function bindEvents() {
         const sender = document.getElementById('fSen').value.trim();
         const priority = document.getElementById('fPri').value;
         
-        if (!subject || !content) { U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); return; }
+        if (!subject || !content) { 
+          U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); 
+          return; 
+        }
         
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
         
         try {
-          const filesWithData = [];
-          for (const file of selectedFiles) {
-            if (!sbConnected) {
-              const dataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-              });
-              filesWithData.push({ ...file, data_url: dataUrl });
-            } else {
-              filesWithData.push(file);
-            }
-          }
+          // رفع المرفقات إذا وجدت
+          const filesToUpload = selectedFiles.filter(f => filePreview.contains(f.parentElement));
           
-          await DB.create({ sector_id: sector, subject, content, sender_name: sender, priority }, filesWithData);
+          await DB.create({ 
+            sector_id: sector, 
+            subject, 
+            content, 
+            sender_name: sender, 
+            priority 
+          }, filesToUpload);
+          
           U.toast('✅ تم حفظ المراسلة بنجاح', 'success');
-          Router.go('dashboard'); // هذا سيعيد استدعاء render() وسحب البيانات الحديثة
+          Router.go('dashboard');
         } catch (e) {
           U.toast(e.message, 'error');
           saveBtn.disabled = false;
