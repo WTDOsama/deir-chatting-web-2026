@@ -51,7 +51,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '9.1.0',
+  VERSION: '10.0.0',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -75,7 +75,7 @@ const ROLES = {
 let sb = null;
 let sbConnected = false;
 let realtimeSubs = [];
-let appData = []; // متغير عام لتخزين البيانات الحديثة
+let appData = [];
 
 try {
   if (CONFIG.USE_SB && CONFIG.SB_URL && CONFIG.SB_KEY && CONFIG.SB_URL.includes('supabase.co') && !CONFIG.SB_KEY.includes('YOUR')) {
@@ -189,48 +189,46 @@ const DB = {
     if (filters.priority) data = data.filter(d => d.priority === filters.priority);
     return data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
   },
-async create(rec, files = []) {
-  let newRec;
-  if (sbConnected) {
-    const { data, error } = await sb.from('correspondence').insert([{
-      reference_number: rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX'),
-      subject: rec.subject, content: rec.content,
-      sender_id: Auth.user?.id,
-      sender_name: rec.sender_name || Auth.user?.full_name,
-      sector_id: rec.sector_id, priority: rec.priority || 'normal',
-    }]).select().single();
-    if (error) throw error;
-    newRec = data;
-    // رفع المرفقات إلى Supabase Storage
-    if (files.length > 0) {
-      await this.uploadAttachments(newRec.id, files);
-      // إعادة جلب البيانات لتحديث المرفقات
-      const { data: updated } = await sb.from('correspondence').select('*, attachments(*)').eq('id', newRec.id).single();
-      newRec = updated;
+  async create(rec, files = []) {
+    let newRec;
+    if (sbConnected) {
+      const { data, error } = await sb.from('correspondence').insert([{
+        reference_number: rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX'),
+        subject: rec.subject, content: rec.content,
+        sender_id: Auth.user?.id,
+        sender_name: rec.sender_name || Auth.user?.full_name,
+        sector_id: rec.sector_id, priority: rec.priority || 'normal',
+      }]).select().single();
+      if (error) throw error;
+      newRec = data;
+      if (files.length > 0) {
+        await this.uploadAttachments(newRec.id, files);
+        const { data: updated } = await sb.from('correspondence').select('*, attachments(*)').eq('id', newRec.id).single();
+        newRec = updated;
+      }
+    } else {
+      const data = U.load('db_correspondence', []);
+      newRec = {
+        id: U.uuid(),
+        reference_number: rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX'),
+        subject: rec.subject, content: rec.content,
+        sender_name: rec.sender_name || Auth.user?.full_name,
+        sector_id: rec.sector_id, priority: rec.priority || 'normal',
+        is_archived: false, replies: [], follow_ups: [], attachments: [],
+        created_at: U.now(),
+      };
+      for (const file of files) {
+        newRec.attachments.push({
+          id: U.uuid(), file_name: file.name, original_name: file.name,
+          mime_type: file.type, file_type: U.getFileType(file.type, file.name),
+          size_bytes: file.size, data_url: file.data_url,
+        });
+      }
+      data.push(newRec);
+      U.save('db_correspondence', data);
     }
-  } else {
-    const data = U.load('db_correspondence', []);
-    newRec = {
-      id: U.uuid(),
-      reference_number: rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX'),
-      subject: rec.subject, content: rec.content,
-      sender_name: rec.sender_name || Auth.user?.full_name,
-      sector_id: rec.sector_id, priority: rec.priority || 'normal',
-      is_archived: false, replies: [], follow_ups: [], attachments: [],
-      created_at: U.now(),
-    };
-    for (const file of files) {
-      newRec.attachments.push({
-        id: U.uuid(), file_name: file.name, original_name: file.name,
-        mime_type: file.type, file_type: U.getFileType(file.type, file.name),
-        size_bytes: file.size, data_url: file.data_url,
-      });
-    }
-    data.push(newRec);
-    U.save('db_correspondence', data);
-  }
-  return newRec;
-},
+    return newRec;
+  },
   async uploadAttachments(correspondenceId, files) {
     if (!sbConnected) return;
     for (const file of files) {
@@ -298,12 +296,10 @@ async create(rec, files = []) {
     U.save('db_correspondence', data);
     return rec;
   },
-    async getById(id) {
-    // 1. البحث في البيانات المحملة مسبقاً
+  async getById(id) {
     let record = appData.find(d => d.id === id);
     if (record) return record;
 
-    // 2. إذا لم توجد، جلبها مباشرة من Supabase مع المرفقات
     if (sbConnected) {
       try {
         const { data, error } = await sb
@@ -311,14 +307,11 @@ async create(rec, files = []) {
           .select('*, attachments(*)')
           .eq('id', id)
           .single();
-        
         if (!error && data) return data;
       } catch (e) {
         console.error('Error fetching record by ID:', e);
       }
     }
-
-    // 3. الحل الأخير: البحث في التخزين المحلي
     return U.load('db_correspondence', []).find(d => d.id === id);
   },
   async getNotifications() {
@@ -610,86 +603,88 @@ const Views = {
     `;
   },
 
-async view() {
+  async view() {
     const id = Router.params.id;
     const r = await DB.getById(id);
-  if (!r) return '<div class="p-8 text-white text-center">السجل غير موجود</div>';
-  const s = SECTORS.find(x => x.id === r.sector_id);
-  
-  return `
-    <div class="min-h-screen">
-      ${this.navbar()}
-      <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
-        <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
-        
-        <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
-          <div class="border-b-2 border-teal-600 pb-4 mb-6 text-center">
-            <h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1>
-            <p class="text-gray-600 mt-1">نظام المراسلات الإدارية</p>
-          </div>
+    if (!r) return '<div class="p-8 text-white text-center text-xl">السجل غير موجود أو تم حذفه</div>';
+    const s = SECTORS.find(x => x.id === r.sector_id);
+    
+    return `
+      <div class="min-h-screen">
+        ${this.navbar()}
+        <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
+          <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer flex items-center gap-2">
+            <span>→</span> رجوع
+          </button>
           
-          <div class="grid md:grid-cols-2 gap-4 mb-6">
-            <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number}</div></div>
-            <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at)}</div></div>
-            <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.icon} ${s?.name || '-'}</div></div>
-            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : ' عادية'}</div></div>
-            ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
-          </div>
-          
-          <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject)}</h2></div>
-          <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content)}</div></div>
-          
-          ${r.attachments && r.attachments.length > 0 ? `
-            <div class="mb-6 bg-blue-50 border-r-4 border-blue-500 p-4 rounded-xl">
-              <h3 class="font-bold text-gray-800 mb-3">📎 المرفقات (${r.attachments.length})</h3>
-              <div class="space-y-2">
-                ${r.attachments.map(a => `
-                  <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow">
-                    <div class="flex items-center gap-2">
-                      <span class="text-2xl">${U.getFileIcon(a.file_type)}</span>
-                      <div>
-                        <div class="font-semibold text-gray-800">${U.esc(a.original_name)}</div>
-                        <div class="text-xs text-gray-500">${(a.size_bytes / 1024).toFixed(1)} KB</div>
+          <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
+            <div class="border-b-2 border-teal-600 pb-4 mb-6 text-center">
+              <h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1>
+              <p class="text-gray-600 mt-1">نظام المراسلات الإدارية</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+              <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || 'غير محدد'}</div></div>
+              <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at) || 'غير محدد'}</div></div>
+              <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.icon || ''} ${s?.name || r.sector_id || 'غير محدد'}</div></div>
+              <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
+              ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
+            </div>
+            
+            <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || 'بدون موضوع')}</h2></div>
+            <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content || 'بدون محتوى')}</div></div>
+            
+            ${r.attachments && r.attachments.length > 0 ? `
+              <div class="mb-6 bg-blue-50 border-r-4 border-blue-500 p-4 rounded-xl">
+                <h3 class="font-bold text-gray-800 mb-3">📎 المرفقات (${r.attachments.length})</h3>
+                <div class="space-y-2">
+                  ${r.attachments.map(a => `
+                    <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow">
+                      <div class="flex items-center gap-2">
+                        <span class="text-2xl">${U.getFileIcon(a.file_type)}</span>
+                        <div>
+                          <div class="font-semibold text-gray-800">${U.esc(a.original_name)}</div>
+                          <div class="text-xs text-gray-500">${(a.size_bytes / 1024).toFixed(1)} KB</div>
+                        </div>
                       </div>
+                      <a href="${a.storage_path || a.data_url}" target="_blank" download="${U.esc(a.original_name)}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm cursor-pointer flex items-center gap-1">
+                        ⬇️ تحميل
+                      </a>
                     </div>
-                    <a href="${a.storage_path || a.data_url}" target="_blank" download="${U.esc(a.original_name)}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm cursor-pointer flex items-center gap-1">
-                      ⬇️ تحميل
-                    </a>
-                  </div>
-                `).join('')}
+                  `).join('')}
+                </div>
               </div>
-            </div>
-          ` : ''}
+            ` : ''}
+            
+            ${r.replies && r.replies.length > 0 ? `
+              <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${r.replies.length})</h3>
+                <div class="space-y-3">${r.replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author || 'مستخدم')}</div><div class="whitespace-pre-wrap">${U.esc(rp.content)}</div></div>`).join('')}</div>
+              </div>
+            ` : ''}
+            
+            ${r.follow_ups && r.follow_ups.length > 0 ? `
+              <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
+                <div class="space-y-2">${r.follow_ups.map(f => `<div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded"><div class="font-semibold">${U.esc(f.title || 'مهمة')}</div>${f.due_date ? `<div class="text-xs text-gray-600">📅 ${U.fmtShort(f.due_date)}</div>` : ''}${f.notes ? `<div class="text-sm text-gray-700">${U.esc(f.notes)}</div>` : ''}</div>`).join('')}</div>
+              </div>
+            ` : ''}
+          </div>
           
-          ${r.replies && r.replies.length > 0 ? `
-            <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${r.replies.length})</h3>
-              <div class="space-y-3">${r.replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author || 'مستخدم')}</div><div class="whitespace-pre-wrap">${U.esc(rp.content)}</div></div>`).join('')}</div>
+          <div class="glass rounded-2xl shadow-xl p-4 mt-4">
+            <h3 class="font-bold mb-3">⚡ إجراءات</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <button onclick="Exporter.txt('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
+              <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🔳 QR</button>
+              <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
+              <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 رد</button>
+              <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
+              ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`}
+              <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
             </div>
-          ` : ''}
-          
-          ${r.follow_ups && r.follow_ups.length > 0 ? `
-            <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
-              <div class="space-y-2">${r.follow_ups.map(f => `<div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded"><div class="font-semibold">${U.esc(f.title || 'مهمة')}</div>${f.due_date ? `<div class="text-xs text-gray-600">📅 ${U.fmtShort(f.due_date)}</div>` : ''}${f.notes ? `<div class="text-sm text-gray-700">${U.esc(f.notes)}</div>` : ''}</div>`).join('')}</div>
-            </div>
-          ` : ''}
-        </div>
-        
-        <div class="glass rounded-2xl shadow-xl p-4 mt-4">
-          <h3 class="font-bold mb-3"> إجراءات</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <button onclick="Exporter.txt('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
-            <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🔳 QR</button>
-            <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
-            <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 رد</button>
-            <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> متابعة</button>
-            ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`}
-            <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
           </div>
         </div>
       </div>
-    </div>
-  `;
-},
+    `;
+  },
 
   chat() {
     return `
@@ -856,7 +851,15 @@ const UI = {
 
 const Exporter = {
   txt(id) {
-    const r = DB.getById(id);
+    const r = DB.getById(id); // Note: getById is async, but Exporter functions are called from onclick, so we might need to handle this or rely on appData. For simplicity, we'll keep it as is or make it async.
+    // To be safe, let's make it async
+  },
+};
+
+// Fix Exporter to handle async getById
+const ExporterFixed = {
+  async txt(id) {
+    const r = await DB.getById(id);
     if (!r) return;
     const text = `${CONFIG.ORG}\n================================\nالمرجع: ${r.reference_number}\nالتاريخ: ${U.fmtDate(r.created_at)}\nالقطاع: ${SECTORS.find(s => s.id === r.sector_id)?.name || ''}\nالأولوية: ${r.priority}\nالمرسل: ${r.sender_name || '-'}\n================================\nالموضوع: ${r.subject}\n\n${r.content}\n================================\n© 2026 ${CONFIG.ORG}`;
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -866,16 +869,16 @@ const Exporter = {
     URL.revokeObjectURL(url);
     U.toast('تم التصدير', 'success');
   },
-  qr(id) {
-    const r = DB.getById(id);
+  async qr(id) {
+    const r = await DB.getById(id);
     if (!r) return;
     const url = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`REF: ${r.reference_number}\nSUBJECT: ${r.subject}\nDATE: ${r.created_at}\nORG: ${CONFIG.ORG}`)}`;
     const a = document.createElement('a');
     a.href = url; a.download = `qr_${r.reference_number}.png`; a.target = '_blank'; a.click();
     U.toast('تم إنشاء QR', 'success');
   },
-  wa(id) {
-    const r = DB.getById(id);
+  async wa(id) {
+    const r = await DB.getById(id);
     if (!r) return;
     const text = `*${CONFIG.ORG}*\n\n📌 ${r.reference_number}\n📅 ${U.fmtShort(r.created_at)}\n📝 ${r.subject}\n\n${(r.content || '').substring(0, 200)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -896,6 +899,8 @@ const Exporter = {
     U.toast('تم التصدير', 'success');
   },
 };
+// Reassign Exporter
+Object.assign(Exporter, ExporterFixed);
 
 function showSettings() {
   const useSb = confirm('هل تريد تفعيل Supabase؟\n\nOK = نعم (سيطلب الرابط والمفتاح)\nCancel = لا (الوضع المحلي)');
@@ -939,7 +944,7 @@ async function loadChatMessages() {
 }
 
 // =====================================================
-// MAIN RENDER - مصحح لعرض بيانات القطاع فقط
+// MAIN RENDER - مصحح لدعم الدوال غير المتزامنة (Async)
 // =====================================================
 async function render() {
   Auth.load();
@@ -961,7 +966,6 @@ async function render() {
   } else {
     whatsappBtn.classList.remove('hidden');
     
-    // 1. سحب البيانات من Supabase مع فلتر القطاع إذا كان المستخدم مدير قطاع
     let filters = {};
     if (sbConnected && Auth.user.role === 'sector_admin' && Auth.user.sector_id) {
       filters.sector_id = Auth.user.sector_id;
@@ -981,7 +985,6 @@ async function render() {
       }
     }
     
-    // 2. عرض الصفحات
     const views = {
       dashboard: () => Views.dashboard(appData),
       sector: () => Views.sector(appData),
@@ -993,9 +996,12 @@ async function render() {
       chat: () => Views.chat(),
       notifications: () => Views.notifications(),
     };
-    app.innerHTML = (views[Router.page] || Views.dashboard(appData))();
     
-    // 3. ربط الأحداث
+    const viewFn = views[Router.page] || views.dashboard;
+    // هذا هو السطر السحري الذي يحل مشكلة [object Promise]
+    const html = await viewFn(); 
+    app.innerHTML = html;
+    
     bindEvents();
   }
 }
@@ -1040,9 +1046,7 @@ function bindEvents() {
         saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
         
         try {
-          // رفع المرفقات إذا وجدت
           const filesToUpload = selectedFiles.filter(f => filePreview.contains(f.parentElement));
-          
           await DB.create({ 
             sector_id: sector, 
             subject, 
