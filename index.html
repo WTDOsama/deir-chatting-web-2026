@@ -52,11 +52,14 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '8.0.0',
-  SB_URL: localStorage.getItem('SB_URL') || '',
-  SB_KEY: localStorage.getItem('SB_KEY') || '',
-  USE_SB: localStorage.getItem('USE_SB') === 'true',
-  WHATSAPP_NUMBER: '9702227958', // غيّر هذا الرقم لرقم واتساب الإدارة
+  VERSION: '8.1.0',
+  
+  // ✅ بيانات الاتصال المضمنة - تعمل على أي جهاز
+  SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
+  SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
+  USE_SB: true, // ✅ مفعل دائماً
+  
+  WHATSAPP_NUMBER: '9702227958',
 };
 
 const SECTORS = [
