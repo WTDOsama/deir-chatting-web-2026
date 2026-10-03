@@ -298,7 +298,29 @@ async create(rec, files = []) {
     U.save('db_correspondence', data);
     return rec;
   },
-  getById(id) { return appData.find(d => d.id === id) || U.load('db_correspondence', []).find(d => d.id === id); },
+    async getById(id) {
+    // 1. البحث في البيانات المحملة مسبقاً
+    let record = appData.find(d => d.id === id);
+    if (record) return record;
+
+    // 2. إذا لم توجد، جلبها مباشرة من Supabase مع المرفقات
+    if (sbConnected) {
+      try {
+        const { data, error } = await sb
+          .from('correspondence')
+          .select('*, attachments(*)')
+          .eq('id', id)
+          .single();
+        
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('Error fetching record by ID:', e);
+      }
+    }
+
+    // 3. الحل الأخير: البحث في التخزين المحلي
+    return U.load('db_correspondence', []).find(d => d.id === id);
+  },
   async getNotifications() {
     if (!sbConnected) return [];
     const { data } = await sb.from('notifications').select('*').eq('user_id', Auth.user?.id).order('created_at', { ascending: false }).limit(20);
