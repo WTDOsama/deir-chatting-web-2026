@@ -60,11 +60,11 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '10.3.0-Final',
+  VERSION: '10.4.0-Fixed',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
-  WHATSAPP_NUMBER: '970592227958', // تم تصحيح الرقم لإزالة الأصفار الزائدة
+  WHATSAPP_NUMBER: '970592227958',
 };
 
 const SECTORS = [
@@ -1201,6 +1201,7 @@ function bindEvents() {
     if (fileInput) {
       fileInput.onchange = async (e) => {
         selectedFiles = Array.from(e.target.files);
+        console.log('📁 Files selected:', selectedFiles.length);
         if (selectedFiles.length > 0) {
           filePreview.innerHTML = selectedFiles.map(f => `
             <div class="attachment-chip">
@@ -1227,18 +1228,20 @@ function bindEvents() {
           return; 
         }
         
+        console.log('📎 Files to upload:', selectedFiles.length);
+        
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
         
         try {
-          const filesToUpload = selectedFiles.filter(f => filePreview.contains(f.parentElement));
+          // ✅ تم التصحيح: إرسال selectedFiles مباشرة بدون فلتر خاطئ
           await DB.create({ 
             sector_id: sector, 
             subject, 
             content, 
             sender_name: sender, 
             priority 
-          }, filesToUpload);
+          }, selectedFiles);
           
           U.toast('✅ تم حفظ المراسلة بنجاح', 'success');
           Router.go('dashboard');
