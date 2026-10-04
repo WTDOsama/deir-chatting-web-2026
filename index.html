@@ -647,97 +647,118 @@ const Views = {
     `;
   },
 
-  async view() {
-    const id = Router.params.id;
-    const r = await DB.getById(id);
+async view() {
+  const id = Router.params.id;
+  
+  // جلب البيانات مباشرة من قاعدة البيانات مع المرفقات
+  let r;
+  if (sbConnected) {
+    try {
+      const { data, error } = await sb
+        .from('correspondence')
+        .select('*, attachments(*)')
+        .eq('id', id)
+        .single();
+      if (error || !data) {
+        return '<div class="p-8 text-white text-center text-xl">السجل غير موجود أو تم حذفه</div>';
+      }
+      r = data;
+    } catch (e) {
+      console.error('Error fetching record:', e);
+      return '<div class="p-8 text-white text-center text-xl">خطأ في تحميل البيانات</div>';
+    }
+  } else {
+    r = await DB.getById(id);
     if (!r) return '<div class="p-8 text-white text-center text-xl">السجل غير موجود أو تم حذفه</div>';
-    const s = SECTORS.find(x => x.id === r.sector_id);
-    
-    return `
-      <div class="min-h-screen">
-        ${this.navbar()}
-        <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
-          <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer flex items-center gap-2">
-            <span>→</span> رجوع
-          </button>
-          
-          <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
-            <div class="border-b-2 border-teal-600 pb-4 mb-6 text-center">
-              <h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1>
-              <p class="text-gray-600 mt-1">نظام المراسلات الإدارية</p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-4 mb-6">
-              <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || 'غير محدد'}</div></div>
-              <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at) || 'غير محدد'}</div></div>
-              <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.icon || ''} ${s?.name || r.sector_id || 'غير محدد'}</div></div>
-              <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
-              ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
-            </div>
-            
-            <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || 'بدون موضوع')}</h2></div>
-            <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content || 'بدون محتوى')}</div></div>
-            
-            ${r.attachments && r.attachments.length > 0 ? `
-              <div class="mb-6 bg-blue-50 border-r-4 border-blue-500 p-4 rounded-xl">
-                <h3 class="font-bold text-gray-800 mb-3">📎 المرفقات (${r.attachments.length})</h3>
-                <div class="space-y-3">
-                  ${r.attachments.map(a => {
-                    const fileType = a.file_type || U.getFileType(a.mime_type, a.original_name);
-                    const icon = U.getFileIcon(fileType);
-                    const label = U.getDownloadLabel(fileType);
-                    const size = U.formatFileSize(a.size_bytes);
-                    const downloadTarget = a.storage_path || a.data_url || '';
-                    const fileName = U.esc(a.original_name || 'ملف');
-                    return `
-                      <div class="attachment-card">
-                        <div class="attachment-info">
-                          <span class="attachment-icon">${icon}</span>
-                          <div style="min-width: 0;">
-                            <div class="attachment-name" title="${fileName}">${fileName}</div>
-                            <div class="attachment-size">${size}</div>
-                          </div>
-                        </div>
-                        <button class="download-btn" onclick="downloadAttachment('${downloadTarget}', '${fileName.replace(/'/g, "\\'")}', '${fileType}')" data-url="${downloadTarget}" data-filename="${fileName}">
-                          <span>⬇️</span>
-                          <span>${label}</span>
-                        </button>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-            ` : ''}
-            
-            ${r.replies && r.replies.length > 0 ? `
-              <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${r.replies.length})</h3>
-                <div class="space-y-3">${r.replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author || 'مستخدم')}</div><div class="whitespace-pre-wrap">${U.esc(rp.content)}</div></div>`).join('')}</div>
-              </div>
-            ` : ''}
-            
-            ${r.follow_ups && r.follow_ups.length > 0 ? `
-              <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
-                <div class="space-y-2">${r.follow_ups.map(f => `<div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded"><div class="font-semibold">${U.esc(f.title || 'مهمة')}</div>${f.due_date ? `<div class="text-xs text-gray-600">📅 ${U.fmtShort(f.due_date)}</div>` : ''}${f.notes ? `<div class="text-sm text-gray-700">${U.esc(f.notes)}</div>` : ''}</div>`).join('')}</div>
-              </div>
-            ` : ''}
+  }
+  
+  const s = SECTORS.find(x => x.id === r.sector_id);
+  
+  return `
+    <div class="min-h-screen">
+      ${this.navbar()}
+      <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
+        <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer flex items-center gap-2">
+          <span>→</span> رجوع
+        </button>
+        
+        <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
+          <div class="border-b-2 border-teal-600 pb-4 mb-6 text-center">
+            <h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1>
+            <p class="text-gray-600 mt-1">نظام المراسلات الإدارية</p>
           </div>
           
-          <div class="glass rounded-2xl shadow-xl p-4 mt-4">
-            <h3 class="font-bold mb-3">⚡ إجراءات</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <button onclick="Exporter.txt('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
-              <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🔳 QR</button>
-              <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
-              <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 رد</button>
-              <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
-              ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`}
-              <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
+          <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || 'غير محدد'}</div></div>
+            <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at) || 'غير محدد'}</div></div>
+            <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.icon || ''} ${s?.name || r.sector_id || 'غير محدد'}</div></div>
+            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? ' عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
+            ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
+          </div>
+          
+          <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || 'بدون موضوع')}</h2></div>
+          <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content || 'بدون محتوى')}</div></div>
+          
+          ${r.attachments && r.attachments.length > 0 ? `
+            <div class="mb-6 bg-blue-50 border-r-4 border-blue-500 p-4 rounded-xl">
+              <h3 class="font-bold text-gray-800 mb-3">📎 المرفقات (${r.attachments.length})</h3>
+              <div class="space-y-3">
+                ${r.attachments.map(a => {
+                  const fileType = a.file_type || U.getFileType(a.mime_type, a.original_name);
+                  const icon = U.getFileIcon(fileType);
+                  const label = U.getDownloadLabel(fileType);
+                  const size = U.formatFileSize(a.size_bytes);
+                  const downloadTarget = a.storage_path || a.data_url || '';
+                  const fileName = U.esc(a.original_name || 'ملف');
+                  return `
+                    <div class="attachment-card">
+                      <div class="attachment-info">
+                        <span class="attachment-icon">${icon}</span>
+                        <div style="min-width: 0;">
+                          <div class="attachment-name" title="${fileName}">${fileName}</div>
+                          <div class="attachment-size">${size}</div>
+                        </div>
+                      </div>
+                      <button class="download-btn" onclick="downloadAttachment('${downloadTarget}', '${fileName.replace(/'/g, "\\'")}', '${fileType}')" data-url="${downloadTarget}" data-filename="${fileName}">
+                        <span>⬇️</span>
+                        <span>${label}</span>
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
             </div>
+          ` : '<div class="mb-6 bg-gray-50 border-r-4 border-gray-300 p-4 rounded-xl text-center text-gray-500"> لا توجد مرفقات</div>'}
+          
+          ${r.replies && r.replies.length > 0 ? `
+            <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3"> الردود (${r.replies.length})</h3>
+              <div class="space-y-3">${r.replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author || 'مستخدم')}</div><div class="whitespace-pre-wrap">${U.esc(rp.content)}</div></div>`).join('')}</div>
+            </div>
+          ` : ''}
+          
+          ${r.follow_ups && r.follow_ups.length > 0 ? `
+            <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
+              <div class="space-y-2">${r.follow_ups.map(f => `<div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded"><div class="font-semibold">${U.esc(f.title || 'مهمة')}</div>${f.due_date ? `<div class="text-xs text-gray-600">📅 ${U.fmtShort(f.due_date)}</div>` : ''}${f.notes ? `<div class="text-sm text-gray-700">${U.esc(f.notes)}</div>` : ''}</div>`).join('')}</div>
+            </div>
+          ` : ''}
+        </div>
+        
+        <div class="glass rounded-2xl shadow-xl p-4 mt-4">
+          <h3 class="font-bold mb-3">⚡ إجراءات</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <button onclick="Exporter.txt('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
+            <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> QR</button>
+            <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
+            <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> رد</button>
+            <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
+            ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> أرشفة</button>`}
+            <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
           </div>
         </div>
       </div>
-    `;
-  },
+    </div>
+  `;
+},
 
   chat() {
     return `
