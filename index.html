@@ -43,6 +43,17 @@
   .download-btn { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; transition: all 0.2s; }
   .download-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,118,110,0.4); }
   .download-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  /* أزرار الإجراءات السريعة على البطاقة */
+  .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+  .quick-actions button { padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 600; color: white; cursor: pointer; border: none; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .quick-actions button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+  .qa-txt { background: #2563eb; }
+  .qa-qr { background: #9333ea; }
+  .qa-wa { background: #16a34a; }
+  .qa-reply { background: #0d9488; }
+  .qa-follow { background: #9333ea; }
+  .qa-archive { background: #4b5563; }
+  .qa-delete { background: #991b1b; }
 </style>
 </head>
 <body>
@@ -60,7 +71,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '10.4.0-Fixed',
+  VERSION: '10.5.0-QuickActions',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -68,7 +79,7 @@ const CONFIG = {
 };
 
 const SECTORS = [
-  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '🌅' },
+  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '' },
   { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '🌊' },
   { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '🏔️' },
   { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '☀️' },
@@ -119,7 +130,7 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '📦', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '', other: '📎' }[type] || '📎'),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
     const lowerName = name.toLowerCase();
@@ -490,7 +501,7 @@ const Views = {
         ${this.navbar()}
         <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
           <div class="glass rounded-2xl shadow-xl p-6 mb-6">
-            <h1 class="text-3xl font-bold text-teal-800 mb-2">👋 أهلاً ${U.esc(u.full_name)}</h1>
+            <h1 class="text-3xl font-bold text-teal-800 mb-2"> أهلاً ${U.esc(u.full_name)}</h1>
             <p class="text-gray-600">${ROLES[u.role] || 'مستخدم'} ${sbConnected ? '🔗' : '💾'}</p>
             <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
               <div class="bg-teal-50 p-3 rounded-xl"><div class="text-2xl font-bold text-teal-700">${active.length}</div><div class="text-xs text-gray-600">مراسلة نشطة</div></div>
@@ -499,7 +510,7 @@ const Views = {
               <div class="bg-blue-50 p-3 rounded-xl"><div class="text-2xl font-bold text-blue-700">${data.length}</div><div class="text-xs text-gray-600">الإجمالي</div></div>
             </div>
           </div>
-          <h2 class="text-xl font-bold text-white mb-3">🏢 القواطع</h2>
+          <h2 class="text-xl font-bold text-white mb-3"> القواطع</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             ${SECTORS.map(s => {
               const count = active.filter(r => r.sector_id === s.id).length;
@@ -518,7 +529,7 @@ const Views = {
             <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📦 الأرشيف</button>
           </div>
           <div class="glass rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">🕐 آخر المراسلات</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4"> آخر المراسلات</h2>
             ${active.length === 0 ? '<div class="text-center text-gray-500 py-8">لا توجد مراسلات بعد. اضغط "مراسلة جديدة" للبدء.</div>' : active.slice(0, 5).map(r => this.card(r)).join('')}
           </div>
           <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG} – جميع الحقوق محفوظة</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
@@ -640,7 +651,7 @@ const Views = {
                     <div class="bg-purple-50 border-r-4 border-purple-500 p-3 rounded">
                       <div class="flex justify-between items-center">
                         <span class="font-semibold text-gray-800">${U.esc(f.title || 'مهمة')}</span>
-                        <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${f.status === 'done' ? '✓ منجزة' : '⏳ قيد التنفيذ'}</span>
+                        <span class="text-xs px-2 py-1 rounded ${f.status === 'done' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${f.status === 'done' ? '✓ منجزة' : ' قيد التنفيذ'}</span>
                       </div>
                       ${f.due_date ? `<div class="text-xs text-gray-600 mt-1">📅 ${U.fmtShort(f.due_date)}</div>` : ''}
                       ${f.notes ? `<div class="text-sm text-gray-700 mt-1">${U.esc(f.notes)}</div>` : ''}
@@ -680,13 +691,13 @@ const Views = {
               </div>
               <div><label class="block text-sm font-semibold mb-1 text-gray-700">المحتوى *</label><textarea id="fCon" rows="8" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea></div>
               <div>
-                <label class="block text-sm font-semibold mb-1 text-gray-700">📎 المرفقات (صور، Excel، PDF)</label>
+                <label class="block text-sm font-semibold mb-1 text-gray-700"> المرفقات (صور، Excel، PDF)</label>
                 <input type="file" id="fFiles" multiple accept="image/*,.xlsx,.xls,.csv,.pdf,.doc,.docx,.zip,.rar" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
                 <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة</p>
                 <div id="filePreview" class="mt-2 flex flex-wrap gap-2"></div>
               </div>
               <div class="flex gap-2">
-                <button type="button" id="saveBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ المراسلة</button>
+                <button type="button" id="saveBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer"> حفظ المراسلة</button>
                 <button type="button" onclick="Router.go('dashboard')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
               </div>
             </form>
@@ -784,7 +795,7 @@ const Views = {
                           </div>
                         </div>
                         <button class="download-btn" onclick="downloadAttachment('${downloadTarget}', '${fileName.replace(/'/g, "\\'")}', '${fileType}')">
-                          <span>⬇️</span>
+                          <span>️</span>
                           <span>${label}</span>
                         </button>
                       </div>
@@ -811,12 +822,12 @@ const Views = {
             <h3 class="font-bold mb-3">⚡ إجراءات</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
               <button onclick="Exporter.txt('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
-              <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🔳 QR</button>
+              <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> QR</button>
               <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
               <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 رد</button>
               <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
-              ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`}
-              <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
+              ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`}
+              <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">️ حذف</button>
             </div>
           </div>
         </div>
@@ -888,12 +899,12 @@ const Views = {
     const s = SECTORS.find(x => x.id === r.sector_id);
     const pc = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
     return `
-      <div onclick="Router.go('view', {id:'${r.id}'})" class="glass rounded-xl shadow-lg p-4 card-hover cursor-pointer ${pc}">
-        <div class="flex-1 min-w-0">
+      <div class="glass rounded-xl shadow-lg p-4 card-hover ${pc}">
+        <div onclick="Router.go('view', {id:'${r.id}'})" class="cursor-pointer">
           <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
             <span>${r.reference_number}</span><span>•</span><span>${U.fmtShort(r.created_at)}</span>
             ${s ? `<span>•</span><span>${s.icon} ${s.name}</span>` : ''}
-            ${r.sender_name ? `<span>•</span><span>👤 ${U.esc(r.sender_name)}</span>` : ''}
+            ${r.sender_name ? `<span>•</span><span> ${U.esc(r.sender_name)}</span>` : ''}
           </div>
           <h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3>
           <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
@@ -906,6 +917,17 @@ const Views = {
             ${r.replies?.length > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">💬 ${r.replies.length}</span>` : ''}
             ${r.follow_ups?.length > 0 ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded">📋 ${r.follow_ups.length}</span>` : ''}
           </div>
+        </div>
+        <div class="quick-actions mt-3 pt-3 border-t border-gray-200">
+          <button class="qa-txt" onclick="event.stopPropagation(); Exporter.txt('${r.id}')">📝 TXT</button>
+          <button class="qa-qr" onclick="event.stopPropagation(); Exporter.qr('${r.id}')">🔳 QR</button>
+          <button class="qa-wa" onclick="event.stopPropagation(); Exporter.wa('${r.id}')">📱 WhatsApp</button>
+          <button class="qa-reply" onclick="event.stopPropagation(); UI.reply('${r.id}')">💬 رد</button>
+          <button class="qa-follow" onclick="event.stopPropagation(); UI.followUp('${r.id}')">📋 متابعة</button>
+          ${r.is_archived 
+            ? `<button class="qa-archive" onclick="event.stopPropagation(); UI.restore('${r.id}')">📤 استعادة</button>` 
+            : `<button class="qa-archive" onclick="event.stopPropagation(); UI.archive('${r.id}')">📦 أرشفة</button>`}
+          <button class="qa-delete" onclick="event.stopPropagation(); UI.del('${r.id}')">🗑️ حذف</button>
         </div>
       </div>
     `;
@@ -1016,7 +1038,7 @@ const Exporter = {
   async wa(id) {
     const r = await DB.getById(id);
     if (!r) return;
-    const text = `*${CONFIG.ORG}*\n\n📌 ${r.reference_number}\n📅 ${U.fmtShort(r.created_at)}\n📝 ${r.subject}\n\n${(r.content || '').substring(0, 200)}`;
+    const text = `*${CONFIG.ORG}*\n\n📌 ${r.reference_number}\n ${U.fmtShort(r.created_at)}\n📝 ${r.subject}\n\n${(r.content || '').substring(0, 200)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   },
   excel() {
@@ -1201,7 +1223,7 @@ function bindEvents() {
     if (fileInput) {
       fileInput.onchange = async (e) => {
         selectedFiles = Array.from(e.target.files);
-        console.log('📁 Files selected:', selectedFiles.length);
+        console.log(' Files selected:', selectedFiles.length);
         if (selectedFiles.length > 0) {
           filePreview.innerHTML = selectedFiles.map(f => `
             <div class="attachment-chip">
@@ -1234,7 +1256,6 @@ function bindEvents() {
         saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
         
         try {
-          // ✅ تم التصحيح: إرسال selectedFiles مباشرة بدون فلتر خاطئ
           await DB.create({ 
             sector_id: sector, 
             subject, 
@@ -1314,7 +1335,7 @@ function bindEvents() {
     DB.subscribeToChat((newMsg) => {
       loadChatMessages();
       if (newMsg.sender_id !== Auth.user?.id) {
-        U.toast(`💬 رسالة جديدة من ${newMsg.sender_name}`, 'info');
+        U.toast(` رسالة جديدة من ${newMsg.sender_name}`, 'info');
       }
     });
   }
@@ -1349,7 +1370,7 @@ async function handleLogin() {
     errEl.textContent = e.message;
     errEl.classList.remove('hidden');
     btn.disabled = false;
-    btn.innerHTML = '🔐 تسجيل الدخول';
+    btn.innerHTML = ' تسجيل الدخول';
   }
 }
 
