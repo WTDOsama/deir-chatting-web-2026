@@ -650,22 +650,31 @@ const Views = {
 async view() {
   const id = Router.params.id;
   
-  // جلب البيانات مباشرة من قاعدة البيانات مع المرفقات
+  // 1. جلب المراسلة الأساسية
   let r;
   if (sbConnected) {
-    try {
-      const { data, error } = await sb
-        .from('correspondence')
-        .select('*, attachments(*)')
-        .eq('id', id)
-        .single();
-      if (error || !data) {
-        return '<div class="p-8 text-white text-center text-xl">السجل غير موجود أو تم حذفه</div>';
-      }
-      r = data;
-    } catch (e) {
-      console.error('Error fetching record:', e);
-      return '<div class="p-8 text-white text-center text-xl">خطأ في تحميل البيانات</div>';
+    const { data: correspondence, error: corrError } = await sb
+      .from('correspondence')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (corrError || !correspondence) {
+      return '<div class="p-8 text-white text-center text-xl">السجل غير موجود أو تم حذفه</div>';
+    }
+    r = correspondence;
+    
+    // 2. جلب المرفقات بشكل منفصل (مضمون 100%)
+    const { data: attachments, error: attError } = await sb
+      .from('attachments')
+      .select('*')
+      .eq('correspondence_id', id)
+      .order('created_at', { ascending: true });
+    
+    if (!attError && attachments) {
+      r.attachments = attachments;
+    } else {
+      r.attachments = [];
     }
   } else {
     r = await DB.getById(id);
@@ -692,7 +701,7 @@ async view() {
             <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || 'غير محدد'}</div></div>
             <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at) || 'غير محدد'}</div></div>
             <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.icon || ''} ${s?.name || r.sector_id || 'غير محدد'}</div></div>
-            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? ' عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
+            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
             ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
           </div>
           
@@ -728,10 +737,10 @@ async view() {
                 }).join('')}
               </div>
             </div>
-          ` : '<div class="mb-6 bg-gray-50 border-r-4 border-gray-300 p-4 rounded-xl text-center text-gray-500"> لا توجد مرفقات</div>'}
+          ` : '<div class="mb-6 bg-gray-50 border-r-4 border-gray-300 p-4 rounded-xl text-center text-gray-500">📭 لا توجد مرفقات</div>'}
           
           ${r.replies && r.replies.length > 0 ? `
-            <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3"> الردود (${r.replies.length})</h3>
+            <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${r.replies.length})</h3>
               <div class="space-y-3">${r.replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author || 'مستخدم')}</div><div class="whitespace-pre-wrap">${U.esc(rp.content)}</div></div>`).join('')}</div>
             </div>
           ` : ''}
@@ -747,11 +756,11 @@ async view() {
           <h3 class="font-bold mb-3">⚡ إجراءات</h3>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
             <button onclick="Exporter.txt('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📝 TXT</button>
-            <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> QR</button>
+            <button onclick="Exporter.qr('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🔳 QR</button>
             <button onclick="Exporter.wa('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📱 WhatsApp</button>
-            <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> رد</button>
+            <button onclick="UI.reply('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">💬 رد</button>
             <button onclick="UI.followUp('${r.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📋 متابعة</button>
-            ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer"> أرشفة</button>`}
+            ${r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📤 استعادة</button>` : `<button onclick="UI.archive('${r.id}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">📦 أرشفة</button>`}
             <button onclick="UI.del('${r.id}')" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">🗑️ حذف</button>
           </div>
         </div>
