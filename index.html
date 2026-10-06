@@ -70,7 +70,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '10.6.0-AuthEnhanced',
+  VERSION: '10.7.0-RepliesFixed',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -79,7 +79,7 @@ const CONFIG = {
 
 const SECTORS = [
   { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '' },
-  { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '🌊' },
+  { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '' },
   { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '🏔️' },
   { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '☀️' },
 ];
@@ -129,7 +129,7 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '️', excel: '📊', document: '📄', pdf: '📕', archive: '', other: '📎' }[type] || '📎'),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
     const lowerName = name.toLowerCase();
@@ -220,7 +220,8 @@ async function refreshNotifications() {
 const DB = {
   async getAll(filters = {}) {
     if (sbConnected) {
-      let q = sb.from('correspondence').select('*, attachments(*)');
+      // ✅ تم التعديل: جلب الردود مع المرفقات
+      let q = sb.from('correspondence').select('*, attachments(*), replies(*)');
       if (filters.sector_id) q = q.eq('sector_id', filters.sector_id);
       if (filters.is_archived !== undefined) q = q.eq('is_archived', filters.is_archived);
       const { data, error } = await q.order('created_at', { ascending: false });
@@ -241,7 +242,7 @@ const DB = {
   async create(rec, files = []) {
     let newRec;
     if (sbConnected) {
-      console.log('📝 Creating correspondence:', rec.subject);
+      console.log(' Creating correspondence:', rec.subject);
       const { data, error } = await sb.from('correspondence').insert([{
         reference_number: rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX'),
         subject: rec.subject, content: rec.content,
@@ -265,7 +266,7 @@ const DB = {
           
           const { data: updated, error: fetchError } = await sb
             .from('correspondence')
-            .select('*, attachments(*)')
+            .select('*, attachments(*), replies(*)')
             .eq('id', newRec.id)
             .single();
             
@@ -405,7 +406,8 @@ const DB = {
     if (record) return record;
     if (sbConnected) {
       try {
-        const { data, error } = await sb.from('correspondence').select('*, attachments(*)').eq('id', id).single();
+        // ✅ تم التعديل: جلب الردود مع المرفقات
+        const { data, error } = await sb.from('correspondence').select('*, attachments(*), replies(*)').eq('id', id).single();
         if (!error && data) return data;
       } catch (e) { console.error('Error fetching record by ID:', e); }
     }
@@ -465,7 +467,7 @@ const Views = {
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in">
           <div class="text-center mb-6">
-            <div class="text-6xl mb-3">🏢</div>
+            <div class="text-6xl mb-3"></div>
             <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
             <p class="text-gray-600 text-sm mt-2">نظام المراسلات الإدارية</p>
           </div>
@@ -670,7 +672,7 @@ const Views = {
         ${this.navbar()}
         <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
           <div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6">
-            <h1 class="text-3xl font-bold">📋 المتابعة</h1>
+            <h1 class="text-3xl font-bold"> المتابعة</h1>
             <p class="opacity-90 mt-1">${withFu.length} مراسلة بها مهام</p>
           </div>
           <div class="space-y-3">
@@ -743,7 +745,7 @@ const Views = {
 
   async view() {
     const id = Router.params.id;
-    console.log('👁️ Opening view for correspondence ID:', id);
+    console.log('️ Opening view for correspondence ID:', id);
     
     let r;
     if (sbConnected) {
@@ -760,8 +762,15 @@ const Views = {
       r = correspondence;
       console.log('✅ Correspondence loaded:', r.reference_number);
       
+      // جلب المرفقات والردود بشكل منفصل
       const { data: attachments, error: attError } = await sb
         .from('attachments')
+        .select('*')
+        .eq('correspondence_id', id)
+        .order('created_at', { ascending: true });
+      
+      const { data: replies, error: replyError } = await sb
+        .from('replies')
         .select('*')
         .eq('correspondence_id', id)
         .order('created_at', { ascending: true });
@@ -772,9 +781,14 @@ const Views = {
       } else {
         r.attachments = attachments || [];
         console.log('✅ Attachments loaded count:', r.attachments.length);
-        if (r.attachments.length > 0) {
-          console.log('📎 Attachment details:', r.attachments);
-        }
+      }
+      
+      if (replyError) {
+        console.error('❌ Fetch replies error:', replyError);
+        r.replies = [];
+      } else {
+        r.replies = replies || [];
+        console.log('✅ Replies loaded count:', r.replies.length);
       }
     } else {
       r = await DB.getById(id);
@@ -801,7 +815,7 @@ const Views = {
               <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || 'غير محدد'}</div></div>
               <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at) || 'غير محدد'}</div></div>
               <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.icon || ''} ${s?.name || r.sector_id || 'غير محدد'}</div></div>
-              <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
+              <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? ' عالية' : r.priority === 'low' ? '🟢 منخفضة' : ' عادية'}</div></div>
               ${r.sender_name ? `<div class="md:col-span-2"><div class="text-xs text-gray-500">المرسل</div><div class="font-semibold">${U.esc(r.sender_name)}</div></div>` : ''}
             </div>
             
@@ -841,9 +855,16 @@ const Views = {
             
             ${r.replies && r.replies.length > 0 ? `
               <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">💬 الردود (${r.replies.length})</h3>
-                <div class="space-y-3">${r.replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author || 'مستخدم')}</div><div class="whitespace-pre-wrap">${U.esc(rp.content)}</div></div>`).join('')}</div>
+                <div class="space-y-3">
+                  ${r.replies.map(rp => `
+                    <div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded">
+                      <div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)} – ${U.esc(rp.author_name || rp.author || 'مستخدم')}</div>
+                      <div class="whitespace-pre-wrap">${U.esc(rp.content)}</div>
+                    </div>
+                  `).join('')}
+                </div>
               </div>
-            ` : ''}
+            ` : '<div class="mb-6 bg-gray-50 border-r-4 border-gray-300 p-4 rounded-xl text-center text-gray-500">💬 لا توجد ردود على هذه المراسلة</div>'}
             
             ${r.follow_ups && r.follow_ups.length > 0 ? `
               <div class="mb-6"><h3 class="font-bold text-lg text-gray-800 mb-3">📋 المتابعة</h3>
@@ -896,7 +917,7 @@ const Views = {
         <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
           <div class="glass rounded-2xl shadow-xl p-6">
             <div class="flex justify-between items-center mb-4">
-              <h1 class="text-2xl font-bold text-teal-800">🔔 التنبيهات</h1>
+              <h1 class="text-2xl font-bold text-teal-800"> التنبيهات</h1>
               <button onclick="UI.markAllRead()" class="text-sm text-teal-600 hover:underline cursor-pointer">تحديد الكل كمقروء</button>
             </div>
             <div id="notifList" class="space-y-3"><div class="text-center text-gray-500">جاري التحميل...</div></div>
@@ -920,9 +941,9 @@ const Views = {
             <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏠 الرئيسية</button>
             <button onclick="Router.go('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer hidden md:inline">🏛️ الإدارة</button>
             <button onclick="Router.go('chat')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer hidden md:inline">💬 المحادثة</button>
-            <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative">🔔 التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
+            <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative"> التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
             <button onclick="Router.go('create')" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm font-semibold cursor-pointer">➕ جديد</button>
-            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
+            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer"> خروج</button>
           </div>
         </div>
       </nav>
@@ -932,23 +953,25 @@ const Views = {
   card(r) {
     const s = SECTORS.find(x => x.id === r.sector_id);
     const pc = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
+    const repliesCount = r.replies ? r.replies.length : 0;
+    
     return `
       <div class="glass rounded-xl shadow-lg p-4 card-hover ${pc}">
         <div onclick="Router.go('view', {id:'${r.id}'})" class="cursor-pointer">
           <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
             <span>${r.reference_number}</span><span>•</span><span>${U.fmtShort(r.created_at)}</span>
             ${s ? `<span>•</span><span>${s.icon} ${s.name}</span>` : ''}
-            ${r.sender_name ? `<span>•</span><span> ${U.esc(r.sender_name)}</span>` : ''}
+            ${r.sender_name ? `<span>•</span><span> 👤 ${U.esc(r.sender_name)}</span>` : ''}
           </div>
           <h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3>
           <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
           <div class="flex gap-2 mt-2 flex-wrap text-xs">
             ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
             ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
-            ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">🟢 منخفضة</span>' : ''}
+            ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded"> منخفضة</span>' : ''}
             ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
-            ${r.attachments?.length > 0 ? `<span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">📎 ${r.attachments.length}</span>` : ''}
-            ${r.replies?.length > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">💬 ${r.replies.length}</span>` : ''}
+            ${r.attachments?.length > 0 ? `<span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded"> ${r.attachments.length}</span>` : ''}
+            ${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">💬 ${repliesCount} رد</span>` : '<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded">💬 لا ردود</span>'}
             ${r.follow_ups?.length > 0 ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded">📋 ${r.follow_ups.length}</span>` : ''}
           </div>
         </div>
@@ -957,7 +980,7 @@ const Views = {
           <button class="qa-qr" onclick="event.stopPropagation(); Exporter.qr('${r.id}')">🔳 QR</button>
           <button class="qa-wa" onclick="event.stopPropagation(); Exporter.wa('${r.id}')">📱 WhatsApp</button>
           <button class="qa-reply" onclick="event.stopPropagation(); UI.reply('${r.id}')">💬 رد</button>
-          <button class="qa-follow" onclick="event.stopPropagation(); UI.followUp('${r.id}')">📋 متابعة</button>
+          <button class="qa-follow" onclick="event.stopPropagation(); UI.followUp('${r.id}')"> متابعة</button>
           ${r.is_archived 
             ? `<button class="qa-archive" onclick="event.stopPropagation(); UI.restore('${r.id}')">📤 استعادة</button>` 
             : `<button class="qa-archive" onclick="event.stopPropagation(); UI.archive('${r.id}')">📦 أرشفة</button>`}
