@@ -70,7 +70,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '11.0.0-OversightSystem',
+  VERSION: '11.1.0-FullComplaints',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -500,7 +500,6 @@ const Views = {
     `;
   },
 
-  // ========== OVERSIGHT DASHBOARD ==========
   async oversightDashboard() {
     const u = Auth.user || {};
     const sector = SECTORS.find(s => s.id === u.sector_id);
@@ -772,7 +771,6 @@ const Views = {
     `;
   },
 
-  // ========== OTHER VIEWS ==========
   sector(data) {
     data = data || appData.correspondence || [];
     const sid = Router.params.id;
@@ -814,8 +812,110 @@ const Views = {
     return `<div class="min-h-screen">${this.navbar()}<div class="max-w-4xl mx-auto p-4 md:p-6 fade-in"><button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button><div class="glass rounded-2xl shadow-xl p-6 md:p-8"><div class="border-b-2 border-teal-600 pb-4 mb-6 text-center"><h1 class="text-2xl font-bold text-teal-800">${CONFIG.ORG}</h1></div><div class="grid md:grid-cols-2 gap-4 mb-6"><div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || '-'}</div></div><div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at)}</div></div><div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.name || '-'}</div></div><div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div></div><div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || '-')}</h2></div><div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap">${U.esc(r.content || '-')}</div></div>${r.replies && r.replies.length > 0 ? `<div class="mb-6"><h3 class="font-bold text-lg mb-3"> الردود (${r.replies.length})</h3><div class="space-y-3">${r.replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="text-xs text-gray-500 mb-1">${U.fmtDate(rp.created_at)}</div><div>${U.esc(rp.content)}</div></div>`).join('')}</div></div>` : ''}</div></div></div>`;
   },
 
-  complaints() {
-    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="glass rounded-2xl p-12 text-center"><h2 class="text-xl font-bold text-teal-800">📝 نظام الشكاوى</h2><p class="text-gray-600 mt-2">انتقل إلى لوحة الرقابة المركزية لعرض الشكاوى</p><button onclick="Router.go('oversightDashboard')" class="btn-primary px-6 py-3 rounded-xl mt-4">الذهاب للوحة الرقابة</button></div></div></div>`;
+  // ========== COMPLAINTS VIEW (محدّث بالكامل) ==========
+  async complaints() {
+    const u = Auth.user || {};
+    const isAdmin = u.role === 'super_admin' || u.role === 'general_admin';
+    
+    let allComplaints = [];
+    try {
+      if (isAdmin) {
+        allComplaints = await DB.getComplaints({});
+      } else if (u.role === 'sector_admin' && u.sector_id) {
+        allComplaints = await DB.getComplaints({ sector_id: u.sector_id });
+      } else {
+        allComplaints = await DB.getComplaints({ sector_id: u.sector_id });
+      }
+    } catch (e) {
+      console.error('Error fetching complaints:', e);
+    }
+    
+    const stats = {
+      total: allComplaints.length,
+      pending: allComplaints.filter(c => c.status === 'pending').length,
+      in_progress: allComplaints.filter(c => c.status === 'in_progress').length,
+      resolved: allComplaints.filter(c => c.status === 'resolved').length,
+      rejected: allComplaints.filter(c => c.status === 'rejected').length,
+      urgent: allComplaints.filter(c => c.priority === 'urgent').length,
+    };
+    
+    const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
+    const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
+    const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
+    const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
+    
+    return `
+      <div class="min-h-screen">
+        ${this.navbar()}
+        <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+          <div class="glass rounded-2xl shadow-xl p-6 mb-6">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+              <div>
+                <h1 class="text-3xl font-bold text-teal-800">📝 نظام الشكاوى</h1>
+                <p class="text-gray-600 mt-1">${isAdmin ? 'جميع شكاوى القواطع' : 'شكاوى القطاع'} (${allComplaints.length})</p>
+              </div>
+              <button onclick="Router.go('createComplaint')" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer">➕ تسجيل شكوى جديدة</button>
+            </div>
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div class="bg-gray-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-gray-700">${stats.total}</div><div class="text-xs text-gray-600">إجمالي الشكاوى</div></div>
+              <div class="bg-yellow-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-yellow-700">${stats.pending}</div><div class="text-xs text-gray-600">قيد الانتظار</div></div>
+              <div class="bg-blue-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-blue-700">${stats.in_progress}</div><div class="text-xs text-gray-600">قيد المعالجة</div></div>
+              <div class="bg-green-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-green-700">${stats.resolved}</div><div class="text-xs text-gray-600">تم الحل</div></div>
+              <div class="bg-red-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-700">${stats.urgent}</div><div class="text-xs text-gray-600">عاجلة 🔴</div></div>
+            </div>
+          </div>
+          <div class="glass rounded-2xl shadow-xl p-4 mb-4">
+            <div class="grid md:grid-cols-4 gap-3">
+              <input type="text" id="cSearch" placeholder="🔍 بحث بالعنوان..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <select id="cStatus" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                <option value="">كل الحالات</option>
+                <option value="pending">قيد الانتظار</option>
+                <option value="in_progress">قيد المعالجة</option>
+                <option value="resolved">تم الحل</option>
+                <option value="rejected">مرفوضة</option>
+              </select>
+              <select id="cPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                <option value="">كل الأولويات</option>
+                <option value="urgent">🔴 عاجلة</option>
+                <option value="high">🟠 عالية</option>
+                <option value="medium">🔵 متوسطة</option>
+                <option value="low">⚪ منخفضة</option>
+              </select>
+              ${isAdmin ? `<select id="cSector" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="">كل القواطع</option>${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>` : '<div></div>'}
+            </div>
+          </div>
+          <div id="complaintsList" class="space-y-3">
+            ${allComplaints.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد شكاوى مسجلة</div>' : allComplaints.map(c => {
+              const sector = SECTORS.find(s => s.id === c.sector_id);
+              return `
+                <div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
+                  <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                        <span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>
+                        ${sector ? `<span>•</span><span>${sector.name}</span>` : ''}
+                        ${c.complainant_name ? `<span>•</span><span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
+                      </div>
+                      <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
+                      <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                      <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
+                      <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
+                    ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
+                    <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
+                    ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
   },
 
   card(r) {
@@ -959,12 +1059,10 @@ async function render() {
     whatsappBtn.classList.remove('hidden');
     const u = Auth.user;
     
-    // ✅ التوجيه التلقائي للرقابة المركزية
     if (u.role === 'central_oversight' && Router.page === 'dashboard') {
       Router.page = 'oversightDashboard';
     }
     
-    // جلب البيانات
     if (sbConnected) {
       try {
         let filters = {};
@@ -1043,6 +1141,65 @@ function bindEvents() {
   if (Router.page === 'createComplaint') {
     const btn = document.getElementById('submitComplaintBtn');
     if (btn) btn.onclick = () => UI.submitComplaint();
+  }
+
+  // فلترة الشكاوى في صفحة complaints
+  if (Router.page === 'complaints') {
+    const filter = () => {
+      const search = document.getElementById('cSearch')?.value.toLowerCase() || '';
+      const status = document.getElementById('cStatus')?.value || '';
+      const priority = document.getElementById('cPriority')?.value || '';
+      const sector = document.getElementById('cSector')?.value || '';
+      
+      let filtered = [...appData.complaints];
+      if (search) filtered = filtered.filter(c => (c.title + ' ' + c.description).toLowerCase().includes(search));
+      if (status) filtered = filtered.filter(c => c.status === status);
+      if (priority) filtered = filtered.filter(c => c.priority === priority);
+      if (sector) filtered = filtered.filter(c => c.sector_id === sector);
+      
+      const el = document.getElementById('complaintsList');
+      if (el) {
+        if (filtered.length === 0) {
+          el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>';
+        } else {
+          const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
+          const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
+          const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
+          const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
+          
+          el.innerHTML = filtered.map(c => {
+            const sec = SECTORS.find(s => s.id === c.sector_id);
+            return `
+              <div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
+                <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                      <span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>
+                      ${sec ? `<span>•</span><span>${sec.name}</span>` : ''}
+                    </div>
+                    <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
+                    <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    };
+    
+    const s = document.getElementById('cSearch');
+    const st = document.getElementById('cStatus');
+    const p = document.getElementById('cPriority');
+    const sc = document.getElementById('cSector');
+    if (s) s.oninput = filter;
+    if (st) st.onchange = filter;
+    if (p) p.onchange = filter;
+    if (sc) sc.onchange = filter;
   }
 }
 
