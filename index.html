@@ -58,16 +58,16 @@
   .attachment-size { font-size: 12px; color: #6b7280; }
   .download-btn { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; transition: all 0.2s; }
   .download-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,118,110,0.4); }
-  .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
-  .quick-actions button { padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 600; color: white; cursor: pointer; border: none; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .quick-actions button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+  .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-top: 12px; }
+  .quick-actions button { padding: 10px 6px; border-radius: 8px; font-size: 12px; font-weight: 600; color: white; cursor: pointer; border: none; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 60px; }
+  .quick-actions button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
   .qa-txt { background: #2563eb; }
   .qa-qr { background: #9333ea; }
   .qa-wa { background: #16a34a; }
   .qa-reply { background: #0d9488; }
-  .qa-follow { background: #9333ea; }
   .qa-archive { background: #4b5563; }
   .qa-delete { background: #991b1b; }
+  .qa-restore { background: #10b981; }
   .oversight-gradient { background: linear-gradient(135deg, #7c2d12 0%, #9a3412 50%, #c2410c 100%); }
   
   .offline-banner {
@@ -121,7 +121,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '11.4.0-FullFeatures',
+  VERSION: '11.5.0-Secure-Fixed',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -164,7 +164,7 @@ try {
 // =====================================================
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE_NAME = 'deir-iyawaat-v11.4.0';
+    const CACHE_NAME = 'deir-iyawaat-v11.5.0';
     const ASSETS = ['/'];
     self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
     self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -198,7 +198,7 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', () => {
   isOnline = false; sbConnected = false;
   document.getElementById('offlineBanner').classList.remove('hidden');
-  U.toast('⚠️ انقطع الاتصال - العمل أوفلاين', 'warning');
+  U.toast('️ انقطع الاتصال - العمل أوفلاين', 'warning');
   updateSyncButton();
 });
 
@@ -237,7 +237,7 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '📦', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '', pdf: '📕', archive: '📦', other: '📎' }[type] || '📎'),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
     const lowerName = name.toLowerCase();
@@ -292,7 +292,7 @@ function subscribeToNotifications() {
   if (!sbConnected || !Auth.user) return;
   const notifSub = sb.channel('notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${Auth.user.id}` }, (payload) => {
-      U.toast(`🔔 ${payload.new.title}: ${payload.new.message}`, 'info');
+      U.toast(` ${payload.new.title}: ${payload.new.message}`, 'info');
       refreshNotifications();
     }).subscribe();
   realtimeSubs.push(notifSub);
@@ -352,7 +352,7 @@ const DB = {
       data.push(record);
       U.save('db_correspondence', data);
       U.save('db_correspondence_cache', data);
-      U.toast('💾 تم الحفظ محلياً (سيتم المزامنة عند عودة الإنترنت)', 'info');
+      U.toast(' تم الحفظ محلياً (سيتم المزامنة عند عودة الإنترنت)', 'info');
       updateSyncButton();
       return record;
     }
@@ -518,7 +518,7 @@ const DB = {
     if (!sbConnected) { U.toast('⚠️ لا يوجد اتصال بالإنترنت', 'warning'); return; }
     const pending = U.load('db_pending_sync', []);
     if (pending.length === 0) { U.toast('✅ لا توجد بيانات للمزامنة', 'success'); return; }
-    U.toast(`🔄 جاري مزامنة ${pending.length} عنصر...`, 'info');
+    U.toast(` جاري مزامنة ${pending.length} عنصر...`, 'info');
     let success = 0, failed = 0;
     const remaining = [];
     for (const item of pending) {
@@ -660,7 +660,7 @@ const Views = {
             <div class="glass rounded-2xl shadow-lg p-5 card-hover border-2 border-red-200"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">عاجلة 🔴</div><div class="text-3xl font-bold text-red-600 mt-1">${stats.urgent}</div></div><div class="bg-red-100 rounded-xl p-3 text-2xl">🚨</div></div></div>
           </div>
           <div class="glass rounded-2xl shadow-xl p-5 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ إجراءات سريعة</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4"> إجراءات سريعة</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
               <button onclick="Router.go('oversightComplaints')" class="bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 جميع الشكاوى</button>
               <button onclick="Router.go('oversightComplaints', {filter:'pending'})" class="bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">⏳ قيد الانتظار</button>
@@ -713,7 +713,7 @@ const Views = {
                 <option value="medium">متوسطة</option>
                 <option value="low">منخفضة</option>
               </select>
-              <button onclick="Router.go('createComplaint')" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">➕ شكوى جديدة</button>
+              <button onclick="Router.go('createComplaint')" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer"> شكوى جديدة</button>
             </div>
           </div>
           <div id="complaintsList" class="space-y-3">
@@ -777,7 +777,7 @@ const Views = {
     const canRespond = ['super_admin', 'general_admin', 'sector_admin', 'central_oversight'].includes(u.role);
     const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
     const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
-    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: '🟠 عالية', urgent: '🔴 عاجلة' };
+    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: ' عالية', urgent: '🔴 عاجلة' };
     return `
       <div class="min-h-screen">
         ${u.role === 'central_oversight' ? this.oversightNavbar() : this.navbar()}
@@ -847,7 +847,7 @@ const Views = {
         </div>
         <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
           ${c.complainant_name ? `<span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
-          ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
+          ${c.complainant_phone ? `<span> ${U.esc(c.complainant_phone)}</span>` : ''}
           ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : ''}
         </div>
       </div>
@@ -866,8 +866,8 @@ const Views = {
           </div>
           <div class="flex items-center gap-1 md:gap-2 flex-wrap">
             <button onclick="Router.go('oversightDashboard')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">🏠 الرئيسية</button>
-            <button onclick="Router.go('oversightComplaints')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">📋 الشكاوى</button>
-            <button onclick="Router.go('createComplaint')" class="px-3 py-1.5 rounded-lg bg-orange-600 text-white hover:bg-orange-700 text-sm font-semibold cursor-pointer">➕ جديدة</button>
+            <button onclick="Router.go('oversightComplaints')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700"> الشكاوى</button>
+            <button onclick="Router.go('createComplaint')" class="px-3 py-1.5 rounded-lg bg-orange-600 text-white hover:bg-orange-700 text-sm font-semibold cursor-pointer"> جديدة</button>
             <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
           </div>
         </div>
@@ -886,10 +886,10 @@ const Views = {
             <div><div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} ${!isOnline ? '📡' : ''}</div></div>
           </div>
           <div class="flex items-center gap-1 md:gap-2 flex-wrap">
-            <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏠 الرئيسية</button>
-            <button onclick="Router.go('complaints')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">📝 الشكاوى</button>
+            <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer"> الرئيسية</button>
+            <button onclick="Router.go('complaints')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer"> الشكاوى</button>
             <button onclick="Router.go('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer hidden md:inline">🏛️ الإدارة</button>
-            <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative">🔔 التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
+            <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative"> التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
             <button onclick="Router.go('create')" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm font-semibold cursor-pointer">➕ جديد</button>
             <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
           </div>
@@ -928,7 +928,7 @@ const Views = {
   create() {
     const preSector = Router.params.sector || '';
     const isAdmin = Auth.user?.role === 'super_admin' || Auth.user?.role === 'general_admin';
-    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-3xl mx-auto p-4 md:p-6 fade-in"><div class="glass rounded-2xl shadow-xl p-6 md:p-8"><h1 class="text-2xl font-bold text-teal-800 mb-6">➕ مراسلة جديدة</h1><form class="space-y-4" onsubmit="return false;"><div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label><select id="fSec" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">${isAdmin ? `<option value="ALL" class="font-bold text-teal-700">📢 جميع القواطع (تعميم)</option>` : ''}${SECTORS.map(s => `<option value="${s.id}" ${s.id===preSector?'selected':''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">الموضوع *</label><input type="text" id="fSub" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></div><div class="grid md:grid-cols-2 gap-3"><div><label class="block text-sm font-semibold mb-1 text-gray-700">المرسل</label><input type="text" id="fSen" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" value="${U.esc(Auth.user?.full_name || '')}"></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية</label><select id="fPri" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="normal">عادية</option><option value="high">عالية</option><option value="low">منخفضة</option></select></div></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">المحتوى *</label><textarea id="fCon" rows="8" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea></div><div class="flex gap-2"><button type="button" id="saveBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ المراسلة</button><button type="button" onclick="Router.go('dashboard')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button></div></form></div></div></div>`;
+    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-3xl mx-auto p-4 md:p-6 fade-in"><div class="glass rounded-2xl shadow-xl p-6 md:p-8"><h1 class="text-2xl font-bold text-teal-800 mb-6">➕ مراسلة جديدة</h1><form class="space-y-4" onsubmit="return false;"><div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label><select id="fSec" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">${isAdmin ? `<option value="ALL" class="font-bold text-teal-700"> جميع القواطع (تعميم)</option>` : ''}${SECTORS.map(s => `<option value="${s.id}" ${s.id===preSector?'selected':''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">الموضوع *</label><input type="text" id="fSub" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></div><div class="grid md:grid-cols-2 gap-3"><div><label class="block text-sm font-semibold mb-1 text-gray-700">المرسل</label><input type="text" id="fSen" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" value="${U.esc(Auth.user?.full_name || '')}"></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية</label><select id="fPri" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="normal">عادية</option><option value="high">عالية</option><option value="low">منخفضة</option></select></div></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">المحتوى *</label><textarea id="fCon" rows="8" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea></div><div class="flex gap-2"><button type="button" id="saveBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ المراسلة</button><button type="button" onclick="Router.go('dashboard')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button></div></form></div></div></div>`;
   },
 
   async view() {
@@ -988,7 +988,7 @@ const Views = {
                 }).join('')}
               </div>
             </div>
-          ` : ''}
+          ` : '<div class="mb-6 text-center text-gray-500 text-sm py-4 bg-gray-50 rounded-xl">📎 لا توجد مرفقات</div>'}
           
           ${replies.length > 0 ? `
             <div class="mb-6">
@@ -1008,16 +1008,16 @@ const Views = {
           ` : ''}
           
           <div class="border-t pt-4 mt-6">
-            <h3 class="font-bold text-gray-800 mb-3">⚡ إجراءات سريعة</h3>
+            <h3 class="font-bold text-gray-800 mb-3"> إجراءات سريعة</h3>
             <div class="quick-actions">
-              <button onclick="UI.reply('${r.id}')" class="qa-reply">💬 رد</button>
+              <button onclick="UI.reply('${r.id}')" class="qa-reply"><span>💬</span><span>رد</span></button>
               ${canArchive ? (r.is_archived 
-                ? `<button onclick="UI.restore('${r.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-pointer">♻️ استعادة</button>` 
-                : `<button onclick="UI.archive('${r.id}')" class="qa-archive">📦 أرشفة</button>`) : ''}
-              <button onclick="UI.copyAsText('${r.id}')" class="qa-txt">📄 نسخ كنص</button>
-              <button onclick="UI.showQR('${r.id}')" class="qa-qr">🔳 QR</button>
-              <button onclick="UI.shareWhatsApp('${r.id}')" class="qa-wa">📱 واتساب</button>
-              ${canDelete ? `<button onclick="UI.del('${r.id}')" class="qa-delete">🗑️ حذف</button>` : ''}
+                ? `<button onclick="UI.restore('${r.id}')" class="qa-restore"><span>♻️</span><span>استعادة</span></button>` 
+                : `<button onclick="UI.archive('${r.id}')" class="qa-archive"><span>📦</span><span>أرشفة</span></button>`) : ''}
+              <button onclick="UI.copyAsText('${r.id}')" class="qa-txt"><span>📄</span><span>نسخ</span></button>
+              <button onclick="UI.showQR('${r.id}')" class="qa-qr"><span>🔳</span><span>QR</span></button>
+              <button onclick="UI.shareWhatsApp('${r.id}')" class="qa-wa"><span>📱</span><span>واتساب</span></button>
+              ${canDelete ? `<button onclick="UI.del('${r.id}')" class="qa-delete"><span>🗑️</span><span>حذف</span></button>` : ''}
             </div>
           </div>
         </div>
@@ -1123,7 +1123,7 @@ const Views = {
     const s = SECTORS.find(x => x.id === r.sector_id);
     const pc = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
     const repliesCount = r.replies ? r.replies.length : 0;
-    return `<div class="glass rounded-xl shadow-lg p-4 card-hover ${pc}"><div onclick="Router.go('view', {id:'${r.id}'})" class="cursor-pointer"><div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap"><span>${r.reference_number}</span><span>•</span><span>${U.fmtShort(r.created_at)}</span>${s ? `<span>•</span><span>${s.name}</span>` : ''}</div><h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3><p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p><div class="flex gap-2 mt-2 flex-wrap text-xs">${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">💬 ${repliesCount} رد</span>` : ''}</div></div></div>`;
+    return `<div class="glass rounded-xl shadow-lg p-4 card-hover ${pc}"><div onclick="Router.go('view', {id:'${r.id}'})" class="cursor-pointer"><div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap"><span>${r.reference_number}</span><span>•</span><span>${U.fmtShort(r.created_at)}</span>${s ? `<span>•</span><span>${s.name}</span>` : ''}</div><h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3><p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p><div class="flex gap-2 mt-2 flex-wrap text-xs">${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded"> عالية</span>' : ''}${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">💬 ${repliesCount} رد</span>` : ''}</div></div></div>`;
   },
 };
 
@@ -1153,7 +1153,7 @@ const UI = {
     catch (e) { U.toast(e.message, 'error'); }
   },
   async del(id) {
-    if (!confirm('⚠️ حذف نهائي؟')) return;
+    if (!confirm('️ حذف نهائي؟')) return;
     try { await DB.remove(id); U.toast('تم الحذف', 'success'); Router.go('dashboard'); }
     catch (e) { U.toast(e.message, 'error'); }
   },
@@ -1171,7 +1171,7 @@ const UI = {
     }
   },
   registerNewUser() {
-    if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; }
+    if (!sbConnected) { U.toast('️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; }
     const email = prompt('البريد الإلكتروني:');
     if (!email) return;
     const password = prompt('كلمة المرور (6 أحرف على الأقل):');
@@ -1181,7 +1181,7 @@ const UI = {
     sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: 'sector_staff' } } }).then(({ data, error }) => {
       if (error) throw error;
       U.toast('✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success');
-    }).catch(err => U.toast('❌ خطأ: ' + err.message, 'error'));
+    }).catch(err => U.toast(' خطأ: ' + err.message, 'error'));
   },
   async submitComplaint() {
     const sector = document.getElementById('compSector').value;
@@ -1237,7 +1237,7 @@ const UI = {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) { U.toast('المراسلة غير موجودة', 'error'); return; }
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
+    const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text));
     } else {
@@ -1268,7 +1268,7 @@ const UI = {
     const container = document.getElementById('qrContainer');
     if (!modal || !container) return;
     container.innerHTML = '';
-    const qrData = `📋 ${r.reference_number || ''}\n📌 ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
+    const qrData = `📋 ${r.reference_number || ''}\n📌 ${r.subject}\n ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
     try {
       new QRCode(container, { text: qrData, width: 220, height: 220, colorDark: '#0f766e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
     } catch (e) {
@@ -1281,7 +1281,7 @@ const UI = {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) return;
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `*${CONFIG.ORG}*\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
+    const text = `*${CONFIG.ORG}*\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 };
@@ -1413,7 +1413,7 @@ function bindEvents() {
               </div>
               <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
                 ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
-                <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
+                <span> ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
                 ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
               </div>
             </div>`;
@@ -1463,7 +1463,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 render();
 updateSyncButton();
-console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (PWA + Full Features)`);
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (PWA + Full Features + Secure)`);
 </script>
 </body>
 </html>
