@@ -14,7 +14,7 @@
 <!-- مكتبة QR Code -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
-<!-- مكتبات التصدير: html2canvas + jsPDF + SheetJS -->
+<!-- مكتبات التصدير -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -23,7 +23,7 @@
 <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"مراسلات إدارة إيواءات دير البلح","short_name":"إيواءات دير البلح","start_url":"./","display":"standalone","background_color":"%230f766e","theme_color":"%230f766e","orientation":"portrait","description":"نظام المراسلات والشكاوى","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 fill=%22%230f766e%22 rx=%2240%22/><text x=%2296%22 y=%22130%22 font-size=%22120%22 text-anchor=%22middle%22 fill=%22white%22>🏢</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
 
 <!-- Apple Touch Icon -->
-<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%230f766e" rx="40"/><text x="90" y="125" font-size="110" text-anchor="middle" fill="white"></text></svg>'>
+<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%230f766e" rx="40"/><text x="90" y="125" font-size="110" text-anchor="middle" fill="white">🏢</text></svg>'>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -51,7 +51,6 @@
   .whatsapp-float:hover { transform: scale(1.1); }
   .whatsapp-float svg { width: 32px; height: 32px; fill: white; }
   .notification-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-  .attachment-chip { display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin: 2px; }
   .attachment-card { background: white; border-radius: 12px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s; border: 1px solid #e5e7eb; }
   .attachment-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-1px); }
   .attachment-info { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
@@ -90,19 +89,17 @@
   .report-btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
   .report-btn-pdf { background: linear-gradient(135deg, #dc2626, #991b1b); color: white; }
   .report-btn-excel { background: linear-gradient(135deg, #16a34a, #15803d); color: white; }
-  .report-btn-csv { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
   .report-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .report-table { width: 100%; border-collapse: collapse; background: white; }
   .report-table th { background: #0f766e; color: white; padding: 12px; text-align: right; font-weight: 700; border: 1px solid #0d5f59; }
   .report-table td { padding: 10px 12px; border: 1px solid #e5e7eb; text-align: right; }
   .report-table tr:nth-child(even) { background: #f9fafb; }
-  .report-table tr:hover { background: #f3f4f6; }
   #reportContainer { position: fixed; top: -9999px; left: -9999px; width: 1200px; background: white; padding: 40px; z-index: -1; }
 </style>
 </head>
 <body>
 <div id="app"></div>
-<div id="offlineBanner" class="offline-banner hidden">⚠️ أنت تعمل بدون إنترنت - سيتم حفظ البيانات محلياً</div>
+<div id="offlineBanner" class="offline-banner hidden">️ أنت تعمل بدون إنترنت - سيتم حفظ البيانات محلياً</div>
 <button id="syncBtn" class="sync-btn hidden" onclick="UI.syncOfflineData()" title="مزامنة البيانات مع الخادم">
   🔄 مزامنة البيانات
   <span id="syncCount" class="bg-white text-orange-600 rounded-full px-2 py-0.5 text-xs font-bold">0</span>
@@ -120,7 +117,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '12.1.0-FollowUp-Complete',
+  VERSION: '12.2.0-FollowUp-Fixed',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -179,7 +176,7 @@ try {
 // =====================================================
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE_NAME = 'deir-iyawaat-v12.1.0';
+    const CACHE_NAME = 'deir-iyawaat-v12.2.0';
     self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['/']).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
     self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
     self.addEventListener('fetch', (e) => {
@@ -251,7 +248,7 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '', pdf: '📕', archive: '📦', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '️', excel: '📊', document: '📄', pdf: '📕', archive: '📦', other: '' }[type] || '📎'),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
     const lowerName = name.toLowerCase();
@@ -306,7 +303,7 @@ function subscribeToNotifications() {
   if (!sbConnected || !Auth.user) return;
   const notifSub = sb.channel('notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${Auth.user.id}` }, (payload) => {
-      U.toast(`🔔 ${payload.new.title}: ${payload.new.message}`, 'info');
+      U.toast(` ${payload.new.title}: ${payload.new.message}`, 'info');
       refreshNotifications();
     }).subscribe();
   realtimeSubs.push(notifSub);
@@ -338,123 +335,67 @@ const DB = {
     return U.load('db_correspondence_cache', U.load('db_correspondence', []));
   },
   
- async create(rec, files = []) {
-  if (sbConnected) {
-    if (rec.sector_id === 'ALL') {
-      const results = [];
-      for (const sector of SECTORS) {
-        const newId = U.uuid();
-        const refNum = U.genRef(sector.code);
-        
-        try {
+  async create(rec, files = []) {
+    if (sbConnected) {
+      if (rec.sector_id === 'ALL') {
+        const results = [];
+        for (const sector of SECTORS) {
+          const newId = U.uuid();
+          const refNum = U.genRef(sector.code);
           const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-            id: newId,
-            reference_number: refNum,
-            subject: rec.subject,
-            content: rec.content,
-            sender_id: Auth.user?.id,
-            sender_name: rec.sender_name || Auth.user?.full_name,
-            sector_id: sector.id,
-            priority: rec.priority || 'normal',
-            is_archived: false,
-            created_at: new Date().toISOString()
+            id: newId, reference_number: refNum, subject: rec.subject, content: rec.content,
+            sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
+            sector_id: sector.id, priority: rec.priority || 'normal',
           }]).select().single();
-          
           if (insertError) throw insertError;
-          
           let atts = [];
           if (files.length > 0) {
             try {
               await this.uploadAttachments(newId, files);
               const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', newId);
               atts = attData || [];
-            } catch (e) {
-              console.error('Failed to upload attachments:', e);
-            }
+            } catch (e) { console.error('Failed to upload attachments:', e); }
           }
-          
-          results.push({ ...inserted, attachments: atts, replies: [], follow_ups: [] });
-        } catch (e) {
-          console.error(`Error creating correspondence for sector ${sector.name}:`, e);
+          results.push({ ...inserted, attachments: atts });
         }
-      }
-      return results;
-    } else {
-      const recordId = U.uuid();
-      const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
-      
-      try {
+        return results;
+      } else {
+        const recordId = U.uuid();
+        const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
         const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-          id: recordId,
-          reference_number: refNum,
-          subject: rec.subject,
-          content: rec.content,
-          sender_id: Auth.user?.id,
-          sender_name: rec.sender_name || Auth.user?.full_name,
-          sector_id: rec.sector_id,
-          priority: rec.priority || 'normal',
-          is_archived: false,
-          created_at: new Date().toISOString()
+          id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
+          sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
+          sector_id: rec.sector_id, priority: rec.priority || 'normal',
         }]).select().single();
-        
         if (insertError) throw insertError;
-        
         let atts = [];
         if (files.length > 0) {
           try {
             await this.uploadAttachments(recordId, files);
             const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', recordId);
             atts = attData || [];
-          } catch (e) {
-            console.error('Failed to upload attachments:', e);
-          }
+          } catch (e) { console.error('Failed to upload attachments:', e); }
         }
-        
-        return { ...inserted, attachments: atts, replies: [], follow_ups: [] };
-      } catch (e) {
-        console.error('Error creating correspondence:', e);
-        throw e;
+        return { ...inserted, attachments: atts };
       }
+    } else {
+      const recordId = U.uuid();
+      const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
+      const record = { id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
+        sender_name: rec.sender_name || Auth.user?.full_name, sector_id: rec.sector_id, priority: rec.priority || 'normal',
+        is_archived: false, replies: [], follow_ups: [], attachments: [], created_at: U.now(), _pending: true };
+      const pending = U.load('db_pending_sync', []);
+      pending.push({ type: 'correspondence', action: 'create', data: record, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
+      U.save('db_pending_sync', pending);
+      const localData = U.load('db_correspondence', []);
+      localData.push(record);
+      U.save('db_correspondence', localData);
+      U.save('db_correspondence_cache', localData);
+      U.toast('💾 تم الحفظ محلياً', 'info');
+      updateSyncButton();
+      return record;
     }
-  } else {
-    // Offline mode
-    const recordId = U.uuid();
-    const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
-    const record = {
-      id: recordId,
-      reference_number: refNum,
-      subject: rec.subject,
-      content: rec.content,
-      sender_name: rec.sender_name || Auth.user?.full_name,
-      sector_id: rec.sector_id,
-      priority: rec.priority || 'normal',
-      is_archived: false,
-      replies: [],
-      follow_ups: [],
-      attachments: [],
-      created_at: U.now(),
-      _pending: true
-    };
-    
-    const pending = U.load('db_pending_sync', []);
-    pending.push({
-      type: 'correspondence',
-      action: 'create',
-      data: record,
-      files: files.map(f => ({ name: f.name, type: f.type, size: f.size }))
-    });
-    U.save('db_pending_sync', pending);
-    
-    const localData = U.load('db_correspondence', []);
-    localData.push(record);
-    U.save('db_correspondence', localData);
-    U.save('db_correspondence_cache', localData);
-    
-    U.toast('💾 تم الحفظ محلياً (سيتم المزامنة عند عودة الإنترنت)', 'info');
-    updateSyncButton();
-    return record;
-  }
-},
+  },
 
   async uploadAttachments(correspondenceId, files) {
     if (!sbConnected) return;
@@ -503,6 +444,7 @@ const DB = {
     return rec;
   },
   
+  // ✅ دالة إضافة متابعة محسّنة
   async addFollowUp(id, fu) {
     if (sbConnected) {
       try {
@@ -515,11 +457,33 @@ const DB = {
           status: fu.status || 'pending',
           created_by: Auth.user?.full_name
         }]).select().single();
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Error adding follow-up:', error);
+          throw new Error(error.message || 'فشل إضافة المتابعة');
+        }
+        
+        // تحديث الكاش المحلي
+        const localData = U.load('db_correspondence', []);
+        const rec = localData.find(d => d.id === id);
+        if (rec) {
+          rec.follow_ups = rec.follow_ups || [];
+          rec.follow_ups.push(data);
+          U.save('db_correspondence', localData);
+          U.save('db_correspondence_cache', localData);
+        }
+        
+        // تحديث appData
+        const appRec = appData.correspondence.find(d => d.id === id);
+        if (appRec) {
+          appRec.follow_ups = appRec.follow_ups || [];
+          appRec.follow_ups.push(data);
+        }
+        
         U.toast('✅ تمت إضافة المتابعة', 'success');
         return data;
       } catch (e) {
-        console.error('Error adding follow-up:', e);
+        console.error('Error in addFollowUp:', e);
         throw e;
       }
     } else {
@@ -544,6 +508,7 @@ const DB = {
     }
   },
   
+  // ✅ دالة تحديث حالة المتابعة
   async updateFollowUp(fuId, updates) {
     if (sbConnected) {
       try {
@@ -552,7 +517,20 @@ const DB = {
           .eq('id', fuId)
           .select()
           .single();
+        
         if (error) throw error;
+        
+        // تحديث الكاش المحلي
+        const localData = U.load('db_correspondence', []);
+        localData.forEach(rec => {
+          if (rec.follow_ups) {
+            const fu = rec.follow_ups.find(f => f.id === fuId);
+            if (fu) Object.assign(fu, updates, { updated_at: new Date().toISOString() });
+          }
+        });
+        U.save('db_correspondence', localData);
+        U.save('db_correspondence_cache', localData);
+        
         return data;
       } catch (e) {
         console.error('Error updating follow-up:', e);
@@ -562,16 +540,17 @@ const DB = {
     return null;
   },
   
+  // ✅ دالة حذف متابعة
   async deleteFollowUp(fuId, corrId) {
     if (sbConnected) {
       try {
         await sb.from('follow_ups').delete().eq('id', fuId);
-        return true;
       } catch (e) {
         console.error('Error deleting follow-up:', e);
         throw e;
       }
     }
+    // تحديث الكاش المحلي
     const data = U.load('db_correspondence', []);
     const rec = data.find(d => d.id === corrId);
     if (rec && rec.follow_ups) {
@@ -582,6 +561,7 @@ const DB = {
     return true;
   },
   
+  // ✅ دالة جلب جميع المتابعات
   async getAllFollowUps() {
     if (sbConnected) {
       try {
@@ -958,7 +938,7 @@ const Views = {
           <div class="text-6xl mb-3">🏢</div>
           <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
           <p class="text-gray-600 text-sm mt-2">نظام المراسلات والشكاوى</p>
-          ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">⚠️ وضع أوفلاين</div>' : ''}
+          ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">️ وضع أوفلاين</div>' : ''}
         </div>
         <div id="loginErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
         <form class="space-y-4" onsubmit="return false;">
@@ -1013,7 +993,7 @@ const Views = {
           <button onclick="Router.go('create')" class="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">➕ مراسلة جديدة</button>
           <button onclick="Router.go('general')" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 التقارير</button>
           <button onclick="Router.go('followups')" class="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 المتابعة</button>
-          <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> الأرشيف</button>
+          <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📦 الأرشيف</button>
         </div>
         <div class="glass rounded-2xl shadow-xl p-6">
           <h2 class="text-xl font-bold text-gray-800 mb-4">آخر المراسلات</h2>
@@ -1024,13 +1004,13 @@ const Views = {
     </div>`;
   },
 
-  // ✅ صفحة المتابعة المحسنة بالكامل
+  // ✅ صفحة المتابعة المحسّنة بالكامل
   async followups(data) {
     data = data || appData.correspondence || [];
     const u = Auth.user || {};
     let allFollowUps = [];
     
-    // من البيانات المحلية
+    // جمع المتابعات من البيانات المحلية
     data.forEach(r => {
       if (r.follow_ups && r.follow_ups.length > 0) {
         r.follow_ups.forEach(fu => {
@@ -1039,7 +1019,7 @@ const Views = {
       }
     });
     
-    // من Supabase مباشرة
+    // جلب المتابعات من Supabase مباشرة
     if (sbConnected) {
       try {
         const { data: fuData } = await sb.from('follow_ups').select('*').order('created_at', { ascending: false });
@@ -1103,7 +1083,7 @@ const Views = {
         </div>
         
         <div class="space-y-3">
-          ${allFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد مهام متابعة</div>' : 
+          ${allFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500"> لا توجد مهام متابعة</div>' : 
             allFollowUps.map(fu => {
               const statusClass = fu.status === 'pending' ? 'followup-status-pending' : fu.status === 'in_progress' ? 'followup-status-progress' : 'followup-status-done';
               const statusLabel = STATUS_LABELS[fu.status] || fu.status;
@@ -1117,7 +1097,7 @@ const Views = {
                     <h3 class="font-bold text-gray-800 text-lg">${U.esc(fu.title)}</h3>
                     ${fu.notes ? `<p class="text-sm text-gray-600 mt-1">${U.esc(fu.notes)}</p>` : ''}
                     <div class="flex gap-3 text-xs text-gray-500 mt-2 flex-wrap">
-                      <span> ${U.fmtShort(fu.created_at)}</span>
+                      <span>📅 ${U.fmtShort(fu.created_at)}</span>
                       ${fu.due_date ? `<span>⏰ الاستحقاق: ${U.fmtShort(fu.due_date)}</span>` : ''}
                       ${fu.created_by ? `<span>👤 ${U.esc(fu.created_by)}</span>` : ''}
                     </div>
@@ -1129,7 +1109,7 @@ const Views = {
                       <option value="in_progress" ${fu.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
                       <option value="done" ${fu.status === 'done' ? 'selected' : ''}>مكتملة</option>
                     </select>
-                    ${u.role !== 'sector_staff' ? `<button onclick="UI.deleteFollowUp('${fu.id}', '${fu.correspondence_id}')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg hover:bg-red-200">🗑️ حذف</button>` : ''}
+                    ${u.role !== 'sector_staff' ? `<button onclick="UI.deleteFollowUp('${fu.id}', '${fu.correspondence_id}')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg hover:bg-red-200">️ حذف</button>` : ''}
                   </div>
                 </div>
               </div>`;
@@ -1223,7 +1203,7 @@ const Views = {
               </div>
             </div>
             <div><label class="block text-sm font-semibold mb-1 text-gray-700">المحتوى *</label><textarea id="fCon" rows="8" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea></div>
-            <div><label class="block text-sm font-semibold mb-1 text-gray-700"> المرفقات</label>
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">📎 المرفقات</label>
               <input type="file" id="fFiles" multiple class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
               <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة (صور، PDF، Word، Excel)</p>
             </div>
@@ -1260,7 +1240,7 @@ const Views = {
             <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || '-'}</div></div>
             <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at)}</div></div>
             <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.name || '-'}</div></div>
-            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : r.priority === 'urgent' ? '🚨 عاجلة' : '🔵 عادية'}</div></div>
+            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? ' عالية' : r.priority === 'low' ? '🟢 منخفضة' : r.priority === 'urgent' ? '🚨 عاجلة' : '🔵 عادية'}</div></div>
           </div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || '-')}</h2></div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content || '-')}</div></div>
@@ -1270,8 +1250,8 @@ const Views = {
             const downloadLabel = U.getDownloadLabel(fileType);
             const fileSize = U.formatFileSize(att.size_bytes);
             const fileUrl = sbConnected ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}` : (att.data_url || '#');
-            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn" onclick="event.stopPropagation();">️ ${downloadLabel}</a></div>`;
-          }).join('')}</div></div>` : '<div class="mb-6 text-center text-gray-500 text-sm py-4 bg-gray-50 rounded-xl">📎 لا توجد مرفقات</div>'}
+            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn" onclick="event.stopPropagation();">⬇️ ${downloadLabel}</a></div>`;
+          }).join('')}</div></div>` : '<div class="mb-6 text-center text-gray-500 text-sm py-4 bg-gray-50 rounded-xl"> لا توجد مرفقات</div>'}
           ${followUps.length > 0 ? `<div class="mb-6">
             <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span>📋</span><span>المتابعات (${followUps.length})</span></h3>
             <div class="space-y-2">
@@ -1290,7 +1270,7 @@ const Views = {
               }).join('')}
             </div>
           </div>` : ''}
-          ${replies.length > 0 ? `<div class="mb-6"><h3 class="font-bold text-lg mb-3"> الردود (${replies.length})</h3><div class="space-y-3">${replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="flex justify-between items-center mb-2"><span class="font-semibold text-sm text-blue-800">${U.esc(rp.author_name || rp.author || 'مستخدم')}</span><span class="text-xs text-gray-500">${U.fmtDate(rp.created_at)}</span></div><div class="text-gray-700">${U.esc(rp.content)}</div></div>`).join('')}</div></div>` : ''}
+          ${replies.length > 0 ? `<div class="mb-6"><h3 class="font-bold text-lg mb-3">💬 الردود (${replies.length})</h3><div class="space-y-3">${replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="flex justify-between items-center mb-2"><span class="font-semibold text-sm text-blue-800">${U.esc(rp.author_name || rp.author || 'مستخدم')}</span><span class="text-xs text-gray-500">${U.fmtDate(rp.created_at)}</span></div><div class="text-gray-700">${U.esc(rp.content)}</div></div>`).join('')}</div></div>` : ''}
           <div class="border-t pt-4 mt-6">
             <h3 class="font-bold text-gray-800 mb-3">⚡ إجراءات سريعة</h3>
             <div class="quick-actions">
@@ -1364,7 +1344,7 @@ const Views = {
               <option value="">كل الحالات</option><option value="pending">قيد الانتظار</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option><option value="rejected">مرفوضة</option>
             </select>
             <select id="cPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <option value="">كل الأولويات</option><option value="urgent"> عاجلة</option><option value="high">🟠 عالية</option><option value="medium">🔵 متوسطة</option><option value="low">⚪ منخفضة</option>
+              <option value="">كل الأولويات</option><option value="urgent">🔴 عاجلة</option><option value="high">🟠 عالية</option><option value="medium">🔵 متوسطة</option><option value="low">⚪ منخفضة</option>
             </select>
             ${isAdmin ? `<select id="cSector" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="">كل القواطع</option>${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>` : '<div></div>'}
           </div>
@@ -1406,7 +1386,7 @@ const Views = {
     return `<nav class="glass shadow-lg sticky top-0 z-50 border-t-4 border-orange-500">
       <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
         <div class="flex items-center gap-3">
-          <span class="text-2xl">🛡️</span>
+          <span class="text-2xl">️</span>
           <div><div class="font-bold text-orange-700 text-sm md:text-base">نظام الرقابة المركزية</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} – ${SECTORS.find(s => s.id === u.sector_id)?.name || ''}</div></div>
         </div>
         <div class="flex items-center gap-1 md:gap-2 flex-wrap">
@@ -1468,9 +1448,9 @@ const Views = {
       </div>
       <div class="quick-actions mt-4 pt-4 border-t border-gray-200">
         <button onclick="event.stopPropagation(); UI.reply('${r.id}')" class="qa-reply"><span>💬</span><span>رد</span></button>
-        <button onclick="event.stopPropagation(); UI.followUp('${r.id}')" class="qa-follow"><span></span><span>متابعة</span></button>
+        <button onclick="event.stopPropagation(); UI.followUp('${r.id}')" class="qa-follow"><span>📌</span><span>متابعة</span></button>
         ${canDelete ? `<button onclick="event.stopPropagation(); UI.del('${r.id}')" class="qa-delete"><span>🗑️</span><span>حذف</span></button>` : ''}
-        <button onclick="event.stopPropagation(); UI.copyAsText('${r.id}')" class="qa-txt"><span>📄</span><span>نسخ</span></button>
+        <button onclick="event.stopPropagation(); UI.copyAsText('${r.id}')" class="qa-txt"><span></span><span>نسخ</span></button>
         <button onclick="event.stopPropagation(); UI.showQR('${r.id}')" class="qa-qr"><span>🔳</span><span>QR</span></button>
         <button onclick="event.stopPropagation(); UI.shareWhatsApp('${r.id}')" class="qa-wa"><span>📱</span><span>واتساب</span></button>
       </div>
@@ -1480,7 +1460,7 @@ const Views = {
   async oversightDashboard() {
     const u = Auth.user || {};
     const sector = SECTORS.find(s => s.id === u.sector_id);
-    if (!sector) return `<div class="min-h-screen flex items-center justify-center"><div class="glass rounded-2xl p-8 text-center"><h2 class="text-xl font-bold text-red-600">⚠️ حساب الرقابة المركزية غير مرتبط بقاطع</h2><button onclick="Auth.logout()" class="btn-primary px-6 py-2 rounded-xl mt-4">تسجيل الخروج</button></div></div>`;
+    if (!sector) return `<div class="min-h-screen flex items-center justify-center"><div class="glass rounded-2xl p-8 text-center"><h2 class="text-xl font-bold text-red-600">️ حساب الرقابة المركزية غير مرتبط بقاطع</h2><button onclick="Auth.logout()" class="btn-primary px-6 py-2 rounded-xl mt-4">تسجيل الخروج</button></div></div>`;
     const stats = await DB.getComplaintStats(u.sector_id);
     const recentComplaints = (await DB.getComplaints({ sector_id: u.sector_id })).slice(0, 5);
     return `<div class="min-h-screen">${this.oversightNavbar()}
@@ -1503,9 +1483,9 @@ const Views = {
         <div class="glass rounded-2xl shadow-xl p-5 mb-6">
           <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ إجراءات سريعة</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button onclick="Router.go('oversightComplaints')" class="bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 جميع الشكاوى</button>
-            <button onclick="Router.go('oversightComplaints', {filter:'pending'})" class="bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">⏳ قيد الانتظار</button>
-            <button onclick="Router.go('oversightComplaints', {filter:'urgent'})" class="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">🚨 العاجلة</button>
+            <button onclick="Router.go('oversightComplaints')" class="bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> جميع الشكاوى</button>
+            <button onclick="Router.go('oversightComplaints', {filter:'pending'})" class="bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> قيد الانتظار</button>
+            <button onclick="Router.go('oversightComplaints', {filter:'urgent'})" class="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> العاجلة</button>
             <button onclick="UI.exportOversightReport()" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 تصدير تقرير</button>
           </div>
         </div>
@@ -1589,17 +1569,17 @@ const Views = {
               </div>
               <div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية *</label>
                 <select id="compPriority" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                  <option value="low">منخفضة</option><option value="medium" selected>متوسطة</option><option value="high">عالية</option><option value="urgent">عاجلة </option>
+                  <option value="low">منخفضة</option><option value="medium" selected>متوسطة</option><option value="high">عالية</option><option value="urgent">عاجلة 🔴</option>
                 </select>
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-1 text-gray-700"> المرفقات</label>
+              <label class="block text-sm font-semibold mb-1 text-gray-700">📎 المرفقات</label>
               <input type="file" id="compFiles" multiple class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
               <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة (صور، PDF، Word، Excel)</p>
             </div>
             <div class="flex gap-2 pt-4">
-              <button type="button" id="submitComplaintBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">📤 إرسال الشكوى</button>
+              <button type="button" id="submitComplaintBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer"> إرسال الشكوى</button>
               <button type="button" onclick="history.back()" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
             </div>
           </form>
@@ -1617,7 +1597,7 @@ const Views = {
     const canRespond = ['super_admin', 'general_admin', 'sector_admin', 'central_oversight'].includes(u.role);
     const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
     const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
-    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: ' عالية', urgent: '🔴 عاجلة' };
+    const priorityLabels = { low: ' منخفضة', medium: '🔵 متوسطة', high: '🟠 عالية', urgent: ' عاجلة' };
     let attachments = [];
     if (sbConnected) {
       try {
@@ -1632,7 +1612,7 @@ const Views = {
         <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
           <div class="border-b-2 border-teal-600 pb-4 mb-6">
             <div class="flex justify-between items-start flex-wrap gap-3">
-              <div><h1 class="text-2xl font-bold text-teal-800">📝 ${U.esc(complaint.title)}</h1><p class="text-gray-500 text-sm mt-1">#${complaint.id.substring(0, 8)} • ${U.fmtDate(complaint.created_at)}</p></div>
+              <div><h1 class="text-2xl font-bold text-teal-800"> ${U.esc(complaint.title)}</h1><p class="text-gray-500 text-sm mt-1">#${complaint.id.substring(0, 8)} • ${U.fmtDate(complaint.created_at)}</p></div>
               <span class="px-3 py-1 rounded-full text-sm font-bold ${statusColors[complaint.status]}">${statusLabels[complaint.status]}</span>
             </div>
           </div>
@@ -1696,7 +1676,7 @@ const Views = {
         </div>
       </div>
       <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
-        ${c.complainant_name ? `<span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
+        ${c.complainant_name ? `<span> ${U.esc(c.complainant_name)}</span>` : ''}
         ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
         ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : ''}
       </div>
@@ -1748,7 +1728,7 @@ const UI = {
   async del(id) { if (!confirm('⚠️ حذف نهائي؟')) return; try { await DB.remove(id); U.toast('تم الحذف', 'success'); Router.go('dashboard'); } catch (e) { U.toast(e.message, 'error'); } },
   openWhatsApp() { const msg = encodeURIComponent(`مرحباً، أنا من ${CONFIG.ORG}`); window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${msg}`, '_blank'); },
   forgotPassword() { const email = prompt('الرجاء إدخال بريدك الإلكتروني لاستعادة كلمة المرور:'); if (!email) return; if (sbConnected) { sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }).then(() => U.toast('✅ تم إرسال رابط إعادة تعيين كلمة المرور', 'success')).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); } else { U.toast('⚠️ هذه الميزة متاحة فقط عند الاتصال بـ Supabase', 'warning'); } },
-  registerNewUser() { if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; } const email = prompt('البريد الإلكتروني:'); if (!email) return; const password = prompt('كلمة المرور (6 أحرف على الأقل):'); if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; } const fullName = prompt('الاسم الكامل:'); const username = prompt('اسم المستخدم:'); const role = prompt('الدور (super_admin/general_admin/sector_admin/central_oversight/sector_staff):', 'sector_staff'); sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: role || 'sector_staff' } } }).then(({ data, error }) => { if (error) throw error; U.toast('✅ تم إنشاء الحساب بنجاح!', 'success'); }).catch(err => U.toast(' خطأ: ' + err.message, 'error')); },
+  registerNewUser() { if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; } const email = prompt('البريد الإلكتروني:'); if (!email) return; const password = prompt('كلمة المرور (6 أحرف على الأقل):'); if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; } const fullName = prompt('الاسم الكامل:'); const username = prompt('اسم المستخدم:'); const role = prompt('الدور (super_admin/general_admin/sector_admin/central_oversight/sector_staff):', 'sector_staff'); sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: role || 'sector_staff' } } }).then(({ data, error }) => { if (error) throw error; U.toast('✅ تم إنشاء الحساب بنجاح!', 'success'); }).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); },
   
   async submitComplaint() {
     const sector = document.getElementById('compSector').value;
@@ -1794,7 +1774,7 @@ const UI = {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) { U.toast('المراسلة غير موجودة', 'error'); return; }
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
+    const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
     if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text)); } else { this.fallbackCopy(text); }
   },
   
@@ -1900,75 +1880,37 @@ function bindEvents() {
         const priority = document.getElementById('fPri').value;
         const fileInput = document.getElementById('fFiles');
         const files = fileInput?.files ? Array.from(fileInput.files) : [];
-        
-        if (!subject || !content) { 
-          U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); 
-          return; 
-        }
-        
-        saveBtn.disabled = true; 
-        saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
-        
+        if (!subject || !content) { U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); return; }
+        saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
         try {
-          const result = await DB.create({ 
-            sector_id: sector, 
-            subject, 
-            content, 
-            sender_name: sender, 
-            priority 
-          }, files);
-          
-          if (Array.isArray(result)) {
-            U.toast(`✅ تم تعميم المراسلة على ${result.length} قواطع`, 'success');
-            // تحديث الكاش المحلي
-            appData.correspondence = [...result, ...appData.correspondence];
-          } else {
-            U.toast('✅ تم حفظ المراسلة', 'success');
-            // تحديث الكاش المحلي
-            appData.correspondence = [result, ...appData.correspondence];
-          }
-          
-          U.save('db_correspondence_cache', appData.correspondence);
-          
-          // الانتقال للوحة التحكم مع تحديث البيانات
+          const result = await DB.create({ sector_id: sector, subject, content, sender_name: sender, priority }, files);
+          if (Array.isArray(result)) U.toast(`✅ تم تعميم المراسلة على ${result.length} قواطع`, 'success');
+          else U.toast('✅ تم حفظ المراسلة', 'success');
           Router.go('dashboard');
-        } catch (e) { 
-          U.toast(e.message || 'حدث خطأ', 'error'); 
-          saveBtn.disabled = false; 
-          saveBtn.innerHTML = '💾 حفظ المراسلة'; 
-        }
+        } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); saveBtn.disabled = false; saveBtn.innerHTML = '💾 حفظ المراسلة'; }
       };
     }
   }
-  
-  if (Router.page === 'createComplaint') { 
-    const btn = document.getElementById('submitComplaintBtn'); 
-    if (btn) btn.onclick = () => UI.submitComplaint(); 
-  }
-  
+  if (Router.page === 'createComplaint') { const btn = document.getElementById('submitComplaintBtn'); if (btn) btn.onclick = () => UI.submitComplaint(); }
   if (Router.page === 'complaints') {
     const filter = () => {
       const search = document.getElementById('cSearch')?.value.toLowerCase() || '';
       const status = document.getElementById('cStatus')?.value || '';
       const priority = document.getElementById('cPriority')?.value || '';
       const sector = document.getElementById('cSector')?.value || '';
-      
       let filtered = [...appData.complaints];
       if (search) filtered = filtered.filter(c => (c.title + ' ' + c.description).toLowerCase().includes(search));
       if (status) filtered = filtered.filter(c => c.status === status);
       if (priority) filtered = filtered.filter(c => c.priority === priority);
       if (sector) filtered = filtered.filter(c => c.sector_id === sector);
-      
       const el = document.getElementById('complaintsList');
       if (el) {
-        if (filtered.length === 0) { 
-          el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; 
-        } else {
+        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; }
+        else {
           const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
           const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
           const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
           const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
-          
           el.innerHTML = filtered.map(c => {
             const sec = SECTORS.find(s => s.id === c.sector_id);
             return `<div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
@@ -1986,19 +1928,15 @@ function bindEvents() {
               <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
                 ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
                 <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
-                ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600"> بانتظار الرد</span>'}
+                ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
               </div>
             </div>`;
           }).join('');
         }
       }
     };
-    
     const s = document.getElementById('cSearch'), st = document.getElementById('cStatus'), p = document.getElementById('cPriority'), sc = document.getElementById('cSector');
-    if (s) s.oninput = filter;
-    if (st) st.onchange = filter;
-    if (p) p.onchange = filter;
-    if (sc) sc.onchange = filter;
+    if (s) s.oninput = filter; if (st) st.onchange = filter; if (p) p.onchange = filter; if (sc) sc.onchange = filter;
   }
 }
 
@@ -2019,7 +1957,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   if (app && !Auth.user) {
     const installBtn = document.createElement('button');
     installBtn.className = 'install-pwa-btn';
-    installBtn.innerHTML = ' تثبيت التطبيق على الهاتف';
+    installBtn.innerHTML = '📱 تثبيت التطبيق على الهاتف';
     installBtn.onclick = async () => { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') U.toast('✅ تم تثبيت التطبيق!', 'success'); installBtn.remove(); deferredPrompt = null; };
     app.appendChild(installBtn);
   }
@@ -2027,7 +1965,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 render();
 updateSyncButton();
-console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (PWA + FollowUp Complete + Reports)`);
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (PWA + FollowUp Fixed + Reports)`);
 </script>
 </body>
 </html>
