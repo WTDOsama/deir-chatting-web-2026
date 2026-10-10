@@ -323,20 +323,50 @@ async function refreshNotifications() {
 // DATA SERVICE
 // =====================================================
 const DB = {
-  async getAll(filters = {}) {
-    if (sbConnected) {
-      try {
-        let q = sb.from('correspondence').select('*, attachments(*), replies(*), follow_ups(*)');
-        if (filters.sector_id) q = q.eq('sector_id', filters.sector_id);
-        if (filters.is_archived !== undefined) q = q.eq('is_archived', filters.is_archived);
-        const { data, error } = await q.order('created_at', { ascending: false });
-        if (error) throw error;
-        U.save('db_correspondence_cache', data);
-        return data;
-      } catch (e) { return U.load('db_correspondence_cache', []); }
+async getAll(filters = {}) {
+  if (sbConnected) {
+    try {
+      // ✅ محاولة جلب مع العلاقة أولاً
+      let q = sb.from('correspondence').select('*, attachments(*), replies(*), follow_ups(*)');
+      if (filters.sector_id) q = q.eq('sector_id', filters.sector_id);
+      if (filters.is_archived !== undefined) q = q.eq('is_archived', filters.is_archived);
+      const { data, error } = await q.order('created_at', { ascending: false });
+      
+      if (error) {
+        console.warn('Relation follow_ups failed, trying without:', error.message);
+        // ✅ fallback: جلب بدون علاقة follow_ups
+        let q2 = sb.from('correspondence').select('*, attachments(*), replies(*)');
+        if (filters.sector_id) q2 = q2.eq('sector_id', filters.sector_id);
+        if (filters.is_archived !== undefined) q2 = q2.eq('is_archived', filters.is_archived);
+        const { data: data2, error: error2 } = await q2.order('created_at', { ascending: false });
+        
+        if (error2) throw error2;
+        
+        // ✅ جلب المتابعات بشكل منفصل ودمجها
+        if (data2 && data2.length > 0) {
+          const corrIds = data2.map(r => r.id);
+          const { data: fuData } = await sb.from('follow_ups').select('*').in('correspondence_id', corrIds);
+          
+          if (fuData) {
+            data2.forEach(r => {
+              r.follow_ups = fuData.filter(fu => fu.correspondence_id === r.id);
+            });
+          }
+        }
+        
+        U.save('db_correspondence_cache', data2);
+        return data2;
+      }
+      
+      U.save('db_correspondence_cache', data);
+      return data;
+    } catch (e) { 
+      console.error('Error in getAll:', e);
+      return U.load('db_correspondence_cache', []); 
     }
-    return U.load('db_correspondence_cache', U.load('db_correspondence', []));
-  },
+  }
+  return U.load('db_correspondence_cache', U.load('db_correspondence', []));
+},
   
  async create(rec, files = []) {
   if (sbConnected) {
@@ -503,46 +533,73 @@ const DB = {
     return rec;
   },
   
-  async addFollowUp(id, fu) {
-    if (sbConnected) {
-      try {
-        const { data, error } = await sb.from('follow_ups').insert([{
-          correspondence_id: id,
-          user_id: Auth.user?.id,
-          title: fu.title,
-          notes: fu.notes || '',
-          due_date: fu.due_date || null,
-          status: fu.status || 'pending',
-          created_by: Auth.user?.full_name
-        }]).select().single();
-        if (error) throw error;
-        U.toast('✅ تمت إضافة المتابعة', 'success');
-        return data;
-      } catch (e) {
-        console.error('Error adding follow-up:', e);
-        throw e;
+ async addFollowUp(id, fu) {
+  if (sbConnected) {
+    try {
+      const { data, error } = await sb.from('follow_ups').insert([{
+        correspondence_id: id,
+        user_id: Auth.user?.id,
+        title: fu.title,
+        notes: fu.notes || '',
+        due_date: fu.due_date || null,
+        status: fu.status || 'pending',
+        created_by: Auth.user?.full_name
+      }]).select().single();
+      
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw new Error(error.message || 'فشل حفظ المتابعة في قاعدة البيانات');
       }
-    } else {
-      const data = U.load('db_correspondence', []);
-      const rec = data.find(d => d.id === id);
+      
+      // ✅ الإصلاح: تحديث الكاش المحلي بعد النجاح
+      const localData = U.load('db_correspondence', []);
+      const rec = localData.find(d => d.id === id);
       if (rec) {
         rec.follow_ups = rec.follow_ups || [];
-        rec.follow_ups.push({ 
-          id: U.uuid(), 
-          title: fu.title,
-          notes: fu.notes || '',
-          due_date: fu.due_date || null,
-          status: fu.status || 'pending',
-          created_by: Auth.user?.full_name,
-          created_at: U.now() 
-        });
-        U.save('db_correspondence', data);
-        U.save('db_correspondence_cache', data);
-        U.toast('💾 تمت إضافة المتابعة محلياً', 'info');
-        return rec;
+        // تجنب التكرار
+        if (!rec.follow_ups.find(f => f.id === data.id)) {
+          rec.follow_ups.push(data);
+        }
+        U.save('db_correspondence', localData);
+        U.save('db_correspondence_cache', localData);
       }
+      
+      // ✅ تحديث appData في الذاكرة
+      const appRec = appData.correspondence.find(d => d.id === id);
+      if (appRec) {
+        appRec.follow_ups = appRec.follow_ups || [];
+        if (!appRec.follow_ups.find(f => f.id === data.id)) {
+          appRec.follow_ups.push(data);
+        }
+      }
+      
+      return data;
+    } catch (e) {
+      console.error('Error in addFollowUp:', e);
+      throw e;
     }
-  },
+  } else {
+    // Offline mode
+    const localData = U.load('db_correspondence', []);
+    const rec = localData.find(d => d.id === id);
+    if (rec) {
+      rec.follow_ups = rec.follow_ups || [];
+      rec.follow_ups.push({ 
+        id: U.uuid(), 
+        title: fu.title,
+        notes: fu.notes || '',
+        due_date: fu.due_date || null,
+        status: fu.status || 'pending',
+        created_by: Auth.user?.full_name,
+        created_at: U.now() 
+      });
+      U.save('db_correspondence', localData);
+      U.save('db_correspondence_cache', localData);
+      return rec;
+    }
+    throw new Error('المراسلة غير موجودة محلياً');
+  }
+},
   
   async updateFollowUp(fuId, updates) {
     if (sbConnected) {
@@ -605,13 +662,42 @@ const DB = {
     return allFu;
   },
   
-  async getById(id) {
-    if (sbConnected) {
-      const { data, error } = await sb.from('correspondence').select('*, attachments(*), replies(*), follow_ups(*)').eq('id', id).single();
-      if (!error && data) return data;
+async getById(id) {
+  if (sbConnected) {
+    try {
+      const { data, error } = await sb.from('correspondence')
+        .select('*, attachments(*), replies(*), follow_ups(*)')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.warn('Relation follow_ups failed in getById, trying fallback:', error.message);
+        // ✅ fallback: جلب بدون علاقة follow_ups
+        const { data: data2, error: error2 } = await sb.from('correspondence')
+          .select('*, attachments(*), replies(*)')
+          .eq('id', id)
+          .single();
+        
+        if (error2) throw error2;
+        
+        // جلب المتابعات بشكل منفصل
+        if (data2) {
+          const { data: fuData } = await sb.from('follow_ups')
+            .select('*')
+            .eq('correspondence_id', id);
+          data2.follow_ups = fuData || [];
+        }
+        
+        return data2;
+      }
+      
+      return data;
+    } catch (e) {
+      console.error('Error in getById:', e);
     }
-    return U.load('db_correspondence', []).find(d => d.id === id);
-  },
+  }
+  return U.load('db_correspondence', []).find(d => d.id === id);
+},
   async getNotifications() {
     if (!sbConnected) return [];
     const { data } = await sb.from('notifications').select('*').eq('user_id', Auth.user?.id).order('created_at', { ascending: false }).limit(20);
@@ -1025,121 +1111,131 @@ const Views = {
   },
 
   // ✅ صفحة المتابعة المحسنة بالكامل
-  async followups(data) {
-    data = data || appData.correspondence || [];
-    const u = Auth.user || {};
-    let allFollowUps = [];
-    
-    // من البيانات المحلية
-    data.forEach(r => {
-      if (r.follow_ups && r.follow_ups.length > 0) {
-        r.follow_ups.forEach(fu => {
-          allFollowUps.push({ ...fu, correspondence: r });
-        });
-      }
-    });
-    
-    // من Supabase مباشرة
-    if (sbConnected) {
-      try {
-        const { data: fuData } = await sb.from('follow_ups').select('*').order('created_at', { ascending: false });
-        if (fuData && fuData.length > 0) {
-          for (const fu of fuData) {
-            if (!allFollowUps.find(existing => existing.id === fu.id)) {
-              const corr = data.find(r => r.id === fu.correspondence_id);
-              allFollowUps.push({ ...fu, correspondence: corr || null });
-            }
+async followups(data) {
+  data = data || appData.correspondence || [];
+  const u = Auth.user || {};
+  let allFollowUps = [];
+  
+  // 1️⃣ من البيانات المحلية
+  data.forEach(r => {
+    if (r.follow_ups && r.follow_ups.length > 0) {
+      r.follow_ups.forEach(fu => {
+        allFollowUps.push({ ...fu, correspondence: r });
+      });
+    }
+  });
+  
+  // 2️⃣ من Supabase مباشرة (مصدر الحقيقة)
+  if (sbConnected) {
+    try {
+      const { data: fuData, error } = await sb.from('follow_ups')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching follow-ups:', error);
+      } else if (fuData && fuData.length > 0) {
+        for (const fu of fuData) {
+          // تجنب التكرار
+          if (!allFollowUps.find(existing => existing.id === fu.id)) {
+            const corr = data.find(r => r.id === fu.correspondence_id);
+            allFollowUps.push({ ...fu, correspondence: corr || null });
           }
         }
-      } catch (e) {
-        console.error('Error fetching follow-ups:', e);
       }
+    } catch (e) {
+      console.error('Error fetching follow-ups:', e);
     }
-    
-    // فلترة حسب القطاع
-    if (u.role !== 'super_admin' && u.role !== 'general_admin' && u.sector_id) {
-      allFollowUps = allFollowUps.filter(fu => fu.correspondence?.sector_id === u.sector_id);
-    }
-    
-    // حفظ للتصدير
-    appData._allFollowUps = allFollowUps;
-    
-    const pending = allFollowUps.filter(f => f.status === 'pending').length;
-    const inProgress = allFollowUps.filter(f => f.status === 'in_progress').length;
-    const done = allFollowUps.filter(f => f.status === 'done').length;
-    const sectorName = u.sector_id ? (SECTORS.find(s => s.id === u.sector_id)?.name || '') : 'جميع القواطع';
-    
-    return `<div class="min-h-screen">${this.navbar()}
-      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
-        <div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6">
-          <div class="flex justify-between items-center flex-wrap gap-4">
-            <div>
-              <h1 class="text-3xl font-bold">📋 نظام المتابعات</h1>
-              <p class="opacity-90 mt-1">إدارة مهام المتابعة (${allFollowUps.length} متابعة)</p>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button onclick="Reports.exportFollowUpsPDF(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-pdf">📄 تصدير PDF</button>
-              <button onclick="Reports.exportFollowUpsExcel(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
-            </div>
+  }
+  
+  // 3️⃣ ✅ الإصلاح: فلتر آمن يتعامل مع correspondence=null
+  if (u.role !== 'super_admin' && u.role !== 'general_admin' && u.sector_id) {
+    allFollowUps = allFollowUps.filter(fu => {
+      // إذا لم نعرف القطاع، نعرضها (لا نستبعدها)
+      if (!fu.correspondence) return true;
+      return fu.correspondence.sector_id === u.sector_id;
+    });
+  }
+  
+  // حفظ للتصدير
+  appData._allFollowUps = allFollowUps;
+  
+  const pending = allFollowUps.filter(f => f.status === 'pending').length;
+  const inProgress = allFollowUps.filter(f => f.status === 'in_progress').length;
+  const done = allFollowUps.filter(f => f.status === 'done').length;
+  const sectorName = u.sector_id ? (SECTORS.find(s => s.id === u.sector_id)?.name || '') : 'جميع القواطع';
+  
+  return `<div class="min-h-screen">${this.navbar()}
+    <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+      <div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6">
+        <div class="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h1 class="text-3xl font-bold">📋 نظام المتابعات</h1>
+            <p class="opacity-90 mt-1">إدارة مهام المتابعة (${allFollowUps.length} متابعة)</p>
           </div>
-          <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
-              <div class="text-2xl font-bold">${allFollowUps.length}</div>
-              <div class="text-xs opacity-90">إجمالي المتابعات</div>
-            </div>
-            <div class="bg-yellow-400/30 backdrop-blur rounded-xl p-3 text-center">
-              <div class="text-2xl font-bold">${pending}</div>
-              <div class="text-xs opacity-90">قيد الانتظار</div>
-            </div>
-            <div class="bg-blue-400/30 backdrop-blur rounded-xl p-3 text-center">
-              <div class="text-2xl font-bold">${inProgress}</div>
-              <div class="text-xs opacity-90">قيد المعالجة</div>
-            </div>
-            <div class="bg-green-400/30 backdrop-blur rounded-xl p-3 text-center">
-              <div class="text-2xl font-bold">${done}</div>
-              <div class="text-xs opacity-90">مكتملة</div>
-            </div>
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="Reports.exportFollowUpsPDF(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-pdf"> تصدير PDF</button>
+            <button onclick="Reports.exportFollowUpsExcel(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
           </div>
         </div>
-        
-        <div class="space-y-3">
-          ${allFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد مهام متابعة</div>' : 
-            allFollowUps.map(fu => {
-              const statusClass = fu.status === 'pending' ? 'followup-status-pending' : fu.status === 'in_progress' ? 'followup-status-progress' : 'followup-status-done';
-              const statusLabel = STATUS_LABELS[fu.status] || fu.status;
-              const sector = fu.correspondence ? SECTORS.find(s => s.id === fu.correspondence.sector_id) : null;
-              return `<div class="followup-card">
-                <div class="flex justify-between items-start flex-wrap gap-3">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
-                      ${fu.correspondence ? `<span>📋 ${fu.correspondence.reference_number || ''}</span><span>•</span><span>${U.esc(fu.correspondence.subject || '')}</span><span>•</span><span>${sector?.name || '-'}</span>` : '<span>مراسلة غير موجودة</span>'}
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-lg">${U.esc(fu.title)}</h3>
-                    ${fu.notes ? `<p class="text-sm text-gray-600 mt-1">${U.esc(fu.notes)}</p>` : ''}
-                    <div class="flex gap-3 text-xs text-gray-500 mt-2 flex-wrap">
-                      <span> ${U.fmtShort(fu.created_at)}</span>
-                      ${fu.due_date ? `<span>⏰ الاستحقاق: ${U.fmtShort(fu.due_date)}</span>` : ''}
-                      ${fu.created_by ? `<span>👤 ${U.esc(fu.created_by)}</span>` : ''}
-                    </div>
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
+            <div class="text-2xl font-bold">${allFollowUps.length}</div>
+            <div class="text-xs opacity-90">إجمالي المتابعات</div>
+          </div>
+          <div class="bg-yellow-400/30 backdrop-blur rounded-xl p-3 text-center">
+            <div class="text-2xl font-bold">${pending}</div>
+            <div class="text-xs opacity-90">قيد الانتظار</div>
+          </div>
+          <div class="bg-blue-400/30 backdrop-blur rounded-xl p-3 text-center">
+            <div class="text-2xl font-bold">${inProgress}</div>
+            <div class="text-xs opacity-90">قيد المعالجة</div>
+          </div>
+          <div class="bg-green-400/30 backdrop-blur rounded-xl p-3 text-center">
+            <div class="text-2xl font-bold">${done}</div>
+            <div class="text-xs opacity-90">مكتملة</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="space-y-3">
+        ${allFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد مهام متابعة</div>' : 
+          allFollowUps.map(fu => {
+            const statusClass = fu.status === 'pending' ? 'followup-status-pending' : fu.status === 'in_progress' ? 'followup-status-progress' : 'followup-status-done';
+            const statusLabel = STATUS_LABELS[fu.status] || fu.status;
+            const sector = fu.correspondence ? SECTORS.find(s => s.id === fu.correspondence.sector_id) : null;
+            return `<div class="followup-card">
+              <div class="flex justify-between items-start flex-wrap gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
+                    ${fu.correspondence ? `<span>📋 ${fu.correspondence.reference_number || ''}</span><span>•</span><span>${U.esc(fu.correspondence.subject || '')}</span><span>•</span><span>${sector?.name || '-'}</span>` : '<span>مراسلة غير موجودة</span>'}
                   </div>
-                  <div class="flex flex-col gap-2">
-                    <span class="${statusClass}">${statusLabel}</span>
-                    <select onchange="UI.changeFollowUpStatus('${fu.id}', '${fu.correspondence_id}', this.value)" class="text-xs border-2 border-gray-200 rounded-lg px-2 py-1 focus:border-purple-500 focus:outline-none">
-                      <option value="pending" ${fu.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
-                      <option value="in_progress" ${fu.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
-                      <option value="done" ${fu.status === 'done' ? 'selected' : ''}>مكتملة</option>
-                    </select>
-                    ${u.role !== 'sector_staff' ? `<button onclick="UI.deleteFollowUp('${fu.id}', '${fu.correspondence_id}')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg hover:bg-red-200">🗑️ حذف</button>` : ''}
+                  <h3 class="font-bold text-gray-800 text-lg">${U.esc(fu.title)}</h3>
+                  ${fu.notes ? `<p class="text-sm text-gray-600 mt-1">${U.esc(fu.notes)}</p>` : ''}
+                  <div class="flex gap-3 text-xs text-gray-500 mt-2 flex-wrap">
+                    <span> ${U.fmtShort(fu.created_at)}</span>
+                    ${fu.due_date ? `<span>⏰ الاستحقاق: ${U.fmtShort(fu.due_date)}</span>` : ''}
+                    ${fu.created_by ? `<span>👤 ${U.esc(fu.created_by)}</span>` : ''}
                   </div>
                 </div>
-              </div>`;
-            }).join('')}
-        </div>
-        
-        <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG}</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
+                <div class="flex flex-col gap-2">
+                  <span class="${statusClass}">${statusLabel}</span>
+                  <select onchange="UI.changeFollowUpStatus('${fu.id}', '${fu.correspondence_id}', this.value)" class="text-xs border-2 border-gray-200 rounded-lg px-2 py-1 focus:border-purple-500 focus:outline-none">
+                    <option value="pending" ${fu.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
+                    <option value="in_progress" ${fu.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
+                    <option value="done" ${fu.status === 'done' ? 'selected' : ''}>مكتملة</option>
+                  </select>
+                  ${u.role !== 'sector_staff' ? `<button onclick="UI.deleteFollowUp('${fu.id}', '${fu.correspondence_id}')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg hover:bg-red-200">🗑️ حذف</button>` : ''}
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
       </div>
-    </div>`;
-  },
+      
+      <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG}</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
+    </div>
+  </div>`;
+},
 
   general(data) {
     data = data || appData.correspondence || [];
@@ -1710,21 +1806,40 @@ const Views = {
 const UI = {
   reply(id) { const content = prompt('نص الرد:'); if (!content) return; try { DB.addReply(id, content); U.toast('تم إضافة الرد', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
   
-  followUp(id) {
-    const title = prompt('عنوان المهمة:');
-    if (!title) return;
-    const notes = prompt('ملاحظات (اختياري):') || '';
-    const dueDate = prompt('تاريخ الاستحقاق (YYYY-MM-DD) - اختياري:') || null;
-    if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
-      U.toast('⚠️ صيغة التاريخ غير صحيحة. استخدم YYYY-MM-DD', 'warning');
-      return;
-    }
+ followUp(id) {
+  const title = prompt('عنوان المهمة:');
+  if (!title) return;
+  const notes = prompt('ملاحظات (اختياري):') || '';
+  const dueDate = prompt('تاريخ الاستحقاق (YYYY-MM-DD) - اختياري:') || null;
+  
+  if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+    U.toast('⚠️ صيغة التاريخ غير صحيحة. استخدم YYYY-MM-DD', 'warning');
+    return;
+  }
+  
+  // ✅ الإصلاح: استخدام async/await بشكل صحيح
+  (async () => {
     try {
-      DB.addFollowUp(id, { title, notes, due_date: dueDate, status: 'pending' });
-      U.toast('✅ تمت إضافة المتابعة', 'success');
-      render();
-    } catch (e) { U.toast(e.message, 'error'); }
-  },
+      const result = await DB.addFollowUp(id, { 
+        title, 
+        notes, 
+        due_date: dueDate, 
+        status: 'pending' 
+      });
+      
+      if (result) {
+        U.toast('✅ تمت إضافة المتابعة بنجاح', 'success');
+        // ✅ إعادة تحميل البيانات من الخادم قبل العرض
+        await render();
+      } else {
+        U.toast('❌ فشل إضافة المتابعة', 'error');
+      }
+    } catch (e) {
+      console.error('Error adding follow-up:', e);
+      U.toast('❌ خطأ: ' + (e.message || 'فشل حفظ المتابعة'), 'error');
+    }
+  })();
+},
   
   async changeFollowUpStatus(fuId, corrId, newStatus) {
     try {
