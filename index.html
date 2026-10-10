@@ -518,77 +518,106 @@ const DB = {
     return data;
   },
   
-  async createComplaint(complaint) {
-    const files = complaint.files || [];
-    const record = { 
-      ...complaint, 
-      id: U.uuid(), 
-      submitted_by: Auth.user?.id, 
-      submitted_by_name: Auth.user?.full_name, 
-      status: 'pending', 
-      created_at: U.now(), 
-      _pending: !sbConnected,
-      attachments: []
-    };
+async createComplaint(complaint) {
+  // ✅ فصل الملفات عن البيانات قبل الإرسال
+  const files = complaint.files || [];
+  
+  // ✅ إنشاء كائن بيانات الشكوى بدون خاصية files
+  const complaintData = {
+    sector_id: complaint.sector_id,
+    title: complaint.title,
+    description: complaint.description,
+    complainant_name: complaint.complainant_name || '',
+    complainant_phone: complaint.complainant_phone || '',
+    complainant_type: complaint.complainant_type || 'مواطن',
+    priority: complaint.priority || 'medium',
+    source: complaint.source || 'internal',
+    submitted_by: Auth.user?.id,
+    submitted_by_name: Auth.user?.full_name,
+    status: 'pending',
+    admin_response: '',
+    created_at: new Date().toISOString()
+  };
+  
+  const record = {
+    ...complaintData,
+    id: U.uuid(),
+    _pending: !sbConnected,
+    attachments: []
+  };
+  
+  if (sbConnected) {
+    // ✅ الإدراج بدون خاصية files
+    const { data, error } = await sb.from('complaints').insert([complaintData]).select().single();
     
-    if (sbConnected) {
-      const { data, error } = await sb.from('complaints').insert([{ 
-        ...complaint, 
-        submitted_by: Auth.user?.id, 
-        submitted_by_name: Auth.user?.full_name 
-      }]).select().single();
-      
-      if (error) throw error;
-      
-      if (files.length > 0 && data.id) {
-        try {
-          for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const ext = file.name.split('.').pop();
-            const path = `complaints/${data.id}/${U.uuid()}.${ext}`;
-            
-            const { error: uploadError } = await sb.storage.from('attachments').upload(path, file, { 
-              contentType: file.type, 
-              upsert: false 
-            });
-            
-            if (uploadError) {
-              console.error('Failed to upload file:', uploadError);
-              continue;
-            }
-            
-            await sb.from('attachments').insert([{
-              correspondence_id: data.id,
-              file_name: path, 
-              original_name: file.name,
-              mime_type: file.type, 
-              size_bytes: file.size, 
-              file_type: U.getFileType(file.type, file.name),
-              storage_path: path, 
-              uploaded_by: Auth.user?.id,
-            }]);
-          }
-        } catch (e) {
-          console.error('Error uploading attachments:', e);
-        }
-      }
-      
-      return data;
-    } else {
-      const pending = U.load('db_pending_sync', []);
-      pending.push({ type: 'complaint', action: 'create', data: record });
-      U.save('db_pending_sync', pending);
-      
-      const complaints = U.load('db_complaints', []);
-      complaints.push(record);
-      U.save('db_complaints', complaints);
-      U.save('db_complaints_cache', complaints);
-      
-      U.toast('💾 تم حفظ الشكوى محلياً', 'info');
-      updateSyncButton();
-      return record;
+    if (error) {
+      console.error('Error creating complaint:', error);
+      throw new Error(error.message || 'فشل إنشاء الشكوى');
     }
-  },
+    
+    // ✅ رفع المرفقات بشكل منفصل
+    if (files.length > 0 && data.id) {
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const ext = file.name.split('.').pop();
+          const path = `complaints/${data.id}/${U.uuid()}.${ext}`;
+          
+          const { error: uploadError } = await sb.storage
+            .from('attachments')
+            .upload(path, file, { contentType: file.type, upsert: false });
+          
+          if (uploadError) {
+            console.error('Failed to upload file:', uploadError);
+            continue;
+          }
+          
+          await sb.from('attachments').insert([{
+            correspondence_id: data.id,
+            file_name: path,
+            original_name: file.name,
+            mime_type: file.type,
+            size_bytes: file.size,
+            file_type: U.getFileType(file.type, file.name),
+            storage_path: path,
+            uploaded_by: Auth.user?.id,
+          }]);
+        }
+        
+        // جلب المرفقات المرفوعة
+        const { data: attData } = await sb.from('attachments')
+          .select('*')
+          .eq('correspondence_id', data.id);
+        
+        return { ...data, attachments: attData || [] };
+      } catch (e) {
+        console.error('Error uploading attachments:', e);
+        return data;
+      }
+    }
+    
+    return { ...data, attachments: [] };
+  } else {
+    // Offline mode
+    const pending = U.load('db_pending_sync', []);
+    pending.push({ 
+      type: 'complaint', 
+      action: 'create', 
+      data: record,
+      files: files.map(f => ({ name: f.name, type: f.type, size: f.size }))
+    });
+    U.save('db_pending_sync', pending);
+    
+    const complaints = U.load('db_complaints', []);
+    complaints.push(record);
+    U.save('db_complaints', complaints);
+    U.save('db_complaints_cache', complaints);
+    
+    U.toast('💾 تم حفظ الشكوى محلياً', 'info');
+    updateSyncButton();
+    return record;
+  }
+},
   
   async updateComplaint(id, updates) {
     if (sbConnected) {
