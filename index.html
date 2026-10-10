@@ -338,67 +338,123 @@ const DB = {
     return U.load('db_correspondence_cache', U.load('db_correspondence', []));
   },
   
-  async create(rec, files = []) {
-    if (sbConnected) {
-      if (rec.sector_id === 'ALL') {
-        const results = [];
-        for (const sector of SECTORS) {
-          const newId = U.uuid();
-          const refNum = U.genRef(sector.code);
+ async create(rec, files = []) {
+  if (sbConnected) {
+    if (rec.sector_id === 'ALL') {
+      const results = [];
+      for (const sector of SECTORS) {
+        const newId = U.uuid();
+        const refNum = U.genRef(sector.code);
+        
+        try {
           const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-            id: newId, reference_number: refNum, subject: rec.subject, content: rec.content,
-            sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
-            sector_id: sector.id, priority: rec.priority || 'normal',
+            id: newId,
+            reference_number: refNum,
+            subject: rec.subject,
+            content: rec.content,
+            sender_id: Auth.user?.id,
+            sender_name: rec.sender_name || Auth.user?.full_name,
+            sector_id: sector.id,
+            priority: rec.priority || 'normal',
+            is_archived: false,
+            created_at: new Date().toISOString()
           }]).select().single();
+          
           if (insertError) throw insertError;
+          
           let atts = [];
           if (files.length > 0) {
             try {
               await this.uploadAttachments(newId, files);
               const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', newId);
               atts = attData || [];
-            } catch (e) { console.error('Failed to upload attachments:', e); }
+            } catch (e) {
+              console.error('Failed to upload attachments:', e);
+            }
           }
-          results.push({ ...inserted, attachments: atts });
+          
+          results.push({ ...inserted, attachments: atts, replies: [], follow_ups: [] });
+        } catch (e) {
+          console.error(`Error creating correspondence for sector ${sector.name}:`, e);
         }
-        return results;
-      } else {
-        const recordId = U.uuid();
-        const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
+      }
+      return results;
+    } else {
+      const recordId = U.uuid();
+      const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
+      
+      try {
         const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-          id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
-          sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
-          sector_id: rec.sector_id, priority: rec.priority || 'normal',
+          id: recordId,
+          reference_number: refNum,
+          subject: rec.subject,
+          content: rec.content,
+          sender_id: Auth.user?.id,
+          sender_name: rec.sender_name || Auth.user?.full_name,
+          sector_id: rec.sector_id,
+          priority: rec.priority || 'normal',
+          is_archived: false,
+          created_at: new Date().toISOString()
         }]).select().single();
+        
         if (insertError) throw insertError;
+        
         let atts = [];
         if (files.length > 0) {
           try {
             await this.uploadAttachments(recordId, files);
             const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', recordId);
             atts = attData || [];
-          } catch (e) { console.error('Failed to upload attachments:', e); }
+          } catch (e) {
+            console.error('Failed to upload attachments:', e);
+          }
         }
-        return { ...inserted, attachments: atts };
+        
+        return { ...inserted, attachments: atts, replies: [], follow_ups: [] };
+      } catch (e) {
+        console.error('Error creating correspondence:', e);
+        throw e;
       }
-    } else {
-      const recordId = U.uuid();
-      const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
-      const record = { id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
-        sender_name: rec.sender_name || Auth.user?.full_name, sector_id: rec.sector_id, priority: rec.priority || 'normal',
-        is_archived: false, replies: [], follow_ups: [], attachments: [], created_at: U.now(), _pending: true };
-      const pending = U.load('db_pending_sync', []);
-      pending.push({ type: 'correspondence', action: 'create', data: record, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
-      U.save('db_pending_sync', pending);
-      const localData = U.load('db_correspondence', []);
-      localData.push(record);
-      U.save('db_correspondence', localData);
-      U.save('db_correspondence_cache', localData);
-      U.toast('💾 تم الحفظ محلياً', 'info');
-      updateSyncButton();
-      return record;
     }
-  },
+  } else {
+    // Offline mode
+    const recordId = U.uuid();
+    const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
+    const record = {
+      id: recordId,
+      reference_number: refNum,
+      subject: rec.subject,
+      content: rec.content,
+      sender_name: rec.sender_name || Auth.user?.full_name,
+      sector_id: rec.sector_id,
+      priority: rec.priority || 'normal',
+      is_archived: false,
+      replies: [],
+      follow_ups: [],
+      attachments: [],
+      created_at: U.now(),
+      _pending: true
+    };
+    
+    const pending = U.load('db_pending_sync', []);
+    pending.push({
+      type: 'correspondence',
+      action: 'create',
+      data: record,
+      files: files.map(f => ({ name: f.name, type: f.type, size: f.size }))
+    });
+    U.save('db_pending_sync', pending);
+    
+    const localData = U.load('db_correspondence', []);
+    localData.push(record);
+    U.save('db_correspondence', localData);
+    U.save('db_correspondence_cache', localData);
+    
+    U.toast('💾 تم الحفظ محلياً (سيتم المزامنة عند عودة الإنترنت)', 'info');
+    updateSyncButton();
+    return record;
+  }
+},
 
   async uploadAttachments(correspondenceId, files) {
     if (!sbConnected) return;
@@ -1844,37 +1900,75 @@ function bindEvents() {
         const priority = document.getElementById('fPri').value;
         const fileInput = document.getElementById('fFiles');
         const files = fileInput?.files ? Array.from(fileInput.files) : [];
-        if (!subject || !content) { U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); return; }
-        saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
+        
+        if (!subject || !content) { 
+          U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); 
+          return; 
+        }
+        
+        saveBtn.disabled = true; 
+        saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
+        
         try {
-          const result = await DB.create({ sector_id: sector, subject, content, sender_name: sender, priority }, files);
-          if (Array.isArray(result)) U.toast(`✅ تم تعميم المراسلة على ${result.length} قواطع`, 'success');
-          else U.toast('✅ تم حفظ المراسلة', 'success');
+          const result = await DB.create({ 
+            sector_id: sector, 
+            subject, 
+            content, 
+            sender_name: sender, 
+            priority 
+          }, files);
+          
+          if (Array.isArray(result)) {
+            U.toast(`✅ تم تعميم المراسلة على ${result.length} قواطع`, 'success');
+            // تحديث الكاش المحلي
+            appData.correspondence = [...result, ...appData.correspondence];
+          } else {
+            U.toast('✅ تم حفظ المراسلة', 'success');
+            // تحديث الكاش المحلي
+            appData.correspondence = [result, ...appData.correspondence];
+          }
+          
+          U.save('db_correspondence_cache', appData.correspondence);
+          
+          // الانتقال للوحة التحكم مع تحديث البيانات
           Router.go('dashboard');
-        } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); saveBtn.disabled = false; saveBtn.innerHTML = '💾 حفظ المراسلة'; }
+        } catch (e) { 
+          U.toast(e.message || 'حدث خطأ', 'error'); 
+          saveBtn.disabled = false; 
+          saveBtn.innerHTML = '💾 حفظ المراسلة'; 
+        }
       };
     }
   }
-  if (Router.page === 'createComplaint') { const btn = document.getElementById('submitComplaintBtn'); if (btn) btn.onclick = () => UI.submitComplaint(); }
+  
+  if (Router.page === 'createComplaint') { 
+    const btn = document.getElementById('submitComplaintBtn'); 
+    if (btn) btn.onclick = () => UI.submitComplaint(); 
+  }
+  
   if (Router.page === 'complaints') {
     const filter = () => {
       const search = document.getElementById('cSearch')?.value.toLowerCase() || '';
       const status = document.getElementById('cStatus')?.value || '';
       const priority = document.getElementById('cPriority')?.value || '';
       const sector = document.getElementById('cSector')?.value || '';
+      
       let filtered = [...appData.complaints];
       if (search) filtered = filtered.filter(c => (c.title + ' ' + c.description).toLowerCase().includes(search));
       if (status) filtered = filtered.filter(c => c.status === status);
       if (priority) filtered = filtered.filter(c => c.priority === priority);
       if (sector) filtered = filtered.filter(c => c.sector_id === sector);
+      
       const el = document.getElementById('complaintsList');
       if (el) {
-        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; }
-        else {
+        if (filtered.length === 0) { 
+          el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; 
+        } else {
           const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
           const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
           const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
           const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
+          
           el.innerHTML = filtered.map(c => {
             const sec = SECTORS.find(s => s.id === c.sector_id);
             return `<div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
@@ -1892,15 +1986,19 @@ function bindEvents() {
               <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
                 ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
                 <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
-                ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
+                ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600"> بانتظار الرد</span>'}
               </div>
             </div>`;
           }).join('');
         }
       }
     };
+    
     const s = document.getElementById('cSearch'), st = document.getElementById('cStatus'), p = document.getElementById('cPriority'), sc = document.getElementById('cSector');
-    if (s) s.oninput = filter; if (st) st.onchange = filter; if (p) p.onchange = filter; if (sc) sc.onchange = filter;
+    if (s) s.oninput = filter;
+    if (st) st.onchange = filter;
+    if (p) p.onchange = filter;
+    if (sc) sc.onchange = filter;
   }
 }
 
