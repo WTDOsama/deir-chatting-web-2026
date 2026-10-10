@@ -14,11 +14,16 @@
 <!-- مكتبة QR Code -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
+<!-- مكتبات التصدير: html2canvas + jsPDF + SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <!-- PWA Manifest -->
 <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"مراسلات إدارة إيواءات دير البلح","short_name":"إيواءات دير البلح","start_url":"./","display":"standalone","background_color":"%230f766e","theme_color":"%230f766e","orientation":"portrait","description":"نظام المراسلات والشكاوى","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 fill=%22%230f766e%22 rx=%2240%22/><text x=%2296%22 y=%22130%22 font-size=%22120%22 text-anchor=%22middle%22 fill=%22white%22>🏢</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
 
 <!-- Apple Touch Icon -->
-<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%230f766e" rx="40"/><text x="90" y="125" font-size="110" text-anchor="middle" fill="white"></text></svg>'>
+<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%230f766e" rx="40"/><text x="90" y="125" font-size="110" text-anchor="middle" fill="white">🏢</text></svg>'>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -46,10 +51,6 @@
   .whatsapp-float:hover { transform: scale(1.1); }
   .whatsapp-float svg { width: 32px; height: 32px; fill: white; }
   .notification-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-  .chat-bubble { max-width: 70%; padding: 10px 14px; border-radius: 16px; margin: 4px 0; }
-  .chat-bubble.me { background: #0f766e; color: white; margin-left: auto; border-bottom-left-radius: 4px; }
-  .chat-bubble.other { background: #e5e7eb; color: #1f2937; margin-right: auto; border-bottom-right-radius: 4px; }
-  .attachment-chip { display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin: 2px; }
   .attachment-card { background: white; border-radius: 12px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s; border: 1px solid #e5e7eb; }
   .attachment-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-1px); }
   .attachment-info { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
@@ -58,8 +59,6 @@
   .attachment-size { font-size: 12px; color: #6b7280; }
   .download-btn { background: linear-gradient(135deg, #0f766e, #134e4a); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; transition: all 0.2s; }
   .download-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,118,110,0.4); }
-  
-  /* Quick Actions Styling */
   .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-top: 12px; }
   .quick-actions button { padding: 10px 6px; border-radius: 8px; font-size: 12px; font-weight: 600; color: white; cursor: pointer; border: none; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 60px; }
   .quick-actions button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
@@ -70,51 +69,53 @@
   .qa-archive { background: #4b5563; }
   .qa-delete { background: #991b1b; }
   .qa-restore { background: #10b981; }
-  
+  .qa-follow { background: #9333ea; }
   .oversight-gradient { background: linear-gradient(135deg, #7c2d12 0%, #9a3412 50%, #c2410c 100%); }
-  
-  .offline-banner {
-    position: fixed; top: 0; left: 0; right: 0;
-    background: linear-gradient(135deg, #dc2626, #991b1b);
-    color: white; padding: 8px 16px; text-align: center;
-    font-weight: bold; font-size: 14px; z-index: 9999;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2); animation: slideDown 0.3s ease;
-  }
+  .offline-banner { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #dc2626, #991b1b); color: white; padding: 8px 16px; text-align: center; font-weight: bold; font-size: 14px; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.2); animation: slideDown 0.3s ease; }
   @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-  
-  .sync-btn {
-    position: fixed; bottom: 90px; left: 20px;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white; padding: 12px 20px; border-radius: 50px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer;
-    z-index: 50; font-weight: bold; font-size: 14px;
-    display: flex; align-items: center; gap: 8px; border: none; transition: all 0.3s;
-  }
+  .sync-btn { position: fixed; bottom: 90px; left: 20px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 12px 20px; border-radius: 50px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 50; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; border: none; transition: all 0.3s; }
   .sync-btn:hover { transform: scale(1.05); }
-  
-  .install-pwa-btn {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    color: white; padding: 12px 20px; border-radius: 50px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer;
-    font-weight: bold; font-size: 14px; display: flex;
-    align-items: center; gap: 8px; border: none; transition: all 0.3s; margin: 10px auto;
-  }
+  .install-pwa-btn { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 12px 20px; border-radius: 50px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; border: none; transition: all 0.3s; margin: 10px auto; }
   .install-pwa-btn:hover { transform: scale(1.05); }
+  
+  /* أنماط المتابعة المحسنة */
+  .followup-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-right: 4px solid #9333ea; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; }
+  .followup-card:hover { transform: translateX(-4px); box-shadow: 0 8px 20px rgba(147,51,234,0.15); }
+  .followup-status-pending { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .followup-status-progress { background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .followup-status-done { background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  
+  /* أنماط التقارير */
+  .report-btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+  .report-btn-pdf { background: linear-gradient(135deg, #dc2626, #991b1b); color: white; }
+  .report-btn-excel { background: linear-gradient(135deg, #16a34a, #15803d); color: white; }
+  .report-btn-csv { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
+  .report-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+  
+  /* أنماط الجداول للتصدير */
+  .report-table { width: 100%; border-collapse: collapse; background: white; }
+  .report-table th { background: #0f766e; color: white; padding: 12px; text-align: right; font-weight: 700; border: 1px solid #0d5f59; }
+  .report-table td { padding: 10px 12px; border: 1px solid #e5e7eb; text-align: right; }
+  .report-table tr:nth-child(even) { background: #f9fafb; }
+  .report-table tr:hover { background: #f3f4f6; }
+  
+  /* حاوية التقرير المخفية للطباعة/التصدير */
+  #reportContainer { position: fixed; top: -9999px; left: -9999px; width: 1200px; background: white; padding: 40px; z-index: -1; }
 </style>
 </head>
 <body>
 <div id="app"></div>
-
 <div id="offlineBanner" class="offline-banner hidden">⚠️ أنت تعمل بدون إنترنت - سيتم حفظ البيانات محلياً</div>
-
 <button id="syncBtn" class="sync-btn hidden" onclick="UI.syncOfflineData()" title="مزامنة البيانات مع الخادم">
   🔄 مزامنة البيانات
   <span id="syncCount" class="bg-white text-orange-600 rounded-full px-2 py-0.5 text-xs font-bold">0</span>
 </button>
-
 <div id="whatsappBtn" class="whatsapp-float hidden" onclick="UI.openWhatsApp()" title="تواصل عبر واتساب">
   <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
 </div>
+
+<!-- حاوية التقارير المخفية للتصدير -->
+<div id="reportContainer"></div>
 
 <script>
 // =====================================================
@@ -124,7 +125,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '11.8.0-Full-QuickActions',
+  VERSION: '12.0.0-Reports-FollowUp',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -132,7 +133,7 @@ const CONFIG = {
 };
 
 const SECTORS = [
-  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>' },
+  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' },
   { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 16c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 8c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>' },
   { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>' },
   { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' },
@@ -144,6 +145,22 @@ const ROLES = {
   sector_admin: 'مدير قاطع',
   central_oversight: 'الرقابة المركزية',
   sector_staff: 'موظف قاطع',
+};
+
+const STATUS_LABELS = {
+  pending: 'قيد الانتظار',
+  in_progress: 'قيد المعالجة',
+  resolved: 'تم الحل',
+  rejected: 'مرفوضة',
+  done: 'مكتملة'
+};
+
+const PRIORITY_LABELS = {
+  low: 'منخفضة',
+  medium: 'متوسطة',
+  high: 'عالية',
+  urgent: 'عاجلة',
+  normal: 'عادية'
 };
 
 let sb = null;
@@ -163,13 +180,12 @@ try {
 } catch (e) { console.error('Supabase init failed:', e); }
 
 // =====================================================
-// PWA SERVICE WORKER (INLINE)
+// PWA SERVICE WORKER
 // =====================================================
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE_NAME = 'deir-iyawaat-v11.8.0';
-    const ASSETS = ['/'];
-    self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
+    const CACHE_NAME = 'deir-iyawaat-v12.0.0';
+    self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['/']).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
     self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
     self.addEventListener('fetch', (e) => {
       if (e.request.method !== 'GET') return;
@@ -184,11 +200,11 @@ if ('serviceWorker' in navigator) {
   `;
   const swBlob = new Blob([swCode], { type: 'application/javascript' });
   const swUrl = URL.createObjectURL(swBlob);
-  navigator.serviceWorker.register(swUrl).then((reg) => console.log('✓ Service Worker registered')).catch((err) => console.log(' Service Worker registration failed:', err.message));
+  navigator.serviceWorker.register(swUrl).then((reg) => console.log('✓ Service Worker registered')).catch((err) => console.log(' SW failed:', err.message));
 }
 
 // =====================================================
-// ONLINE/OFFLINE DETECTION
+// ONLINE/OFFLINE
 // =====================================================
 window.addEventListener('online', () => {
   isOnline = true; sbConnected = true;
@@ -240,7 +256,7 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '📦', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '', archive: '📦', other: '📎' }[type] || ''),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
     const lowerName = name.toLowerCase();
@@ -315,16 +331,14 @@ const DB = {
   async getAll(filters = {}) {
     if (sbConnected) {
       try {
-        let q = sb.from('correspondence').select('*, attachments(*), replies(*)');
+        let q = sb.from('correspondence').select('*, attachments(*), replies(*), follow_ups(*)');
         if (filters.sector_id) q = q.eq('sector_id', filters.sector_id);
         if (filters.is_archived !== undefined) q = q.eq('is_archived', filters.is_archived);
         const { data, error } = await q.order('created_at', { ascending: false });
         if (error) throw error;
         U.save('db_correspondence_cache', data);
         return data;
-      } catch (e) {
-        return U.load('db_correspondence_cache', []);
-      }
+      } catch (e) { return U.load('db_correspondence_cache', []); }
     }
     return U.load('db_correspondence_cache', U.load('db_correspondence', []));
   },
@@ -337,27 +351,18 @@ const DB = {
           const newId = U.uuid();
           const refNum = U.genRef(sector.code);
           const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-            id: newId,
-            reference_number: refNum,
-            subject: rec.subject, 
-            content: rec.content, 
-            sender_id: Auth.user?.id,
-            sender_name: rec.sender_name || Auth.user?.full_name, 
-            sector_id: sector.id, 
-            priority: rec.priority || 'normal',
+            id: newId, reference_number: refNum, subject: rec.subject, content: rec.content,
+            sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
+            sector_id: sector.id, priority: rec.priority || 'normal',
           }]).select().single();
-          
           if (insertError) throw insertError;
-          
           let atts = [];
           if (files.length > 0) {
             try {
               await this.uploadAttachments(newId, files);
               const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', newId);
               atts = attData || [];
-            } catch (e) {
-              console.error('Failed to upload attachments:', e);
-            }
+            } catch (e) { console.error('Failed to upload attachments:', e); }
           }
           results.push({ ...inserted, attachments: atts });
         }
@@ -366,58 +371,35 @@ const DB = {
         const recordId = U.uuid();
         const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
         const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-          id: recordId,
-          reference_number: refNum,
-          subject: rec.subject, 
-          content: rec.content, 
-          sender_id: Auth.user?.id,
-          sender_name: rec.sender_name || Auth.user?.full_name, 
-          sector_id: rec.sector_id, 
-          priority: rec.priority || 'normal',
+          id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
+          sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
+          sector_id: rec.sector_id, priority: rec.priority || 'normal',
         }]).select().single();
-        
         if (insertError) throw insertError;
-        
         let atts = [];
         if (files.length > 0) {
           try {
             await this.uploadAttachments(recordId, files);
             const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', recordId);
             atts = attData || [];
-          } catch (e) {
-            console.error('Failed to upload attachments:', e);
-          }
+          } catch (e) { console.error('Failed to upload attachments:', e); }
         }
         return { ...inserted, attachments: atts };
       }
     } else {
       const recordId = U.uuid();
       const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
-      const record = {
-        id: recordId, 
-        reference_number: refNum,
-        subject: rec.subject, 
-        content: rec.content, 
-        sender_name: rec.sender_name || Auth.user?.full_name,
-        sector_id: rec.sector_id, 
-        priority: rec.priority || 'normal',
-        is_archived: false, 
-        replies: [], 
-        follow_ups: [], 
-        attachments: [], 
-        created_at: U.now(), 
-        _pending: true
-      };
+      const record = { id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
+        sender_name: rec.sender_name || Auth.user?.full_name, sector_id: rec.sector_id, priority: rec.priority || 'normal',
+        is_archived: false, replies: [], follow_ups: [], attachments: [], created_at: U.now(), _pending: true };
       const pending = U.load('db_pending_sync', []);
       pending.push({ type: 'correspondence', action: 'create', data: record, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
       U.save('db_pending_sync', pending);
-      
       const localData = U.load('db_correspondence', []);
       localData.push(record);
       U.save('db_correspondence', localData);
       U.save('db_correspondence_cache', localData);
-      
-      U.toast('💾 تم الحفظ محلياً (سيتم المزامنة عند عودة الإنترنت)', 'info');
+      U.toast('💾 تم الحفظ محلياً', 'info');
       updateSyncButton();
       return record;
     }
@@ -471,7 +453,15 @@ const DB = {
   },
   async addFollowUp(id, fu) {
     if (sbConnected) {
-      const { data, error } = await sb.from('follow_ups').insert([{ correspondence_id: id, user_id: Auth.user?.id, ...fu }]).select().single();
+      const { data, error } = await sb.from('follow_ups').insert([{ 
+        correspondence_id: id, 
+        user_id: Auth.user?.id,
+        title: fu.title,
+        notes: fu.notes || '',
+        due_date: fu.due_date || null,
+        status: fu.status || 'pending',
+        created_by: Auth.user?.full_name
+      }]).select().single();
       if (error) throw error; return data;
     }
     const data = U.load('db_correspondence', []);
@@ -481,9 +471,29 @@ const DB = {
     U.save('db_correspondence', data);
     return rec;
   },
+  async updateFollowUp(fuId, updates) {
+    if (sbConnected) {
+      const { data, error } = await sb.from('follow_ups').update(updates).eq('id', fuId).select().single();
+      if (error) throw error; return data;
+    }
+    return null;
+  },
+  async deleteFollowUp(fuId, corrId) {
+    if (sbConnected) {
+      await sb.from('follow_ups').delete().eq('id', fuId);
+      return true;
+    }
+    const data = U.load('db_correspondence', []);
+    const rec = data.find(d => d.id === corrId);
+    if (rec && rec.follow_ups) {
+      rec.follow_ups = rec.follow_ups.filter(f => f.id !== fuId);
+      U.save('db_correspondence', data);
+    }
+    return true;
+  },
   async getById(id) {
     if (sbConnected) {
-      const { data, error } = await sb.from('correspondence').select('*, attachments(*), replies(*)').eq('id', id).single();
+      const { data, error } = await sb.from('correspondence').select('*, attachments(*), replies(*), follow_ups(*)').eq('id', id).single();
       if (!error && data) return data;
     }
     return U.load('db_correspondence', []).find(d => d.id === id);
@@ -518,106 +528,62 @@ const DB = {
     return data;
   },
   
-async createComplaint(complaint) {
-  // ✅ فصل الملفات عن البيانات قبل الإرسال
-  const files = complaint.files || [];
-  
-  // ✅ إنشاء كائن بيانات الشكوى بدون خاصية files
-  const complaintData = {
-    sector_id: complaint.sector_id,
-    title: complaint.title,
-    description: complaint.description,
-    complainant_name: complaint.complainant_name || '',
-    complainant_phone: complaint.complainant_phone || '',
-    complainant_type: complaint.complainant_type || 'مواطن',
-    priority: complaint.priority || 'medium',
-    source: complaint.source || 'internal',
-    submitted_by: Auth.user?.id,
-    submitted_by_name: Auth.user?.full_name,
-    status: 'pending',
-    admin_response: '',
-    created_at: new Date().toISOString()
-  };
-  
-  const record = {
-    ...complaintData,
-    id: U.uuid(),
-    _pending: !sbConnected,
-    attachments: []
-  };
-  
-  if (sbConnected) {
-    // ✅ الإدراج بدون خاصية files
-    const { data, error } = await sb.from('complaints').insert([complaintData]).select().single();
+  async createComplaint(complaint) {
+    const files = complaint.files || [];
+    const complaintData = {
+      sector_id: complaint.sector_id,
+      title: complaint.title,
+      description: complaint.description,
+      complainant_name: complaint.complainant_name || '',
+      complainant_phone: complaint.complainant_phone || '',
+      complainant_type: complaint.complainant_type || 'مواطن',
+      priority: complaint.priority || 'medium',
+      source: complaint.source || 'internal',
+      submitted_by: Auth.user?.id,
+      submitted_by_name: Auth.user?.full_name,
+      status: 'pending',
+      admin_response: '',
+      created_at: new Date().toISOString()
+    };
     
-    if (error) {
-      console.error('Error creating complaint:', error);
-      throw new Error(error.message || 'فشل إنشاء الشكوى');
-    }
+    const record = { ...complaintData, id: U.uuid(), _pending: !sbConnected, attachments: [] };
     
-    // ✅ رفع المرفقات بشكل منفصل
-    if (files.length > 0 && data.id) {
-      try {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const ext = file.name.split('.').pop();
-          const path = `complaints/${data.id}/${U.uuid()}.${ext}`;
-          
-          const { error: uploadError } = await sb.storage
-            .from('attachments')
-            .upload(path, file, { contentType: file.type, upsert: false });
-          
-          if (uploadError) {
-            console.error('Failed to upload file:', uploadError);
-            continue;
+    if (sbConnected) {
+      const { data, error } = await sb.from('complaints').insert([complaintData]).select().single();
+      if (error) throw new Error(error.message || 'فشل إنشاء الشكوى');
+      
+      if (files.length > 0 && data.id) {
+        try {
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const ext = file.name.split('.').pop();
+            const path = `complaints/${data.id}/${U.uuid()}.${ext}`;
+            const { error: uploadError } = await sb.storage.from('attachments').upload(path, file, { contentType: file.type, upsert: false });
+            if (uploadError) { console.error('Failed to upload file:', uploadError); continue; }
+            await sb.from('attachments').insert([{
+              correspondence_id: data.id, file_name: path, original_name: file.name,
+              mime_type: file.type, size_bytes: file.size, file_type: U.getFileType(file.type, file.name),
+              storage_path: path, uploaded_by: Auth.user?.id,
+            }]);
           }
-          
-          await sb.from('attachments').insert([{
-            correspondence_id: data.id,
-            file_name: path,
-            original_name: file.name,
-            mime_type: file.type,
-            size_bytes: file.size,
-            file_type: U.getFileType(file.type, file.name),
-            storage_path: path,
-            uploaded_by: Auth.user?.id,
-          }]);
-        }
-        
-        // جلب المرفقات المرفوعة
-        const { data: attData } = await sb.from('attachments')
-          .select('*')
-          .eq('correspondence_id', data.id);
-        
-        return { ...data, attachments: attData || [] };
-      } catch (e) {
-        console.error('Error uploading attachments:', e);
-        return data;
+          const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', data.id);
+          return { ...data, attachments: attData || [] };
+        } catch (e) { console.error('Error uploading attachments:', e); }
       }
+      return { ...data, attachments: [] };
+    } else {
+      const pending = U.load('db_pending_sync', []);
+      pending.push({ type: 'complaint', action: 'create', data: record, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
+      U.save('db_pending_sync', pending);
+      const complaints = U.load('db_complaints', []);
+      complaints.push(record);
+      U.save('db_complaints', complaints);
+      U.save('db_complaints_cache', complaints);
+      U.toast('💾 تم حفظ الشكوى محلياً', 'info');
+      updateSyncButton();
+      return record;
     }
-    
-    return { ...data, attachments: [] };
-  } else {
-    // Offline mode
-    const pending = U.load('db_pending_sync', []);
-    pending.push({ 
-      type: 'complaint', 
-      action: 'create', 
-      data: record,
-      files: files.map(f => ({ name: f.name, type: f.type, size: f.size }))
-    });
-    U.save('db_pending_sync', pending);
-    
-    const complaints = U.load('db_complaints', []);
-    complaints.push(record);
-    U.save('db_complaints', complaints);
-    U.save('db_complaints_cache', complaints);
-    
-    U.toast('💾 تم حفظ الشكوى محلياً', 'info');
-    updateSyncButton();
-    return record;
-  }
-},
+  },
   
   async updateComplaint(id, updates) {
     if (sbConnected) {
@@ -661,10 +627,10 @@ async createComplaint(complaint) {
     for (const item of pending) {
       try {
         if (item.type === 'correspondence' && item.action === 'create') {
-          await this._createSingle(item.data, []);
+          await this.create(item.data, []);
           success++;
         } else if (item.type === 'complaint' && item.action === 'create') {
-          await sb.from('complaints').insert([{ ...item.data, submitted_by: item.data.submitted_by, submitted_by_name: item.data.submitted_by_name }]);
+          await this.createComplaint(item.data);
           success++;
         }
       } catch (e) {
@@ -690,37 +656,336 @@ const Router = {
 };
 
 // =====================================================
+// REPORTS SERVICE - تصدير التقارير
+// =====================================================
+const Reports = {
+  // بناء HTML للتقرير
+  buildReportHTML(title, subtitle, headers, rows, stats = null) {
+    let html = `
+      <div style="padding: 30px; background: white; direction: rtl; font-family: 'Cairo', sans-serif;">
+        <div style="text-align: center; border-bottom: 3px solid #0f766e; padding-bottom: 20px; margin-bottom: 20px;">
+          <h1 style="color: #0f766e; margin: 0; font-size: 28px;">${title}</h1>
+          <h2 style="color: #6b7280; margin: 10px 0; font-size: 18px;">${subtitle}</h2>
+          <p style="color: #9ca3af; margin: 5px 0; font-size: 14px;">تاريخ التقرير: ${U.fmtDate(new Date().toISOString())}</p>
+          <p style="color: #9ca3af; margin: 5px 0; font-size: 14px;">${CONFIG.ORG} - ${CONFIG.DEV}</p>
+        </div>
+    `;
+    
+    if (stats) {
+      html += `<div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">`;
+      for (const [key, value] of Object.entries(stats)) {
+        html += `
+          <div style="flex: 1; min-width: 120px; background: #f3f4f6; padding: 15px; border-radius: 10px; text-align: center; border-right: 4px solid #0f766e;">
+            <div style="font-size: 24px; font-weight: bold; color: #0f766e;">${value}</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">${key}</div>
+          </div>
+        `;
+      }
+      html += `</div>`;
+    }
+    
+    html += `
+      <table class="report-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+          <tr>
+            ${headers.map(h => `<th style="background: #0f766e; color: white; padding: 12px; text-align: right; border: 1px solid #0d5f59; font-weight: 700;">${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row, idx) => `
+            <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+              ${row.map(cell => `<td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: right;">${cell}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>© ${new Date().getFullYear()} ${CONFIG.ORG} - جميع الحقوق محفوظة</p>
+        <p>تم إنشاء هذا التقرير بواسطة ${CONFIG.APP_NAME}</p>
+      </div>
+    </div>`;
+    return html;
+  },
+  
+  // تصدير PDF
+  async exportPDF(filename, title, subtitle, headers, rows, stats = null) {
+    U.toast('🔄 جاري إنشاء ملف PDF...', 'info');
+    
+    const container = document.getElementById('reportContainer');
+    container.innerHTML = this.buildReportHTML(title, subtitle, headers, rows, stats);
+    container.style.display = 'block';
+    
+    try {
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('l', 'mm', 'a4'); // landscape
+      
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 297;
+      const pageHeight = 210;
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(filename);
+      U.toast('✅ تم تصدير PDF بنجاح', 'success');
+    } catch (e) {
+      console.error('PDF export error:', e);
+      U.toast('❌ فشل تصدير PDF', 'error');
+    } finally {
+      container.style.display = 'none';
+      container.innerHTML = '';
+    }
+  },
+  
+  // تصدير Excel
+  exportExcel(filename, sheetName, headers, rows) {
+    U.toast('🔄 جاري إنشاء ملف Excel...', 'info');
+    
+    try {
+      const wb = XLSX.utils.book_new();
+      const wsData = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // تنسيق الأعمدة
+      const colWidths = headers.map(h => ({ wch: Math.max(h.length * 2, 15) }));
+      ws['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, filename);
+      U.toast('✅ تم تصدير Excel بنجاح', 'success');
+    } catch (e) {
+      console.error('Excel export error:', e);
+      U.toast('❌ فشل تصدير Excel', 'error');
+    }
+  },
+  
+  // تصدير شكاوى
+  async exportComplaintsPDF(complaints, sectorName = 'جميع القواطع') {
+    const headers = ['الرقم', 'العنوان', 'القطاع', 'المشتكي', 'الهاتف', 'النوع', 'الأولوية', 'الحالة', 'التاريخ', 'الرد'];
+    const rows = complaints.map(c => {
+      const sector = SECTORS.find(s => s.id === c.sector_id);
+      return [
+        c.id.substring(0, 8),
+        c.title || '',
+        sector?.name || '-',
+        c.complainant_name || '-',
+        c.complainant_phone || '-',
+        c.complainant_type || '-',
+        PRIORITY_LABELS[c.priority] || c.priority,
+        STATUS_LABELS[c.status] || c.status,
+        U.fmtShort(c.created_at),
+        c.admin_response || '-'
+      ];
+    });
+    
+    const stats = {
+      'إجمالي الشكاوى': complaints.length,
+      'قيد الانتظار': complaints.filter(c => c.status === 'pending').length,
+      'قيد المعالجة': complaints.filter(c => c.status === 'in_progress').length,
+      'تم الحل': complaints.filter(c => c.status === 'resolved').length,
+      'مرفوضة': complaints.filter(c => c.status === 'rejected').length,
+      'عاجلة': complaints.filter(c => c.priority === 'urgent').length
+    };
+    
+    await this.exportPDF(
+      `تقرير_الشكاوى_${Date.now()}.pdf`,
+      'تقرير الشكاوى',
+      sectorName,
+      headers,
+      rows,
+      stats
+    );
+  },
+  
+  exportComplaintsExcel(complaints, sectorName = 'جميع القواطع') {
+    const headers = ['الرقم', 'العنوان', 'القطاع', 'المشتكي', 'الهاتف', 'النوع', 'الأولوية', 'الحالة', 'التاريخ', 'الرد'];
+    const rows = complaints.map(c => {
+      const sector = SECTORS.find(s => s.id === c.sector_id);
+      return [
+        c.id.substring(0, 8),
+        c.title || '',
+        sector?.name || '-',
+        c.complainant_name || '-',
+        c.complainant_phone || '-',
+        c.complainant_type || '-',
+        PRIORITY_LABELS[c.priority] || c.priority,
+        STATUS_LABELS[c.status] || c.status,
+        U.fmtShort(c.created_at),
+        c.admin_response || '-'
+      ];
+    });
+    
+    this.exportExcel(
+      `تقرير_الشكاوى_${Date.now()}.xlsx`,
+      'الشكاوى',
+      headers,
+      rows
+    );
+  },
+  
+  // تصدير مراسلات
+  async exportCorrespondencePDF(correspondence, sectorName = 'جميع القواطع') {
+    const headers = ['الرقم المرجعي', 'الموضوع', 'القطاع', 'المرسل', 'الأولوية', 'التاريخ', 'الحالة'];
+    const rows = correspondence.map(r => {
+      const sector = SECTORS.find(s => s.id === r.sector_id);
+      return [
+        r.reference_number || '-',
+        r.subject || '',
+        sector?.name || '-',
+        r.sender_name || '-',
+        PRIORITY_LABELS[r.priority] || r.priority,
+        U.fmtShort(r.created_at),
+        r.is_archived ? 'مؤرشف' : 'نشط'
+      ];
+    });
+    
+    const stats = {
+      'إجمالي المراسلات': correspondence.length,
+      'نشطة': correspondence.filter(r => !r.is_archived).length,
+      'مؤرشفة': correspondence.filter(r => r.is_archived).length,
+      'عالية الأولوية': correspondence.filter(r => r.priority === 'high').length,
+      'عاجلة': correspondence.filter(r => r.priority === 'urgent').length
+    };
+    
+    await this.exportPDF(
+      `تقرير_المراسلات_${Date.now()}.pdf`,
+      'تقرير المراسلات',
+      sectorName,
+      headers,
+      rows,
+      stats
+    );
+  },
+  
+  exportCorrespondenceExcel(correspondence, sectorName = 'جميع القواطع') {
+    const headers = ['الرقم المرجعي', 'الموضوع', 'القطاع', 'المرسل', 'الأولوية', 'التاريخ', 'الحالة'];
+    const rows = correspondence.map(r => {
+      const sector = SECTORS.find(s => s.id === r.sector_id);
+      return [
+        r.reference_number || '-',
+        r.subject || '',
+        sector?.name || '-',
+        r.sender_name || '-',
+        PRIORITY_LABELS[r.priority] || r.priority,
+        U.fmtShort(r.created_at),
+        r.is_archived ? 'مؤرشف' : 'نشط'
+      ];
+    });
+    
+    this.exportExcel(
+      `تقرير_المراسلات_${Date.now()}.xlsx`,
+      'المراسلات',
+      headers,
+      rows
+    );
+  },
+  
+  // تصدير المتابعات
+  async exportFollowUpsPDF(followUps, sectorName = 'جميع القواطع') {
+    const headers = ['رقم المراسلة', 'عنوان المهمة', 'المراسلة', 'القطاع', 'الحالة', 'تاريخ الإنشاء', 'تاريخ الاستحقاق', 'الملاحظات'];
+    const rows = followUps.map(fu => {
+      const sector = SECTORS.find(s => s.id === fu.correspondence?.sector_id);
+      return [
+        fu.correspondence?.reference_number || fu.correspondence_id?.substring(0, 8) || '-',
+        fu.title || '',
+        fu.correspondence?.subject || '-',
+        sector?.name || '-',
+        STATUS_LABELS[fu.status] || fu.status,
+        U.fmtShort(fu.created_at),
+        fu.due_date ? U.fmtShort(fu.due_date) : '-',
+        fu.notes || '-'
+      ];
+    });
+    
+    const stats = {
+      'إجمالي المتابعات': followUps.length,
+      'قيد الانتظار': followUps.filter(f => f.status === 'pending').length,
+      'قيد المعالجة': followUps.filter(f => f.status === 'in_progress').length,
+      'مكتملة': followUps.filter(f => f.status === 'done').length
+    };
+    
+    await this.exportPDF(
+      `تقرير_المتابعات_${Date.now()}.pdf`,
+      'تقرير المتابعات',
+      sectorName,
+      headers,
+      rows,
+      stats
+    );
+  },
+  
+  exportFollowUpsExcel(followUps, sectorName = 'جميع القواطع') {
+    const headers = ['رقم المراسلة', 'عنوان المهمة', 'المراسلة', 'القطاع', 'الحالة', 'تاريخ الإنشاء', 'تاريخ الاستحقاق', 'الملاحظات'];
+    const rows = followUps.map(fu => {
+      const sector = SECTORS.find(s => s.id === fu.correspondence?.sector_id);
+      return [
+        fu.correspondence?.reference_number || fu.correspondence_id?.substring(0, 8) || '-',
+        fu.title || '',
+        fu.correspondence?.subject || '-',
+        sector?.name || '-',
+        STATUS_LABELS[fu.status] || fu.status,
+        U.fmtShort(fu.created_at),
+        fu.due_date ? U.fmtShort(fu.due_date) : '-',
+        fu.notes || '-'
+      ];
+    });
+    
+    this.exportExcel(
+      `تقرير_المتابعات_${Date.now()}.xlsx`,
+      'المتابعات',
+      headers,
+      rows
+    );
+  }
+};
+
+// =====================================================
 // VIEWS
 // =====================================================
 const Views = {
   login() {
-    return `
-      <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in">
-          <div class="text-center mb-6">
-            <div class="text-6xl mb-3">🏢</div>
-            <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
-            <p class="text-gray-600 text-sm mt-2">نظام المراسلات والشكاوى</p>
-            ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">⚠️ وضع أوفلاين</div>' : ''}
-          </div>
-          <div id="loginErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
-          <form class="space-y-4" onsubmit="return false;">
-            <div><label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label><input type="email" id="lgEmail" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="name@example.com"></div>
-            <div><label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label><input type="password" id="lgPass" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••"></div>
-            <div class="flex items-center justify-between text-sm">
-              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"><span class="text-gray-600">تذكرني</span></label>
-              <button type="button" onclick="UI.forgotPassword()" class="text-teal-600 hover:text-teal-800 font-semibold cursor-pointer">هل نسيت كلمة المرور؟</button>
-            </div>
-            <button type="button" id="lgBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg"> تسجيل الدخول</button>
-          </form>
-          <div class="mt-6 pt-6 border-t border-gray-200">
-            <p class="text-center text-gray-600 text-sm mb-3">ليس لديك حساب؟</p>
-            <button type="button" onclick="UI.registerNewUser()" class="w-full bg-white border-2 border-teal-600 text-teal-600 hover:bg-teal-50 py-3 rounded-xl font-bold cursor-pointer transition">📝 تسجيل مستخدم جديد</button>
-          </div>
-          <div class="mt-4 text-xs text-gray-500 text-center"><p>الإصدار ${CONFIG.VERSION}</p><p class="mt-1">© 2026 ${CONFIG.ORG}</p></div>
+    return `<div class="min-h-screen flex items-center justify-center p-4">
+      <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in">
+        <div class="text-center mb-6">
+          <div class="text-6xl mb-3">🏢</div>
+          <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
+          <p class="text-gray-600 text-sm mt-2">نظام المراسلات والشكاوى</p>
+          ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">⚠️ وضع أوفلاين</div>' : ''}
         </div>
+        <div id="loginErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
+        <form class="space-y-4" onsubmit="return false;">
+          <div><label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label><input type="email" id="lgEmail" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="name@example.com"></div>
+          <div><label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label><input type="password" id="lgPass" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••"></div>
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"><span class="text-gray-600">تذكرني</span></label>
+            <button type="button" onclick="UI.forgotPassword()" class="text-teal-600 hover:text-teal-800 font-semibold cursor-pointer">هل نسيت كلمة المرور؟</button>
+          </div>
+          <button type="button" id="lgBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">🔐 تسجيل الدخول</button>
+        </form>
+        <div class="mt-6 pt-6 border-t border-gray-200">
+          <p class="text-center text-gray-600 text-sm mb-3">ليس لديك حساب؟</p>
+          <button type="button" onclick="UI.registerNewUser()" class="w-full bg-white border-2 border-teal-600 text-teal-600 hover:bg-teal-50 py-3 rounded-xl font-bold cursor-pointer transition">📝 تسجيل مستخدم جديد</button>
+        </div>
+        <div class="mt-4 text-xs text-gray-500 text-center"><p>الإصدار ${CONFIG.VERSION}</p><p class="mt-1">© 2026 ${CONFIG.ORG}</p></div>
       </div>
-    `;
+    </div>`;
   },
 
   dashboard(data) {
@@ -729,350 +994,192 @@ const Views = {
     const active = data.filter(r => !r.is_archived);
     const archived = data.filter(r => r.is_archived);
     const withFu = data.filter(r => r.follow_ups && r.follow_ups.length > 0);
-    return `
-      <div class="min-h-screen">
-        ${this.navbar()}
-        <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
-          <div class="glass rounded-2xl shadow-xl p-6 mb-6">
-            <h1 class="text-3xl font-bold text-teal-800 mb-2">أهلاً ${U.esc(u.full_name)}</h1>
-            <p class="text-gray-600">${ROLES[u.role] || 'مستخدم'} ${sbConnected ? '🔗 متصل' : ' أوفلاين'}</p>
-            <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-              <div class="bg-teal-50 p-3 rounded-xl"><div class="text-2xl font-bold text-teal-700">${active.length}</div><div class="text-xs text-gray-600">مراسلة نشطة</div></div>
-              <div class="bg-gray-50 p-3 rounded-xl"><div class="text-2xl font-bold text-gray-700">${archived.length}</div><div class="text-xs text-gray-600">مؤرشفة</div></div>
-              <div class="bg-purple-50 p-3 rounded-xl"><div class="text-2xl font-bold text-purple-700">${withFu.length}</div><div class="text-xs text-gray-600">بها متابعة</div></div>
-              <div class="bg-blue-50 p-3 rounded-xl"><div class="text-2xl font-bold text-blue-700">${data.length}</div><div class="text-xs text-gray-600">الإجمالي</div></div>
-            </div>
-          </div>
-          <h2 class="text-xl font-bold text-white mb-3">القواطع</h2>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            ${SECTORS.map(s => {
-              const count = active.filter(r => r.sector_id === s.id).length;
-              return `<button onclick="Router.go('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right cursor-pointer">
-                <div class="bg-gradient-to-br ${s.color} text-white rounded-xl p-3 inline-flex items-center justify-center mb-2">${s.icon}</div>
-                <h3 class="font-bold text-gray-800">${s.name}</h3>
-                <div class="text-sm text-gray-500 mt-1">${count} مراسلة</div>
-              </button>`;
-            }).join('')}
-          </div>
-          <h2 class="text-xl font-bold text-white mb-3">📋 الإجراءات السريعة</h2>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <button onclick="Router.go('create')" class="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">➕ مراسلة جديدة</button>
-            <button onclick="Router.go('general')" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 التقارير</button>
-            <button onclick="Router.go('followups')" class="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 المتابعة</button>
-            <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📦 الأرشيف</button>
-          </div>
-          <div class="glass rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">آخر المراسلات</h2>
-            ${active.length === 0 ? '<div class="text-center text-gray-500 py-8">لا توجد مراسلات بعد</div>' : active.slice(0, 5).map(r => this.card(r)).join('')}
-          </div>
-          <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG}</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
-        </div>
-      </div>
-    `;
-  },
-
-  async oversightDashboard() {
-    const u = Auth.user || {};
-    const sector = SECTORS.find(s => s.id === u.sector_id);
-    if (!sector) return `<div class="min-h-screen flex items-center justify-center"><div class="glass rounded-2xl p-8 text-center"><h2 class="text-xl font-bold text-red-600">⚠️ حساب الرقابة المركزية غير مرتبط بقاطع</h2><button onclick="Auth.logout()" class="btn-primary px-6 py-2 rounded-xl mt-4">تسجيل الخروج</button></div></div>`;
-    const stats = await DB.getComplaintStats(u.sector_id);
-    const recentComplaints = (await DB.getComplaints({ sector_id: u.sector_id })).slice(0, 5);
-    return `
-      <div class="min-h-screen">
-        ${this.oversightNavbar()}
-        <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
-          <div class="oversight-gradient rounded-2xl shadow-xl p-6 mb-6 text-white">
-            <div class="flex items-center justify-between flex-wrap gap-4">
-              <div class="flex items-center gap-4">
-                <div class="bg-white/20 rounded-xl p-3">${sector.icon}</div>
-                <div><h1 class="text-3xl font-bold">🛡️ لوحة الرقابة المركزية</h1><p class="opacity-90 mt-1">${sector.name} – ${U.esc(u.full_name)}</p></div>
-              </div>
-              <button onclick="Router.go('createComplaint')" class="bg-white text-orange-700 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer hover:bg-orange-50 transition">➕ تسجيل شكوى جديدة</button>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">إجمالي الشكاوى</div><div class="text-3xl font-bold text-gray-800 mt-1">${stats.total}</div></div><div class="bg-gray-100 rounded-xl p-3 text-2xl">📊</div></div></div>
-            <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">قيد الانتظار</div><div class="text-3xl font-bold text-yellow-600 mt-1">${stats.pending}</div></div><div class="bg-yellow-100 rounded-xl p-3 text-2xl">⏳</div></div></div>
-            <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">تم الحل</div><div class="text-3xl font-bold text-green-600 mt-1">${stats.resolved}</div></div><div class="bg-green-100 rounded-xl p-3 text-2xl">✅</div></div></div>
-            <div class="glass rounded-2xl shadow-lg p-5 card-hover border-2 border-red-200"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">عاجلة 🔴</div><div class="text-3xl font-bold text-red-600 mt-1">${stats.urgent}</div></div><div class="bg-red-100 rounded-xl p-3 text-2xl">🚨</div></div></div>
-          </div>
-          <div class="glass rounded-2xl shadow-xl p-5 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ إجراءات سريعة</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <button onclick="Router.go('oversightComplaints')" class="bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 جميع الشكاوى</button>
-              <button onclick="Router.go('oversightComplaints', {filter:'pending'})" class="bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">⏳ قيد الانتظار</button>
-              <button onclick="Router.go('oversightComplaints', {filter:'urgent'})" class="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">🚨 العاجلة</button>
-              <button onclick="UI.exportOversightReport()" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 تصدير تقرير</button>
-            </div>
-          </div>
-          <div class="glass rounded-2xl shadow-xl p-6">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold text-gray-800">🕐 آخر الشكاوى</h2>
-              <button onclick="Router.go('oversightComplaints')" class="text-orange-600 hover:text-orange-800 font-semibold cursor-pointer text-sm">عرض الكل ←</button>
-            </div>
-            ${recentComplaints.length === 0 ? '<div class="text-center text-gray-500 py-8">لا توجد شكاوى مسجلة</div>' : recentComplaints.map(c => this.complaintCard(c)).join('')}
-          </div>
-          <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG} – نظام الرقابة المركزية</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
-        </div>
-      </div>
-    `;
-  },
-
-  async oversightComplaints() {
-    const u = Auth.user || {};
-    const sector = SECTORS.find(s => s.id === u.sector_id);
-    const allComplaints = await DB.getComplaints({ sector_id: u.sector_id });
-    const initialFilter = Router.params.filter || '';
-    return `
-      <div class="min-h-screen">
-        ${this.oversightNavbar()}
-        <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
-          <div class="oversight-gradient rounded-2xl shadow-xl p-6 mb-6 text-white">
-            <div class="flex items-center gap-4">
-              <div class="bg-white/20 rounded-xl p-3">${sector?.icon || ''}</div>
-              <div><h1 class="text-3xl font-bold">📋 إدارة الشكاوى</h1><p class="opacity-90 mt-1">${sector?.name || ''} – ${allComplaints.length} شكوى</p></div>
-            </div>
-          </div>
-          <div class="glass rounded-2xl shadow-xl p-4 mb-4">
-            <div class="grid md:grid-cols-4 gap-3">
-              <input type="text" id="cSearch" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none">
-              <select id="cStatus" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none">
-                <option value="">كل الحالات</option>
-                <option value="pending" ${initialFilter==='pending'?'selected':''}>قيد الانتظار</option>
-                <option value="in_progress">قيد المعالجة</option>
-                <option value="resolved">تم الحل</option>
-                <option value="rejected">مرفوضة</option>
-              </select>
-              <select id="cPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none">
-                <option value="">كل الأولويات</option>
-                <option value="urgent" ${initialFilter==='urgent'?'selected':''}>🔴 عاجلة</option>
-                <option value="high">🟠 عالية</option>
-                <option value="medium">متوسطة</option>
-                <option value="low">منخفضة</option>
-              </select>
-              <button onclick="Router.go('createComplaint')" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">➕ شكوى جديدة</button>
-            </div>
-          </div>
-          <div id="complaintsList" class="space-y-3">
-            ${allComplaints.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد شكاوى</div>' : allComplaints.map(c => this.complaintCard(c)).join('')}
+    return `<div class="min-h-screen">${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="glass rounded-2xl shadow-xl p-6 mb-6">
+          <h1 class="text-3xl font-bold text-teal-800 mb-2">أهلاً ${U.esc(u.full_name)}</h1>
+          <p class="text-gray-600">${ROLES[u.role] || 'مستخدم'} ${sbConnected ? '🔗 متصل' : '📡 أوفلاين'}</p>
+          <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+            <div class="bg-teal-50 p-3 rounded-xl"><div class="text-2xl font-bold text-teal-700">${active.length}</div><div class="text-xs text-gray-600">مراسلة نشطة</div></div>
+            <div class="bg-gray-50 p-3 rounded-xl"><div class="text-2xl font-bold text-gray-700">${archived.length}</div><div class="text-xs text-gray-600">مؤرشفة</div></div>
+            <div class="bg-purple-50 p-3 rounded-xl"><div class="text-2xl font-bold text-purple-700">${withFu.length}</div><div class="text-xs text-gray-600">بها متابعة</div></div>
+            <div class="bg-blue-50 p-3 rounded-xl"><div class="text-2xl font-bold text-blue-700">${data.length}</div><div class="text-xs text-gray-600">الإجمالي</div></div>
           </div>
         </div>
-      </div>
-    `;
-  },
-
-  createComplaint() {
-    const u = Auth.user || {};
-    const isAdmin = u.role === 'super_admin' || u.role === 'general_admin';
-    return `
-      <div class="min-h-screen">
-        ${u.role === 'central_oversight' ? this.oversightNavbar() : this.navbar()}
-        <div class="max-w-3xl mx-auto p-4 md:p-6 fade-in">
-          <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
-            <h1 class="text-2xl font-bold text-teal-800 mb-6">📝 تسجيل شكوى جديدة</h1>
-            <form class="space-y-4" onsubmit="return false;">
-              <div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label>
-                <select id="compSector" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                  ${isAdmin ? SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : `<option value="${u.sector_id}" selected>${SECTORS.find(s => s.id === u.sector_id)?.name || ''}</option>`}
-                </select>
-              </div>
-              <div><label class="block text-sm font-semibold mb-1 text-gray-700">عنوان الشكوى *</label><input type="text" id="compTitle" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="مثال: انقطاع المياه عن المركز"></div>
-              <div><label class="block text-sm font-semibold mb-1 text-gray-700">تفاصيل الشكوى *</label><textarea id="compDesc" rows="6" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="اشرح المشكلة بالتفصيل..."></textarea></div>
-              <div class="grid md:grid-cols-2 gap-3">
-                <div><label class="block text-sm font-semibold mb-1 text-gray-700">اسم المشتكي</label><input type="text" id="compName" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="اختياري"></div>
-                <div><label class="block text-sm font-semibold mb-1 text-gray-700">رقم الهاتف</label><input type="tel" id="compPhone" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="05xxxxxxxx"></div>
-              </div>
-              <div class="grid md:grid-cols-2 gap-3">
-                <div><label class="block text-sm font-semibold mb-1 text-gray-700">نوع المشتكي</label>
-                  <select id="compType" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                    <option value="مواطن">مواطن</option><option value="موظف">موظف</option><option value="جهة رسمية">جهة رسمية</option><option value="أخرى">أخرى</option>
-                  </select>
-                </div>
-                <div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية *</label>
-                  <select id="compPriority" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                    <option value="low">منخفضة</option><option value="medium" selected>متوسطة</option><option value="high">عالية</option><option value="urgent">عاجلة </option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-semibold mb-1 text-gray-700"> المرفقات</label>
-                <input type="file" id="compFiles" multiple class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
-                <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة (صور، PDF، Word، Excel)</p>
-              </div>
-              <div class="flex gap-2 pt-4">
-                <button type="button" id="submitComplaintBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">📤 إرسال الشكوى</button>
-                <button type="button" onclick="history.back()" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
-              </div>
-            </form>
-          </div>
+        <h2 class="text-xl font-bold text-white mb-3">القواطع</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          ${SECTORS.map(s => {
+            const count = active.filter(r => r.sector_id === s.id).length;
+            return `<button onclick="Router.go('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right cursor-pointer">
+              <div class="bg-gradient-to-br ${s.color} text-white rounded-xl p-3 inline-flex items-center justify-center mb-2">${s.icon}</div>
+              <h3 class="font-bold text-gray-800">${s.name}</h3>
+              <div class="text-sm text-gray-500 mt-1">${count} مراسلة</div>
+            </button>`;
+          }).join('')}
         </div>
+        <h2 class="text-xl font-bold text-white mb-3">📋 الإجراءات السريعة</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <button onclick="Router.go('create')" class="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> مراسلة جديدة</button>
+          <button onclick="Router.go('general')" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> التقارير</button>
+          <button onclick="Router.go('followups')" class="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 المتابعة</button>
+          <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📦 الأرشيف</button>
+        </div>
+        <div class="glass rounded-2xl shadow-xl p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">آخر المراسلات</h2>
+          ${active.length === 0 ? '<div class="text-center text-gray-500 py-8">لا توجد مراسلات بعد</div>' : active.slice(0, 5).map(r => this.card(r)).join('')}
+        </div>
+        <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG}</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
       </div>
-    `;
+    </div>`;
   },
 
-  async viewComplaint() {
-    const id = Router.params.id;
-    const complaint = await DB.getComplaintById(id);
-    if (!complaint) return '<div class="p-8 text-white text-center text-xl">الشكوى غير موجودة</div>';
+  // صفحة المتابعة المحسنة
+  async followups(data) {
+    data = data || appData.correspondence || [];
     const u = Auth.user || {};
-    const sector = SECTORS.find(s => s.id === complaint.sector_id);
-    const canRespond = ['super_admin', 'general_admin', 'sector_admin', 'central_oversight'].includes(u.role);
-    const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
-    const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
-    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: '🟠 عالية', urgent: ' عاجلة' };
     
-    const attachments = complaint.attachments || [];
+    // جمع جميع المتابعات من جميع المراسلات
+    let allFollowUps = [];
+    data.forEach(r => {
+      if (r.follow_ups && r.follow_ups.length > 0) {
+        r.follow_ups.forEach(fu => {
+          allFollowUps.push({ ...fu, correspondence: r });
+        });
+      }
+    });
     
-    return `
-      <div class="min-h-screen">
-        ${u.role === 'central_oversight' ? this.oversightNavbar() : this.navbar()}
-        <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
-          <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
-          <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
-            <div class="border-b-2 border-teal-600 pb-4 mb-6">
-              <div class="flex justify-between items-start flex-wrap gap-3">
-                <div><h1 class="text-2xl font-bold text-teal-800">📝 ${U.esc(complaint.title)}</h1><p class="text-gray-500 text-sm mt-1">#${complaint.id.substring(0, 8)} • ${U.fmtDate(complaint.created_at)}</p></div>
-                <span class="px-3 py-1 rounded-full text-sm font-bold ${statusColors[complaint.status]}">${statusLabels[complaint.status]}</span>
-              </div>
+    // جلب المتابعات من Supabase مباشرة إذا متصل
+    if (sbConnected) {
+      try {
+        const { data: fuData } = await sb.from('follow_ups').select('*').order('created_at', { ascending: false });
+        if (fuData && fuData.length > 0) {
+          // دمج مع بيانات المراسلات
+          for (const fu of fuData) {
+            const corr = data.find(r => r.id === fu.correspondence_id);
+            if (corr) {
+              allFollowUps.push({ ...fu, correspondence: corr });
+            } else {
+              allFollowUps.push({ ...fu, correspondence: null });
+            }
+          }
+          // إزالة التكرارات
+          const seen = new Set();
+          allFollowUps = allFollowUps.filter(fu => {
+            if (seen.has(fu.id)) return false;
+            seen.add(fu.id);
+            return true;
+          });
+        }
+      } catch (e) {
+        console.error('Error fetching follow-ups:', e);
+      }
+    }
+    
+    // فلترة حسب القطاع للمستخدمين غير المديرين
+    if (u.role !== 'super_admin' && u.role !== 'general_admin' && u.sector_id) {
+      allFollowUps = allFollowUps.filter(fu => fu.correspondence?.sector_id === u.sector_id);
+    }
+    
+    const pending = allFollowUps.filter(f => f.status === 'pending').length;
+    const inProgress = allFollowUps.filter(f => f.status === 'in_progress').length;
+    const done = allFollowUps.filter(f => f.status === 'done').length;
+    
+    return `<div class="min-h-screen">${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6">
+          <div class="flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <h1 class="text-3xl font-bold">📋 نظام المتابعات</h1>
+              <p class="opacity-90 mt-1">إدارة مهام المتابعة (${allFollowUps.length} متابعة)</p>
             </div>
-            <div class="grid md:grid-cols-2 gap-4 mb-6">
-              <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${sector?.name || '-'}</div></div>
-              <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${priorityLabels[complaint.priority] || complaint.priority}</div></div>
-              ${complaint.complainant_name ? `<div><div class="text-xs text-gray-500">اسم المشتكي</div><div class="font-semibold">${U.esc(complaint.complainant_name)}</div></div>` : ''}
-              ${complaint.complainant_phone ? `<div><div class="text-xs text-gray-500">الهاتف</div><div class="font-semibold">${U.esc(complaint.complainant_phone)}</div></div>` : ''}
-              <div><div class="text-xs text-gray-500">نوع المشتكي</div><div class="font-semibold">${U.esc(complaint.complainant_type || 'مواطن')}</div></div>
-              <div><div class="text-xs text-gray-500">أرسلها</div><div class="font-semibold">${U.esc(complaint.submitted_by_name || 'مستخدم')}</div></div>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="Reports.exportFollowUpsPDF(${JSON.stringify(allFollowUps).replace(/"/g, '&quot;')}, '${u.sector_id ? SECTORS.find(s => s.id === u.sector_id)?.name || '' : 'جميع القواطع'}')" class="report-btn report-btn-pdf">📄 تصدير PDF</button>
+              <button onclick="Reports.exportFollowUpsExcel(${JSON.stringify(allFollowUps).replace(/"/g, '&quot;')}, '${u.sector_id ? SECTORS.find(s => s.id === u.sector_id)?.name || '' : 'جميع القواطع'}')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
             </div>
-            <div class="mb-6"><div class="text-xs text-gray-500 mb-1">تفاصيل الشكوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(complaint.description)}</div></div>
-            
-            ${attachments.length > 0 ? `
-              <div class="mb-6">
-                <div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div>
-                <div class="space-y-2">
-                  ${attachments.map(att => {
-                    const fileType = U.getFileType(att.mime_type, att.original_name);
-                    const fileIcon = U.getFileIcon(fileType);
-                    const downloadLabel = U.getDownloadLabel(fileType);
-                    const fileSize = U.formatFileSize(att.size_bytes);
-                    const fileUrl = sbConnected 
-                      ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}`
-                      : '#';
-                    return `
-                      <div class="attachment-card">
-                        <div class="attachment-info">
-                          <div class="attachment-icon">${fileIcon}</div>
-                          <div class="min-w-0 flex-1">
-                            <div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div>
-                            <div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div>
-                          </div>
-                        </div>
-                        <a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn">
-                          ⬇️ ${downloadLabel}
-                        </a>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-            ` : ''}
-            
-            ${complaint.admin_response ? `<div class="mb-6 bg-green-50 border-r-4 border-green-500 p-4 rounded-xl"><h3 class="font-bold text-gray-800 mb-2">✅ رد الإدارة</h3><div class="whitespace-pre-wrap">${U.esc(complaint.admin_response)}</div>${complaint.resolved_at ? `<div class="text-xs text-gray-500 mt-2">تم الحل في: ${U.fmtDate(complaint.resolved_at)}</div>` : ''}</div>` : ''}
-            ${canRespond && complaint.status !== 'resolved' ? `
-              <div class="border-t pt-4 mt-4">
-                <h3 class="font-bold text-gray-800 mb-3">⚡ إجراءات</h3>
-                <div class="space-y-3">
-                  <div><label class="block text-sm font-semibold mb-1">تغيير الحالة</label>
-                    <select id="updateStatus" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
-                      <option value="pending" ${complaint.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
-                      <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
-                      <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>تم الحل</option>
-                      <option value="rejected" ${complaint.status === 'rejected' ? 'selected' : ''}>مرفوضة</option>
-                    </select>
+          </div>
+          <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
+              <div class="text-2xl font-bold">${allFollowUps.length}</div>
+              <div class="text-xs opacity-90">إجمالي المتابعات</div>
+            </div>
+            <div class="bg-yellow-400/30 backdrop-blur rounded-xl p-3 text-center">
+              <div class="text-2xl font-bold">${pending}</div>
+              <div class="text-xs opacity-90">قيد الانتظار</div>
+            </div>
+            <div class="bg-blue-400/30 backdrop-blur rounded-xl p-3 text-center">
+              <div class="text-2xl font-bold">${inProgress}</div>
+              <div class="text-xs opacity-90">قيد المعالجة</div>
+            </div>
+            <div class="bg-green-400/30 backdrop-blur rounded-xl p-3 text-center">
+              <div class="text-2xl font-bold">${done}</div>
+              <div class="text-xs opacity-90">مكتملة</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-3">
+          ${allFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد مهام متابعة</div>' : 
+            allFollowUps.map(fu => {
+              const statusClass = fu.status === 'pending' ? 'followup-status-pending' : fu.status === 'in_progress' ? 'followup-status-progress' : 'followup-status-done';
+              const statusLabel = STATUS_LABELS[fu.status] || fu.status;
+              const sector = fu.correspondence ? SECTORS.find(s => s.id === fu.correspondence.sector_id) : null;
+              return `<div class="followup-card">
+                <div class="flex justify-between items-start flex-wrap gap-3">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
+                      ${fu.correspondence ? `<span>📋 ${fu.correspondence.reference_number || ''}</span><span>•</span><span>${U.esc(fu.correspondence.subject || '')}</span><span>•</span><span>${sector?.name || '-'}</span>` : '<span>مراسلة غير موجودة</span>'}
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg">${U.esc(fu.title)}</h3>
+                    ${fu.notes ? `<p class="text-sm text-gray-600 mt-1">${U.esc(fu.notes)}</p>` : ''}
+                    <div class="flex gap-3 text-xs text-gray-500 mt-2 flex-wrap">
+                      <span>📅 ${U.fmtShort(fu.created_at)}</span>
+                      ${fu.due_date ? `<span>⏰ الاستحقاق: ${U.fmtShort(fu.due_date)}</span>` : ''}
+                      ${fu.created_by ? `<span>👤 ${U.esc(fu.created_by)}</span>` : ''}
+                    </div>
                   </div>
-                  <div><label class="block text-sm font-semibold mb-1">رد الإدارة</label><textarea id="adminResponse" rows="4" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl" placeholder="اكتب الرد هنا...">${U.esc(complaint.admin_response || '')}</textarea></div>
-                  <button onclick="UI.updateComplaint('${complaint.id}')" class="btn-primary w-full py-3 rounded-xl font-bold">💾 حفظ التحديثات</button>
+                  <div class="flex flex-col gap-2">
+                    <span class="${statusClass}">${statusLabel}</span>
+                    <select onchange="UI.changeFollowUpStatus('${fu.id}', '${fu.correspondence_id}', this.value)" class="text-xs border-2 border-gray-200 rounded-lg px-2 py-1 focus:border-purple-500 focus:outline-none">
+                      <option value="pending" ${fu.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
+                      <option value="in_progress" ${fu.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
+                      <option value="done" ${fu.status === 'done' ? 'selected' : ''}>مكتملة</option>
+                    </select>
+                    ${u.role !== 'sector_staff' ? `<button onclick="UI.deleteFollowUp('${fu.id}', '${fu.correspondence_id}')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg hover:bg-red-200">🗑️ حذف</button>` : ''}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
-          </div>
+              </div>`;
+            }).join('')}
         </div>
+        
+        <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG}</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
       </div>
-    `;
+    </div>`;
   },
 
-  complaintCard(c) {
-    const sector = SECTORS.find(s => s.id === c.sector_id);
-    const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
-    const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
-    const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
-    const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
-    return `
-      <div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
-        <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
-          <div class="flex-1">
-            <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
-              <span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>
-              ${sector ? `<span>•</span><span>${sector.name}</span>` : ''}
+  // صفحة الإدارة العامة مع التصدير
+  general(data) {
+    data = data || appData.correspondence || [];
+    const filteredData = data.filter(r => !r.is_archived);
+    const u = Auth.user || {};
+    return `<div class="min-h-screen">${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-2xl shadow-xl p-6 mb-6">
+          <div class="flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <h1 class="text-3xl font-bold">🏛️ الإدارة العامة</h1>
+              <p class="opacity-90 mt-1">جميع المراسلات (${filteredData.length})</p>
             </div>
-            <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
-            <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
-            <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="Reports.exportCorrespondencePDF(${JSON.stringify(filteredData).replace(/"/g, '&quot;')}, 'جميع القواطع')" class="report-btn report-btn-pdf">📄 تصدير PDF</button>
+              <button onclick="Reports.exportCorrespondenceExcel(${JSON.stringify(filteredData).replace(/"/g, '&quot;')}, 'جميع القواطع')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
+            </div>
           </div>
         </div>
-        <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
-          ${c.complainant_name ? `<span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
-          ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
-          ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : ''}
+        <div class="space-y-3">
+          ${filteredData.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات</div>' : filteredData.map(r => this.card(r)).join('')}
         </div>
       </div>
-    `;
-  },
-
-  oversightNavbar() {
-    const u = Auth.user || {};
-    if (!u.id) return '';
-    return `
-      <nav class="glass shadow-lg sticky top-0 z-50 border-t-4 border-orange-500">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">🛡️</span>
-            <div><div class="font-bold text-orange-700 text-sm md:text-base">نظام الرقابة المركزية</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} – ${SECTORS.find(s => s.id === u.sector_id)?.name || ''}</div></div>
-          </div>
-          <div class="flex items-center gap-1 md:gap-2 flex-wrap">
-            <button onclick="Router.go('oversightDashboard')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">🏠 الرئيسية</button>
-            <button onclick="Router.go('oversightComplaints')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">📋 الشكاوى</button>
-            <button onclick="Router.go('createComplaint')" class="px-3 py-1.5 rounded-lg bg-orange-600 text-white hover:bg-orange-700 text-sm font-semibold cursor-pointer">➕ جديدة</button>
-            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
-          </div>
-        </div>
-      </nav>
-    `;
-  },
-
-  navbar() {
-    const u = Auth.user || {};
-    if (!u.id) return '';
-    return `
-      <nav class="glass shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">🏢</span>
-            <div><div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} ${!isOnline ? '📡' : ''}</div></div>
-          </div>
-          <div class="flex items-center gap-1 md:gap-2 flex-wrap">
-            <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏠 الرئيسية</button>
-            <button onclick="Router.go('complaints')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">📝 الشكاوى</button>
-            <button onclick="Router.go('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer hidden md:inline">🏛️ الإدارة</button>
-            <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative">🔔 التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
-            <button onclick="Router.go('create')" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm font-semibold cursor-pointer">➕ جديد</button>
-            <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
-          </div>
-        </div>
-      </nav>
-    `;
+    </div>`;
   },
 
   sector(data) {
@@ -1081,31 +1188,84 @@ const Views = {
     const s = SECTORS.find(x => x.id === sid);
     if (!s) return '<div class="p-8 text-white text-center">القطاع غير موجود</div>';
     const filteredData = data.filter(r => r.sector_id === sid && !r.is_archived);
-    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br ${s.color} text-white rounded-2xl shadow-xl p-6 mb-6"><div class="flex items-center justify-between flex-wrap gap-3"><div class="flex items-center gap-4"><div class="bg-white/20 rounded-xl p-3">${s.icon}</div><div><h1 class="text-3xl font-bold">${s.name}</h1><p class="opacity-90 mt-1">${filteredData.length} مراسلة نشطة</p></div></div><button onclick="Router.go('create', {sector:'${sid}'})" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer"> مراسلة جديدة</button></div></div><div class="space-y-3">${filteredData.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات</div>' : filteredData.map(r => this.card(r)).join('')}</div></div></div>`;
-  },
-
-  general(data) {
-    data = data || appData.correspondence || [];
-    const filteredData = data.filter(r => !r.is_archived);
-    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-2xl shadow-xl p-6 mb-6"><h1 class="text-3xl font-bold">🏛️ الإدارة العامة</h1><p class="opacity-90 mt-1">جميع المراسلات (${filteredData.length})</p></div><div class="space-y-3">${filteredData.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات</div>' : filteredData.map(r => this.card(r)).join('')}</div></div></div>`;
+    const u = Auth.user || {};
+    return `<div class="min-h-screen">${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="bg-gradient-to-br ${s.color} text-white rounded-2xl shadow-xl p-6 mb-6">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-4">
+              <div class="bg-white/20 rounded-xl p-3">${s.icon}</div>
+              <div>
+                <h1 class="text-3xl font-bold">${s.name}</h1>
+                <p class="opacity-90 mt-1">${filteredData.length} مراسلة نشطة</p>
+              </div>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="Router.go('create', {sector:'${sid}'})" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer">➕ مراسلة جديدة</button>
+              <button onclick="Reports.exportCorrespondencePDF(${JSON.stringify(filteredData).replace(/"/g, '&quot;')}, '${s.name}')" class="report-btn report-btn-pdf">📄 PDF</button>
+              <button onclick="Reports.exportCorrespondenceExcel(${JSON.stringify(filteredData).replace(/"/g, '&quot;')}, '${s.name}')" class="report-btn report-btn-excel">📊 Excel</button>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-3">
+          ${filteredData.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات</div>' : filteredData.map(r => this.card(r)).join('')}
+        </div>
+      </div>
+    </div>`;
   },
 
   archive(data) {
     data = data || appData.correspondence || [];
     const filteredData = data.filter(r => r.is_archived);
-    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br from-gray-700 to-gray-900 text-white rounded-2xl shadow-xl p-6 mb-6"><h1 class="text-3xl font-bold">📦 الأرشيف</h1><p class="opacity-90 mt-1">${filteredData.length} مراسلة</p></div><div class="space-y-3">${filteredData.map(r => this.card(r)).join('')}</div></div></div>`;
-  },
-
-  followups(data) {
-    data = data || appData.correspondence || [];
-    const withFu = data.filter(r => r.follow_ups && r.follow_ups.length > 0);
-    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl shadow-xl p-6 mb-6"><h1 class="text-3xl font-bold">📋 المتابعة</h1><p class="opacity-90 mt-1">${withFu.length} مراسلة</p></div><div class="space-y-3">${withFu.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مهام</div>' : withFu.map(r => `<div class="glass rounded-2xl shadow-lg p-5"><h3 class="font-bold">${U.esc(r.subject)}</h3></div>`).join('')}</div></div></div>`;
+    return `<div class="min-h-screen">${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="bg-gradient-to-br from-gray-700 to-gray-900 text-white rounded-2xl shadow-xl p-6 mb-6">
+          <h1 class="text-3xl font-bold">📦 الأرشيف</h1>
+          <p class="opacity-90 mt-1">${filteredData.length} مراسلة</p>
+        </div>
+        <div class="space-y-3">
+          ${filteredData.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد مراسلات مؤرشفة</div>' : filteredData.map(r => this.card(r)).join('')}
+        </div>
+      </div>
+    </div>`;
   },
 
   create() {
     const preSector = Router.params.sector || '';
     const isAdmin = Auth.user?.role === 'super_admin' || Auth.user?.role === 'general_admin';
-    return `<div class="min-h-screen">${this.navbar()}<div class="max-w-3xl mx-auto p-4 md:p-6 fade-in"><div class="glass rounded-2xl shadow-xl p-6 md:p-8"><h1 class="text-2xl font-bold text-teal-800 mb-6">➕ مراسلة جديدة</h1><form class="space-y-4" onsubmit="return false;"><div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label><select id="fSec" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">${isAdmin ? `<option value="ALL" class="font-bold text-teal-700">📢 جميع القواطع (تعميم)</option>` : ''}${SECTORS.map(s => `<option value="${s.id}" ${s.id===preSector?'selected':''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">الموضوع *</label><input type="text" id="fSub" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></div><div class="grid md:grid-cols-2 gap-3"><div><label class="block text-sm font-semibold mb-1 text-gray-700">المرسل</label><input type="text" id="fSen" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" value="${U.esc(Auth.user?.full_name || '')}"></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية</label><select id="fPri" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="normal">عادية</option><option value="high">عالية</option><option value="low">منخفضة</option></select></div></div><div><label class="block text-sm font-semibold mb-1 text-gray-700">المحتوى *</label><textarea id="fCon" rows="8" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea></div><div><label class="block text-sm font-semibold mb-1 text-gray-700"> المرفقات</label><input type="file" id="fFiles" multiple class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"><p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة (صور، PDF، Word، Excel)</p></div><div class="flex gap-2"><button type="button" id="saveBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">💾 حفظ المراسلة</button><button type="button" onclick="Router.go('dashboard')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button></div></form></div></div></div>`;
+    return `<div class="min-h-screen">${this.navbar()}
+      <div class="max-w-3xl mx-auto p-4 md:p-6 fade-in">
+        <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
+          <h1 class="text-2xl font-bold text-teal-800 mb-6">➕ مراسلة جديدة</h1>
+          <form class="space-y-4" onsubmit="return false;">
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label>
+              <select id="fSec" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                ${isAdmin ? `<option value="ALL" class="font-bold text-teal-700">📢 جميع القواطع (تعميم)</option>` : ''}
+                ${SECTORS.map(s => `<option value="${s.id}" ${s.id===preSector?'selected':''}>${s.name}</option>`).join('')}
+              </select>
+            </div>
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">الموضوع *</label><input type="text" id="fSub" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></div>
+            <div class="grid md:grid-cols-2 gap-3">
+              <div><label class="block text-sm font-semibold mb-1 text-gray-700">المرسل</label><input type="text" id="fSen" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" value="${U.esc(Auth.user?.full_name || '')}"></div>
+              <div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية</label>
+                <select id="fPri" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                  <option value="normal">عادية</option><option value="high">عالية</option><option value="low">منخفضة</option><option value="urgent">عاجلة</option>
+                </select>
+              </div>
+            </div>
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">المحتوى *</label><textarea id="fCon" rows="8" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"></textarea></div>
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">📎 المرفقات</label>
+              <input type="file" id="fFiles" multiple class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+              <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة (صور، PDF، Word، Excel)</p>
+            </div>
+            <div class="flex gap-2">
+              <button type="button" id="saveBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer"> حفظ المراسلة</button>
+              <button type="button" onclick="Router.go('dashboard')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>`;
   },
 
   async view() {
@@ -1115,10 +1275,10 @@ const Views = {
     const s = SECTORS.find(x => x.id === r.sector_id);
     const attachments = r.attachments || [];
     const replies = r.replies || [];
+    const followUps = r.follow_ups || [];
     const u = Auth.user || {};
     const canArchive = ['super_admin', 'general_admin', 'sector_admin'].includes(u.role);
     const canDelete = ['super_admin', 'general_admin', 'sector_admin'].includes(u.role);
-    
     return `<div class="min-h-screen">${this.navbar()}
       <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
         <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
@@ -1131,66 +1291,47 @@ const Views = {
             <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || '-'}</div></div>
             <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at)}</div></div>
             <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.name || '-'}</div></div>
-            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : '🔵 عادية'}</div></div>
+            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? ' عالية' : r.priority === 'low' ? '🟢 منخفضة' : r.priority === 'urgent' ? '🚨 عاجلة' : '🔵 عادية'}</div></div>
           </div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || '-')}</h2></div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content || '-')}</div></div>
           
-          ${attachments.length > 0 ? `
-            <div class="mb-6">
-              <div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div>
-              <div class="space-y-2">
-                ${attachments.map(att => {
-                  const fileType = U.getFileType(att.mime_type, att.original_name);
-                  const fileIcon = U.getFileIcon(fileType);
-                  const downloadLabel = U.getDownloadLabel(fileType);
-                  const fileSize = U.formatFileSize(att.size_bytes);
-                  const fileUrl = sbConnected 
-                    ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}`
-                    : (att.data_url || '#');
-                  return `
-                    <div class="attachment-card">
-                      <div class="attachment-info">
-                        <div class="attachment-icon">${fileIcon}</div>
-                        <div class="min-w-0 flex-1">
-                          <div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div>
-                          <div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div>
-                        </div>
-                      </div>
-                      <a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn" onclick="event.stopPropagation();">
-                        ⬇️ ${downloadLabel}
-                      </a>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-          ` : '<div class="mb-6 text-center text-gray-500 text-sm py-4 bg-gray-50 rounded-xl"> لا توجد مرفقات</div>'}
+          ${attachments.length > 0 ? `<div class="mb-6"><div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div><div class="space-y-2">${attachments.map(att => {
+            const fileType = U.getFileType(att.mime_type, att.original_name);
+            const fileIcon = U.getFileIcon(fileType);
+            const downloadLabel = U.getDownloadLabel(fileType);
+            const fileSize = U.formatFileSize(att.size_bytes);
+            const fileUrl = sbConnected ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}` : (att.data_url || '#');
+            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn" onclick="event.stopPropagation();">⬇️ ${downloadLabel}</a></div>`;
+          }).join('')}</div></div>` : '<div class="mb-6 text-center text-gray-500 text-sm py-4 bg-gray-50 rounded-xl">📎 لا توجد مرفقات</div>'}
           
-          ${replies.length > 0 ? `
-            <div class="mb-6">
-              <h3 class="font-bold text-lg mb-3">💬 الردود (${replies.length})</h3>
-              <div class="space-y-3">
-                ${replies.map(rp => `
-                  <div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded">
-                    <div class="flex justify-between items-center mb-2">
-                      <span class="font-semibold text-sm text-blue-800">${U.esc(rp.author_name || rp.author || 'مستخدم')}</span>
-                      <span class="text-xs text-gray-500">${U.fmtDate(rp.created_at)}</span>
+          ${followUps.length > 0 ? `<div class="mb-6">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span>📋</span><span>المتابعات (${followUps.length})</span></h3>
+            <div class="space-y-2">
+              ${followUps.map(fu => {
+                const statusClass = fu.status === 'pending' ? 'followup-status-pending' : fu.status === 'in_progress' ? 'followup-status-progress' : 'followup-status-done';
+                return `<div class="followup-card" style="margin-bottom: 8px;">
+                  <div class="flex justify-between items-center flex-wrap gap-2">
+                    <div class="flex-1">
+                      <div class="font-semibold text-gray-800">${U.esc(fu.title)}</div>
+                      ${fu.notes ? `<div class="text-sm text-gray-600 mt-1">${U.esc(fu.notes)}</div>` : ''}
+                      <div class="text-xs text-gray-500 mt-1">📅 ${U.fmtShort(fu.created_at)} ${fu.due_date ? '• ⏰ ' + U.fmtShort(fu.due_date) : ''}</div>
                     </div>
-                    <div class="text-gray-700">${U.esc(rp.content)}</div>
+                    <span class="${statusClass}">${STATUS_LABELS[fu.status] || fu.status}</span>
                   </div>
-                `).join('')}
-              </div>
+                </div>`;
+              }).join('')}
             </div>
-          ` : ''}
+          </div>` : ''}
+          
+          ${replies.length > 0 ? `<div class="mb-6"><h3 class="font-bold text-lg mb-3">💬 الردود (${replies.length})</h3><div class="space-y-3">${replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="flex justify-between items-center mb-2"><span class="font-semibold text-sm text-blue-800">${U.esc(rp.author_name || rp.author || 'مستخدم')}</span><span class="text-xs text-gray-500">${U.fmtDate(rp.created_at)}</span></div><div class="text-gray-700">${U.esc(rp.content)}</div></div>`).join('')}</div></div>` : ''}
           
           <div class="border-t pt-4 mt-6">
             <h3 class="font-bold text-gray-800 mb-3">⚡ إجراءات سريعة</h3>
             <div class="quick-actions">
               <button onclick="UI.reply('${r.id}')" class="qa-reply"><span>💬</span><span>رد</span></button>
-              ${canArchive ? (r.is_archived 
-                ? `<button onclick="UI.restore('${r.id}')" class="qa-restore"><span>♻️</span><span>استعادة</span></button>` 
-                : `<button onclick="UI.archive('${r.id}')" class="qa-archive"><span>📦</span><span>أرشفة</span></button>`) : ''}
+              <button onclick="UI.followUp('${r.id}')" class="qa-follow"><span>📌</span><span>متابعة</span></button>
+              ${canArchive ? (r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="qa-restore"><span>♻️</span><span>استعادة</span></button>` : `<button onclick="UI.archive('${r.id}')" class="qa-archive"><span>📦</span><span>أرشفة</span></button>`) : ''}
               <button onclick="UI.copyAsText('${r.id}')" class="qa-txt"><span>📄</span><span>نسخ</span></button>
               <button onclick="UI.showQR('${r.id}')" class="qa-qr"><span>🔳</span><span>QR</span></button>
               <button onclick="UI.shareWhatsApp('${r.id}')" class="qa-wa"><span>📱</span><span>واتساب</span></button>
@@ -1199,7 +1340,6 @@ const Views = {
           </div>
         </div>
       </div>
-      
       <div id="qrModal" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
         <div class="glass rounded-2xl p-6 max-w-sm w-full text-center">
           <h3 class="font-bold text-lg text-teal-800 mb-3">📱 رمز QR للمراسلة</h3>
@@ -1218,6 +1358,7 @@ const Views = {
     try {
       if (isAdmin) allComplaints = await DB.getComplaints({});
       else if (u.role === 'sector_admin' && u.sector_id) allComplaints = await DB.getComplaints({ sector_id: u.sector_id });
+      else if (u.role === 'central_oversight' && u.sector_id) allComplaints = await DB.getComplaints({ sector_id: u.sector_id });
       else allComplaints = await DB.getComplaints({ sector_id: u.sector_id });
     } catch (e) { console.error('Error fetching complaints:', e); }
     
@@ -1233,117 +1374,373 @@ const Views = {
     const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
     const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
     
-    return `
-      <div class="min-h-screen">
-        ${this.navbar()}
-        <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
-          <div class="glass rounded-2xl shadow-xl p-6 mb-6">
-            <div class="flex justify-between items-center flex-wrap gap-4">
-              <div><h1 class="text-3xl font-bold text-teal-800">📝 نظام الشكاوى</h1><p class="text-gray-600 mt-1">${isAdmin ? 'جميع شكاوى القواطع' : 'شكاوى القطاع'} (${allComplaints.length})</p></div>
+    const sectorName = isAdmin ? 'جميع القواطع' : (SECTORS.find(s => s.id === u.sector_id)?.name || '');
+    
+    return `<div class="min-h-screen">${this.navbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="glass rounded-2xl shadow-xl p-6 mb-6">
+          <div class="flex justify-between items-center flex-wrap gap-4">
+            <div><h1 class="text-3xl font-bold text-teal-800"> نظام الشكاوى</h1><p class="text-gray-600 mt-1">${isAdmin ? 'جميع شكاوى القواطع' : 'شكاوى القطاع'} (${allComplaints.length})</p></div>
+            <div class="flex gap-2 flex-wrap">
               <button onclick="Router.go('createComplaint')" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer">➕ تسجيل شكوى جديدة</button>
-            </div>
-            <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">
-              <div class="bg-gray-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-gray-700">${stats.total}</div><div class="text-xs text-gray-600">إجمالي الشكاوى</div></div>
-              <div class="bg-yellow-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-yellow-700">${stats.pending}</div><div class="text-xs text-gray-600">قيد الانتظار</div></div>
-              <div class="bg-blue-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-blue-700">${stats.in_progress}</div><div class="text-xs text-gray-600">قيد المعالجة</div></div>
-              <div class="bg-green-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-green-700">${stats.resolved}</div><div class="text-xs text-gray-600">تم الحل</div></div>
-              <div class="bg-red-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-700">${stats.urgent}</div><div class="text-xs text-gray-600">عاجلة 🔴</div></div>
+              <button onclick="Reports.exportComplaintsPDF(${JSON.stringify(allComplaints).replace(/"/g, '&quot;')}, '${sectorName}')" class="report-btn report-btn-pdf">📄 تصدير PDF</button>
+              <button onclick="Reports.exportComplaintsExcel(${JSON.stringify(allComplaints).replace(/"/g, '&quot;')}, '${sectorName}')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
             </div>
           </div>
-          <div class="glass rounded-2xl shadow-xl p-4 mb-4">
-            <div class="grid md:grid-cols-4 gap-3">
-              <input type="text" id="cSearch" placeholder="🔍 بحث بالعنوان..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <select id="cStatus" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                <option value="">كل الحالات</option><option value="pending">قيد الانتظار</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option><option value="rejected">مرفوضة</option>
-              </select>
-              <select id="cPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                <option value="">كل الأولويات</option><option value="urgent">🔴 عاجلة</option><option value="high">🟠 عالية</option><option value="medium">🔵 متوسطة</option><option value="low">⚪ منخفضة</option>
-              </select>
-              ${isAdmin ? `<select id="cSector" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="">كل القواطع</option>${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>` : '<div></div>'}
-            </div>
-          </div>
-          <div id="complaintsList" class="space-y-3">
-            ${allComplaints.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد شكاوى مسجلة</div>' : allComplaints.map(c => {
-              const sector = SECTORS.find(s => s.id === c.sector_id);
-              return `
-                <div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
-                  <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
-                    <div class="flex-1">
-                      <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                        <span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>
-                        ${sector ? `<span>•</span><span>${sector.name}</span>` : ''}
-                        ${c.complainant_name ? `<span>•</span><span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
-                      </div>
-                      <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
-                      <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                      <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
-                      <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
-                    </div>
-                  </div>
-                  <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
-                    ${c.complainant_phone ? `<span> ${U.esc(c.complainant_phone)}</span>` : ''}
-                    <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
-                    ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
-                  </div>
-                </div>
-              `;
-            }).join('')}
+          <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div class="bg-gray-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-gray-700">${stats.total}</div><div class="text-xs text-gray-600">إجمالي الشكاوى</div></div>
+            <div class="bg-yellow-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-yellow-700">${stats.pending}</div><div class="text-xs text-gray-600">قيد الانتظار</div></div>
+            <div class="bg-blue-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-blue-700">${stats.in_progress}</div><div class="text-xs text-gray-600">قيد المعالجة</div></div>
+            <div class="bg-green-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-green-700">${stats.resolved}</div><div class="text-xs text-gray-600">تم الحل</div></div>
+            <div class="bg-red-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-700">${stats.urgent}</div><div class="text-xs text-gray-600">عاجلة 🔴</div></div>
           </div>
         </div>
+        <div class="glass rounded-2xl shadow-xl p-4 mb-4">
+          <div class="grid md:grid-cols-4 gap-3">
+            <input type="text" id="cSearch" placeholder="🔍 بحث بالعنوان..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+            <select id="cStatus" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <option value="">كل الحالات</option><option value="pending">قيد الانتظار</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option><option value="rejected">مرفوضة</option>
+            </select>
+            <select id="cPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+              <option value="">كل الأولويات</option><option value="urgent"> عاجلة</option><option value="high">🟠 عالية</option><option value="medium">🔵 متوسطة</option><option value="low">⚪ منخفضة</option>
+            </select>
+            ${isAdmin ? `<select id="cSector" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="">كل القواطع</option>${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>` : '<div></div>'}
+          </div>
+        </div>
+        <div id="complaintsList" class="space-y-3">
+          ${allComplaints.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد شكاوى مسجلة</div>' : allComplaints.map(c => {
+            const sector = SECTORS.find(s => s.id === c.sector_id);
+            return `<div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
+              <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                    <span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>
+                    ${sector ? `<span>•</span><span>${sector.name}</span>` : ''}
+                    ${c.complainant_name ? `<span>•</span><span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
+                  </div>
+                  <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
+                  <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
+                  <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
+                </div>
+              </div>
+              <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
+                ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
+                <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
+                ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
       </div>
-    `;
+    </div>`;
+  },
+
+  oversightNavbar() {
+    const u = Auth.user || {};
+    if (!u.id) return '';
+    return `<nav class="glass shadow-lg sticky top-0 z-50 border-t-4 border-orange-500">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🛡️</span>
+          <div><div class="font-bold text-orange-700 text-sm md:text-base">نظام الرقابة المركزية</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} – ${SECTORS.find(s => s.id === u.sector_id)?.name || ''}</div></div>
+        </div>
+        <div class="flex items-center gap-1 md:gap-2 flex-wrap">
+          <button onclick="Router.go('oversightDashboard')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">🏠 الرئيسية</button>
+          <button onclick="Router.go('oversightComplaints')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">📋 الشكاوى</button>
+          <button onclick="Router.go('createComplaint')" class="px-3 py-1.5 rounded-lg bg-orange-600 text-white hover:bg-orange-700 text-sm font-semibold cursor-pointer">➕ جديدة</button>
+          <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
+        </div>
+      </div>
+    </nav>`;
+  },
+
+  navbar() {
+    const u = Auth.user || {};
+    if (!u.id) return '';
+    return `<nav class="glass shadow-lg sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🏢</span>
+          <div><div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} ${!isOnline ? '📡' : ''}</div></div>
+        </div>
+        <div class="flex items-center gap-1 md:gap-2 flex-wrap">
+          <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏠 الرئيسية</button>
+          <button onclick="Router.go('complaints')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">📝 الشكاوى</button>
+          <button onclick="Router.go('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">📋 المتابعة</button>
+          <button onclick="Router.go('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer hidden md:inline">️ الإدارة</button>
+          <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative">🔔 التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
+          <button onclick="Router.go('create')" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm font-semibold cursor-pointer">➕ جديد</button>
+          <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer"> خروج</button>
+        </div>
+      </div>
+    </nav>`;
   },
 
   card(r) {
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const pc = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : 'priority-normal';
+    const pc = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : r.priority === 'urgent' ? 'priority-urgent' : 'priority-normal';
     const repliesCount = r.replies ? r.replies.length : 0;
+    const followUpsCount = r.follow_ups ? r.follow_ups.length : 0;
     const u = Auth.user || {};
     const canDelete = ['super_admin', 'general_admin', 'sector_admin'].includes(u.role);
-    
-    return `
-      <div class="glass rounded-xl shadow-lg p-4 card-hover ${pc}">
-        <div onclick="Router.go('view', {id:'${r.id}'})" class="cursor-pointer">
-          <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
-            <span>${r.reference_number}</span>
-            <span>•</span>
-            <span>${U.fmtShort(r.created_at)}</span>
-            ${s ? `<span>•</span><span>${s.name}</span>` : ''}
-          </div>
-          <h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3>
-          <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
-          <div class="flex gap-2 mt-2 flex-wrap text-xs">
-            ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
-            ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
-            ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
-            ${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">💬 ${repliesCount} رد</span>` : ''}
-          </div>
+    return `<div class="glass rounded-xl shadow-lg p-4 card-hover ${pc}">
+      <div onclick="Router.go('view', {id:'${r.id}'})" class="cursor-pointer">
+        <div class="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
+          <span>${r.reference_number}</span><span>•</span><span>${U.fmtShort(r.created_at)}</span>
+          ${s ? `<span>•</span><span>${s.name}</span>` : ''}
         </div>
-        
-        <!-- الأيقونات السريعة -->
-        <div class="quick-actions mt-4 pt-4 border-t border-gray-200">
-          <button onclick="event.stopPropagation(); UI.reply('${r.id}')" class="qa-reply">
-            <span>💬</span><span>رد</span>
-          </button>
-          ${canDelete ? `
-            <button onclick="event.stopPropagation(); UI.del('${r.id}')" class="qa-delete">
-              <span>🗑️</span><span>حذف</span>
-            </button>
-          ` : ''}
-          <button onclick="event.stopPropagation(); UI.copyAsText('${r.id}')" class="qa-txt">
-            <span>📄</span><span>نسخ</span>
-          </button>
-          <button onclick="event.stopPropagation(); UI.showQR('${r.id}')" class="qa-qr">
-            <span></span><span>QR</span>
-          </button>
-          <button onclick="event.stopPropagation(); UI.shareWhatsApp('${r.id}')" class="qa-wa">
-            <span>📱</span><span>واتساب</span>
-          </button>
+        <h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3>
+        <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
+        <div class="flex gap-2 mt-2 flex-wrap text-xs">
+          ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
+          ${r.priority === 'urgent' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🚨 عاجلة</span>' : ''}
+          ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
+          ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">🟢 منخفضة</span>' : ''}
+          ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
+          ${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">💬 ${repliesCount} رد</span>` : ''}
+          ${followUpsCount > 0 ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">📌 ${followUpsCount} متابعة</span>` : ''}
         </div>
       </div>
-    `;
+      <div class="quick-actions mt-4 pt-4 border-t border-gray-200">
+        <button onclick="event.stopPropagation(); UI.reply('${r.id}')" class="qa-reply"><span>💬</span><span>رد</span></button>
+        <button onclick="event.stopPropagation(); UI.followUp('${r.id}')" class="qa-follow"><span>📌</span><span>متابعة</span></button>
+        ${canDelete ? `<button onclick="event.stopPropagation(); UI.del('${r.id}')" class="qa-delete"><span>🗑️</span><span>حذف</span></button>` : ''}
+        <button onclick="event.stopPropagation(); UI.copyAsText('${r.id}')" class="qa-txt"><span>📄</span><span>نسخ</span></button>
+        <button onclick="event.stopPropagation(); UI.showQR('${r.id}')" class="qa-qr"><span>🔳</span><span>QR</span></button>
+        <button onclick="event.stopPropagation(); UI.shareWhatsApp('${r.id}')" class="qa-wa"><span>📱</span><span>واتساب</span></button>
+      </div>
+    </div>`;
+  },
+
+  async oversightDashboard() {
+    const u = Auth.user || {};
+    const sector = SECTORS.find(s => s.id === u.sector_id);
+    if (!sector) return `<div class="min-h-screen flex items-center justify-center"><div class="glass rounded-2xl p-8 text-center"><h2 class="text-xl font-bold text-red-600">⚠️ حساب الرقابة المركزية غير مرتبط بقاطع</h2><button onclick="Auth.logout()" class="btn-primary px-6 py-2 rounded-xl mt-4">تسجيل الخروج</button></div></div>`;
+    const stats = await DB.getComplaintStats(u.sector_id);
+    const recentComplaints = (await DB.getComplaints({ sector_id: u.sector_id })).slice(0, 5);
+    return `<div class="min-h-screen">${this.oversightNavbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="oversight-gradient rounded-2xl shadow-xl p-6 mb-6 text-white">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-4">
+              <div class="bg-white/20 rounded-xl p-3">${sector.icon}</div>
+              <div><h1 class="text-3xl font-bold">🛡️ لوحة الرقابة المركزية</h1><p class="opacity-90 mt-1">${sector.name} – ${U.esc(u.full_name)}</p></div>
+            </div>
+            <button onclick="Router.go('createComplaint')" class="bg-white text-orange-700 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer hover:bg-orange-50 transition">➕ تسجيل شكوى جديدة</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">إجمالي الشكاوى</div><div class="text-3xl font-bold text-gray-800 mt-1">${stats.total}</div></div><div class="bg-gray-100 rounded-xl p-3 text-2xl">📊</div></div></div>
+          <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">قيد الانتظار</div><div class="text-3xl font-bold text-yellow-600 mt-1">${stats.pending}</div></div><div class="bg-yellow-100 rounded-xl p-3 text-2xl">⏳</div></div></div>
+          <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">تم الحل</div><div class="text-3xl font-bold text-green-600 mt-1">${stats.resolved}</div></div><div class="bg-green-100 rounded-xl p-3 text-2xl">✅</div></div></div>
+          <div class="glass rounded-2xl shadow-lg p-5 card-hover border-2 border-red-200"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">عاجلة </div><div class="text-3xl font-bold text-red-600 mt-1">${stats.urgent}</div></div><div class="bg-red-100 rounded-xl p-3 text-2xl">🚨</div></div></div>
+        </div>
+        <div class="glass rounded-2xl shadow-xl p-5 mb-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4"> إجراءات سريعة</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button onclick="Router.go('oversightComplaints')" class="bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 جميع الشكاوى</button>
+            <button onclick="Router.go('oversightComplaints', {filter:'pending'})" class="bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">⏳ قيد الانتظار</button>
+            <button onclick="Router.go('oversightComplaints', {filter:'urgent'})" class="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> العاجلة</button>
+            <button onclick="UI.exportOversightReport()" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 تصدير تقرير</button>
+          </div>
+        </div>
+        <div class="glass rounded-2xl shadow-xl p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800"> آخر الشكاوى</h2>
+            <button onclick="Router.go('oversightComplaints')" class="text-orange-600 hover:text-orange-800 font-semibold cursor-pointer text-sm">عرض الكل ←</button>
+          </div>
+          ${recentComplaints.length === 0 ? '<div class="text-center text-gray-500 py-8">لا توجد شكاوى مسجلة</div>' : recentComplaints.map(c => this.complaintCard(c)).join('')}
+        </div>
+        <div class="text-center text-xs text-white/70 mt-8 pb-4"><p>© 2026 ${CONFIG.ORG} – نظام الرقابة المركزية</p><p class="mt-1">تطوير: ${CONFIG.DEV}</p></div>
+      </div>
+    </div>`;
+  },
+
+  async oversightComplaints() {
+    const u = Auth.user || {};
+    const sector = SECTORS.find(s => s.id === u.sector_id);
+    const allComplaints = await DB.getComplaints({ sector_id: u.sector_id });
+    const initialFilter = Router.params.filter || '';
+    return `<div class="min-h-screen">${this.oversightNavbar()}
+      <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
+        <div class="oversight-gradient rounded-2xl shadow-xl p-6 mb-6 text-white">
+          <div class="flex items-center gap-4">
+            <div class="bg-white/20 rounded-xl p-3">${sector?.icon || ''}</div>
+            <div><h1 class="text-3xl font-bold">📋 إدارة الشكاوى</h1><p class="opacity-90 mt-1">${sector?.name || ''} – ${allComplaints.length} شكوى</p></div>
+          </div>
+        </div>
+        <div class="glass rounded-2xl shadow-xl p-4 mb-4">
+          <div class="grid md:grid-cols-4 gap-3">
+            <input type="text" id="cSearch" placeholder="🔍 بحث..." class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none">
+            <select id="cStatus" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none">
+              <option value="">كل الحالات</option>
+              <option value="pending" ${initialFilter==='pending'?'selected':''}>قيد الانتظار</option>
+              <option value="in_progress">قيد المعالجة</option>
+              <option value="resolved">تم الحل</option>
+              <option value="rejected">مرفوضة</option>
+            </select>
+            <select id="cPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none">
+              <option value="">كل الأولويات</option>
+              <option value="urgent" ${initialFilter==='urgent'?'selected':''}> عاجلة</option>
+              <option value="high">🟠 عالية</option>
+              <option value="medium">متوسطة</option>
+              <option value="low">منخفضة</option>
+            </select>
+            <button onclick="Router.go('createComplaint')" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">➕ شكوى جديدة</button>
+          </div>
+        </div>
+        <div id="complaintsList" class="space-y-3">
+          ${allComplaints.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">لا توجد شكاوى</div>' : allComplaints.map(c => this.complaintCard(c)).join('')}
+        </div>
+      </div>
+    </div>`;
+  },
+
+  createComplaint() {
+    const u = Auth.user || {};
+    const isAdmin = u.role === 'super_admin' || u.role === 'general_admin';
+    return `<div class="min-h-screen">
+      ${u.role === 'central_oversight' ? this.oversightNavbar() : this.navbar()}
+      <div class="max-w-3xl mx-auto p-4 md:p-6 fade-in">
+        <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
+          <h1 class="text-2xl font-bold text-teal-800 mb-6">📝 تسجيل شكوى جديدة</h1>
+          <form class="space-y-4" onsubmit="return false;">
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label>
+              <select id="compSector" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                ${isAdmin ? SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : `<option value="${u.sector_id}" selected>${SECTORS.find(s => s.id === u.sector_id)?.name || ''}</option>`}
+              </select>
+            </div>
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">عنوان الشكوى *</label><input type="text" id="compTitle" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="مثال: انقطاع المياه عن المركز"></div>
+            <div><label class="block text-sm font-semibold mb-1 text-gray-700">تفاصيل الشكوى *</label><textarea id="compDesc" rows="6" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="اشرح المشكلة بالتفصيل..."></textarea></div>
+            <div class="grid md:grid-cols-2 gap-3">
+              <div><label class="block text-sm font-semibold mb-1 text-gray-700">اسم المشتكي</label><input type="text" id="compName" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="اختياري"></div>
+              <div><label class="block text-sm font-semibold mb-1 text-gray-700">رقم الهاتف</label><input type="tel" id="compPhone" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="05xxxxxxxx"></div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-3">
+              <div><label class="block text-sm font-semibold mb-1 text-gray-700">نوع المشتكي</label>
+                <select id="compType" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                  <option value="مواطن">مواطن</option><option value="موظف">موظف</option><option value="جهة رسمية">جهة رسمية</option><option value="أخرى">أخرى</option>
+                </select>
+              </div>
+              <div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية *</label>
+                <select id="compPriority" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                  <option value="low">منخفضة</option><option value="medium" selected>متوسطة</option><option value="high">عالية</option><option value="urgent"> عاجلة</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1 text-gray-700">📎 المرفقات</label>
+              <input type="file" id="compFiles" multiple class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+              <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة (صور، PDF، Word، Excel)</p>
+            </div>
+            <div class="flex gap-2 pt-4">
+              <button type="button" id="submitComplaintBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">📤 إرسال الشكوى</button>
+              <button type="button" onclick="history.back()" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>`;
+  },
+
+  async viewComplaint() {
+    const id = Router.params.id;
+    const complaint = await DB.getComplaintById(id);
+    if (!complaint) return '<div class="p-8 text-white text-center text-xl">الشكوى غير موجودة</div>';
+    const u = Auth.user || {};
+    const sector = SECTORS.find(s => s.id === complaint.sector_id);
+    const canRespond = ['super_admin', 'general_admin', 'sector_admin', 'central_oversight'].includes(u.role);
+    const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
+    const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
+    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: ' عالية', urgent: '🔴 عاجلة' };
+    
+    let attachments = [];
+    if (sbConnected) {
+      try {
+        const { data } = await sb.from('attachments').select('*').eq('correspondence_id', complaint.id);
+        attachments = data || [];
+      } catch (e) { console.error('Error fetching attachments:', e); }
+    }
+    
+    return `<div class="min-h-screen">
+      ${u.role === 'central_oversight' ? this.oversightNavbar() : this.navbar()}
+      <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
+        <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
+        <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
+          <div class="border-b-2 border-teal-600 pb-4 mb-6">
+            <div class="flex justify-between items-start flex-wrap gap-3">
+              <div><h1 class="text-2xl font-bold text-teal-800">📝 ${U.esc(complaint.title)}</h1><p class="text-gray-500 text-sm mt-1">#${complaint.id.substring(0, 8)} • ${U.fmtDate(complaint.created_at)}</p></div>
+              <span class="px-3 py-1 rounded-full text-sm font-bold ${statusColors[complaint.status]}">${statusLabels[complaint.status]}</span>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${sector?.name || '-'}</div></div>
+            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${priorityLabels[complaint.priority] || complaint.priority}</div></div>
+            ${complaint.complainant_name ? `<div><div class="text-xs text-gray-500">اسم المشتكي</div><div class="font-semibold">${U.esc(complaint.complainant_name)}</div></div>` : ''}
+            ${complaint.complainant_phone ? `<div><div class="text-xs text-gray-500">الهاتف</div><div class="font-semibold">${U.esc(complaint.complainant_phone)}</div></div>` : ''}
+            <div><div class="text-xs text-gray-500">نوع المشتكي</div><div class="font-semibold">${U.esc(complaint.complainant_type || 'مواطن')}</div></div>
+            <div><div class="text-xs text-gray-500">أرسلها</div><div class="font-semibold">${U.esc(complaint.submitted_by_name || 'مستخدم')}</div></div>
+          </div>
+          <div class="mb-6"><div class="text-xs text-gray-500 mb-1">تفاصيل الشكوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(complaint.description)}</div></div>
+          ${attachments.length > 0 ? `<div class="mb-6"><div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div><div class="space-y-2">${attachments.map(att => {
+            const fileType = U.getFileType(att.mime_type, att.original_name);
+            const fileIcon = U.getFileIcon(fileType);
+            const downloadLabel = U.getDownloadLabel(fileType);
+            const fileSize = U.formatFileSize(att.size_bytes);
+            const fileUrl = sbConnected ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}` : '#';
+            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn">⬇️ ${downloadLabel}</a></div>`;
+          }).join('')}</div></div>` : ''}
+          ${complaint.admin_response ? `<div class="mb-6 bg-green-50 border-r-4 border-green-500 p-4 rounded-xl"><h3 class="font-bold text-gray-800 mb-2">✅ رد الإدارة</h3><div class="whitespace-pre-wrap">${U.esc(complaint.admin_response)}</div>${complaint.resolved_at ? `<div class="text-xs text-gray-500 mt-2">تم الحل في: ${U.fmtDate(complaint.resolved_at)}</div>` : ''}</div>` : ''}
+          ${canRespond && complaint.status !== 'resolved' ? `<div class="border-t pt-4 mt-4">
+            <h3 class="font-bold text-gray-800 mb-3">⚡ إجراءات</h3>
+            <div class="space-y-3">
+              <div><label class="block text-sm font-semibold mb-1">تغيير الحالة</label>
+                <select id="updateStatus" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl">
+                  <option value="pending" ${complaint.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
+                  <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
+                  <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>تم الحل</option>
+                  <option value="rejected" ${complaint.status === 'rejected' ? 'selected' : ''}>مرفوضة</option>
+                </select>
+              </div>
+              <div><label class="block text-sm font-semibold mb-1">رد الإدارة</label><textarea id="adminResponse" rows="4" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl" placeholder="اكتب الرد هنا...">${U.esc(complaint.admin_response || '')}</textarea></div>
+              <button onclick="UI.updateComplaint('${complaint.id}')" class="btn-primary w-full py-3 rounded-xl font-bold">💾 حفظ التحديثات</button>
+            </div>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  },
+
+  complaintCard(c) {
+    const sector = SECTORS.find(s => s.id === c.sector_id);
+    const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
+    const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
+    const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
+    const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
+    return `<div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
+      <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
+            <span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>
+            ${sector ? `<span>•</span><span>${sector.name}</span>` : ''}
+          </div>
+          <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
+          <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
+          <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
+        </div>
+      </div>
+      <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
+        ${c.complainant_name ? `<span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
+        ${c.complainant_phone ? `<span> ${U.esc(c.complainant_phone)}</span>` : ''}
+        ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : ''}
+      </div>
+    </div>`;
   },
 };
 
@@ -1351,58 +1748,41 @@ const Views = {
 // UI ACTIONS
 // =====================================================
 const UI = {
-  reply(id) {
-    const content = prompt('نص الرد:');
-    if (!content) return;
-    try { DB.addReply(id, content); U.toast('تم إضافة الرد', 'success'); render(); }
-    catch (e) { U.toast(e.message, 'error'); }
-  },
+  reply(id) { const content = prompt('نص الرد:'); if (!content) return; try { DB.addReply(id, content); U.toast('تم إضافة الرد', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
   followUp(id) {
     const title = prompt('عنوان المهمة:');
     if (!title) return;
-    try { DB.addFollowUp(id, { title, status: 'pending' }); U.toast('تمت إضافة المتابعة', 'success'); render(); }
-    catch (e) { U.toast(e.message, 'error'); }
+    const notes = prompt('ملاحظات (اختياري):') || '';
+    const dueDate = prompt('تاريخ الاستحقاق (YYYY-MM-DD) - اختياري:') || null;
+    try { 
+      DB.addFollowUp(id, { title, notes, due_date: dueDate, status: 'pending' }); 
+      U.toast('تمت إضافة المتابعة', 'success'); 
+      render(); 
+    } catch (e) { U.toast(e.message, 'error'); }
   },
-  async archive(id) {
-    if (!confirm('تأكيد أرشفة هذه المراسلة؟')) return;
-    try { await DB.archive(id); U.toast('تمت الأرشفة', 'success'); render(); }
-    catch (e) { U.toast(e.message, 'error'); }
-  },
-  async restore(id) {
-    try { await DB.restore(id); U.toast('تمت الاستعادة', 'success'); render(); }
-    catch (e) { U.toast(e.message, 'error'); }
-  },
-  async del(id) {
-    if (!confirm('⚠️ حذف نهائي؟')) return;
-    try { await DB.remove(id); U.toast('تم الحذف', 'success'); Router.go('dashboard'); }
-    catch (e) { U.toast(e.message, 'error'); }
-  },
-  openWhatsApp() {
-    const msg = encodeURIComponent(`مرحباً، أنا من ${CONFIG.ORG}`);
-    window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${msg}`, '_blank');
-  },
-  forgotPassword() {
-    const email = prompt('الرجاء إدخال بريدك الإلكتروني لاستعادة كلمة المرور:');
-    if (!email) return;
-    if (sbConnected) {
-      sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }).then(() => U.toast('✅ تم إرسال رابط إعادة تعيين كلمة المرور', 'success')).catch(err => U.toast('❌ خطأ: ' + err.message, 'error'));
-    } else {
-      U.toast('⚠️ هذه الميزة متاحة فقط عند الاتصال بـ Supabase', 'warning');
+  async changeFollowUpStatus(fuId, corrId, newStatus) {
+    try {
+      await DB.updateFollowUp(fuId, { status: newStatus });
+      U.toast('✅ تم تحديث حالة المتابعة', 'success');
+      render();
+    } catch (e) {
+      U.toast(e.message, 'error');
     }
   },
-  registerNewUser() {
-    if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; }
-    const email = prompt('البريد الإلكتروني:');
-    if (!email) return;
-    const password = prompt('كلمة المرور (6 أحرف على الأقل):');
-    if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; }
-    const fullName = prompt('الاسم الكامل:');
-    const username = prompt('اسم المستخدم:');
-    sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: 'sector_staff' } } }).then(({ data, error }) => {
-      if (error) throw error;
-      U.toast('✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success');
-    }).catch(err => U.toast('❌ خطأ: ' + err.message, 'error'));
+  async deleteFollowUp(fuId, corrId) {
+    if (!confirm('️ هل تريد حذف هذه المتابعة؟')) return;
+    try {
+      await DB.deleteFollowUp(fuId, corrId);
+      U.toast('تم حذف المتابعة', 'success');
+      render();
+    } catch (e) { U.toast(e.message, 'error'); }
   },
+  async archive(id) { if (!confirm('تأكيد أرشفة هذه المراسلة؟')) return; try { await DB.archive(id); U.toast('تمت الأرشفة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
+  async restore(id) { try { await DB.restore(id); U.toast('تمت الاستعادة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
+  async del(id) { if (!confirm('⚠️ حذف نهائي؟')) return; try { await DB.remove(id); U.toast('تم الحذف', 'success'); Router.go('dashboard'); } catch (e) { U.toast(e.message, 'error'); } },
+  openWhatsApp() { const msg = encodeURIComponent(`مرحباً، أنا من ${CONFIG.ORG}`); window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${msg}`, '_blank'); },
+  forgotPassword() { const email = prompt('الرجاء إدخال بريدك الإلكتروني لاستعادة كلمة المرور:'); if (!email) return; if (sbConnected) { sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }).then(() => U.toast('✅ تم إرسال رابط إعادة تعيين كلمة المرور', 'success')).catch(err => U.toast(' خطأ: ' + err.message, 'error')); } else { U.toast('⚠️ هذه الميزة متاحة فقط عند الاتصال بـ Supabase', 'warning'); } },
+  registerNewUser() { if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; } const email = prompt('البريد الإلكتروني:'); if (!email) return; const password = prompt('كلمة المرور (6 أحرف على الأقل):'); if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; } const fullName = prompt('الاسم الكامل:'); const username = prompt('اسم المستخدم:'); const role = prompt('الدور (super_admin/general_admin/sector_admin/central_oversight/sector_staff):', 'sector_staff'); sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: role || 'sector_staff' } } }).then(({ data, error }) => { if (error) throw error; U.toast('✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success'); }).catch(err => U.toast(' خطأ: ' + err.message, 'error')); },
   async submitComplaint() {
     const sector = document.getElementById('compSector').value;
     const title = document.getElementById('compTitle').value.trim();
@@ -1413,89 +1793,43 @@ const UI = {
     const priority = document.getElementById('compPriority').value;
     const fileInput = document.getElementById('compFiles');
     const files = fileInput?.files ? Array.from(fileInput.files) : [];
-    
     if (!title || !description) { U.toast('الرجاء إدخال العنوان والتفاصيل', 'warning'); return; }
-    
     const btn = document.getElementById('submitComplaintBtn');
     btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> جاري الإرسال...';
-    
     try {
-      await DB.createComplaint({ 
-        sector_id: sector, 
-        title, 
-        description, 
-        complainant_name: name, 
-        complainant_phone: phone, 
-        complainant_type: type, 
-        priority, 
-        attachments: [],
-        files: files
-      });
+      await DB.createComplaint({ sector_id: sector, title, description, complainant_name: name, complainant_phone: phone, complainant_type: type, priority, files: files, source: 'internal' });
       U.toast('✅ تم إرسال الشكوى بنجاح', 'success');
       const u = Auth.user || {};
-      Router.go(u.role === 'central_oversight' ? 'oversightDashboard' : 'oversightComplaints');
-    } catch (e) {
-      U.toast(e.message || 'حدث خطأ', 'error');
-      btn.disabled = false; btn.innerHTML = '📤 إرسال الشكوى';
-    }
+      Router.go(u.role === 'central_oversight' ? 'oversightDashboard' : 'complaints');
+    } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); btn.disabled = false; btn.innerHTML = '📤 إرسال الشكوى'; }
   },
   async updateComplaint(id) {
     const status = document.getElementById('updateStatus').value;
     const response = document.getElementById('adminResponse').value.trim();
     const updates = { status, admin_response: response };
     if (status === 'resolved') { updates.resolved_by = Auth.user?.id; updates.resolved_at = new Date().toISOString(); }
-    try {
-      await DB.updateComplaint(id, updates);
-      U.toast('✅ تم تحديث الشكوى', 'success');
-      Router.go('viewComplaint', { id });
-    } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); }
+    try { await DB.updateComplaint(id, updates); U.toast('✅ تم تحديث الشكوى', 'success'); Router.go('viewComplaint', { id }); } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); }
   },
   async exportOversightReport() {
     const u = Auth.user || {};
     const complaints = await DB.getComplaints({ sector_id: u.sector_id });
     const sector = SECTORS.find(s => s.id === u.sector_id);
-    let csv = '\ufeffنظام الرقابة المركزية - تقرير الشكاوى\n';
-    csv += `القاطع: ${sector?.name || ''}\nتاريخ التقرير: ${U.fmtDate(new Date().toISOString())}\n\n`;
-    csv += 'الرقم,العنوان,الحالة,الأولوية,المشتكي,الهاتف,التاريخ,الرد\n';
-    complaints.forEach(c => { csv += `${c.id.substring(0,8)},"${c.title}","${c.status}","${c.priority}","${c.complainant_name || ''}","${c.complainant_phone || ''}","${U.fmtShort(c.created_at)}","${c.admin_response || ''}"\n`; });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `تقرير_الرقابة_${sector?.code || ''}_${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    U.toast('✅ تم تصدير التقرير', 'success');
+    const format = prompt('اختر صيغة التصدير:\n1 - PDF\n2 - Excel', '1');
+    if (format === '1') {
+      await Reports.exportComplaintsPDF(complaints, sector?.name || '');
+    } else if (format === '2') {
+      Reports.exportComplaintsExcel(complaints, sector?.name || '');
+    }
   },
   async syncOfflineData() { await DB.syncPending(); },
-
   copyAsText(id) {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) { U.toast('المراسلة غير موجودة', 'error'); return; }
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `📋 ${CONFIG.ORG}\n\n الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : 'عادية'}\n\n المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text));
-    } else {
-      this.fallbackCopy(text);
-    }
+    const text = ` ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n الموضوع: ${r.subject || '-'}\n التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text)); } else { this.fallbackCopy(text); }
   },
-  
-  fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      document.execCommand('copy');
-      U.toast('✅ تم نسخ المراسلة كنص', 'success');
-    } catch (e) {
-      U.toast('❌ فشل النسخ', 'error');
-    }
-    document.body.removeChild(textarea);
-  },
-  
+  fallbackCopy(text) { const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); U.toast('✅ تم نسخ المراسلة كنص', 'success'); } catch (e) { U.toast('❌ فشل النسخ', 'error'); } document.body.removeChild(textarea); },
   showQR(id) {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) return;
@@ -1503,15 +1837,10 @@ const UI = {
     const container = document.getElementById('qrContainer');
     if (!modal || !container) return;
     container.innerHTML = '';
-    const qrData = `📋 ${r.reference_number || ''}\n ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
-    try {
-      new QRCode(container, { text: qrData, width: 220, height: 220, colorDark: '#0f766e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-    } catch (e) {
-      container.innerHTML = '<div class="text-red-600">فشل إنشاء QR</div>';
-    }
+    const qrData = `📋 ${r.reference_number || ''}\n📌 ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
+    try { new QRCode(container, { text: qrData, width: 220, height: 220, colorDark: '#0f766e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { container.innerHTML = '<div class="text-red-600">فشل إنشاء QR</div>'; }
     modal.classList.remove('hidden');
   },
-  
   shareWhatsApp(id) {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) return;
@@ -1535,10 +1864,7 @@ async function render() {
     whatsappBtn.classList.add('hidden');
     setTimeout(() => {
       const btn = document.getElementById('lgBtn');
-      if (btn) {
-        btn.onclick = handleLogin;
-        document.getElementById('lgPass').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
-      }
+      if (btn) { btn.onclick = handleLogin; document.getElementById('lgPass').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); }); }
     }, 0);
   } else {
     whatsappBtn.classList.remove('hidden');
@@ -1550,9 +1876,15 @@ async function render() {
         let filters = {};
         if (u.role === 'sector_admin' && u.sector_id) filters.sector_id = u.sector_id;
         appData.correspondence = await DB.getAll(filters);
-        if (u.role === 'central_oversight' || u.role === 'sector_admin') appData.complaints = await DB.getComplaints({ sector_id: u.sector_id });
-        else if (u.role === 'super_admin' || u.role === 'general_admin') appData.complaints = await DB.getComplaints({});
-        else appData.complaints = [];
+        if (u.role === 'super_admin' || u.role === 'general_admin') {
+          appData.complaints = await DB.getComplaints({});
+        } else if (u.role === 'central_oversight' && u.sector_id) {
+          appData.complaints = await DB.getComplaints({ sector_id: u.sector_id });
+        } else if (u.role === 'sector_admin' && u.sector_id) {
+          appData.complaints = await DB.getComplaints({ sector_id: u.sector_id });
+        } else {
+          appData.complaints = [];
+        }
       } catch (e) {
         console.error("فشل جلب البيانات", e);
         appData = { correspondence: U.load('db_correspondence_cache', []), complaints: U.load('db_complaints_cache', []) };
@@ -1597,89 +1929,63 @@ function bindEvents() {
         const priority = document.getElementById('fPri').value;
         const fileInput = document.getElementById('fFiles');
         const files = fileInput?.files ? Array.from(fileInput.files) : [];
-        
         if (!subject || !content) { U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); return; }
-        
-        saveBtn.disabled = true; 
-        saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
-        
+        saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
         try {
           const result = await DB.create({ sector_id: sector, subject, content, sender_name: sender, priority }, files);
           if (Array.isArray(result)) U.toast(`✅ تم تعميم المراسلة على ${result.length} قواطع`, 'success');
           else U.toast('✅ تم حفظ المراسلة', 'success');
           Router.go('dashboard');
-        } catch (e) {
-          U.toast(e.message || 'حدث خطأ', 'error');
-          saveBtn.disabled = false; 
-          saveBtn.innerHTML = ' حفظ المراسلة';
-        }
+        } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); saveBtn.disabled = false; saveBtn.innerHTML = '💾 حفظ المراسلة'; }
       };
     }
   }
-  
-  if (Router.page === 'createComplaint') {
-    const btn = document.getElementById('submitComplaintBtn');
-    if (btn) btn.onclick = () => UI.submitComplaint();
-  }
-  
+  if (Router.page === 'createComplaint') { const btn = document.getElementById('submitComplaintBtn'); if (btn) btn.onclick = () => UI.submitComplaint(); }
   if (Router.page === 'complaints') {
     const filter = () => {
       const search = document.getElementById('cSearch')?.value.toLowerCase() || '';
       const status = document.getElementById('cStatus')?.value || '';
       const priority = document.getElementById('cPriority')?.value || '';
       const sector = document.getElementById('cSector')?.value || '';
-      
       let filtered = [...appData.complaints];
       if (search) filtered = filtered.filter(c => (c.title + ' ' + c.description).toLowerCase().includes(search));
       if (status) filtered = filtered.filter(c => c.status === status);
       if (priority) filtered = filtered.filter(c => c.priority === priority);
       if (sector) filtered = filtered.filter(c => c.sector_id === sector);
-      
       const el = document.getElementById('complaintsList');
       if (el) {
-        if (filtered.length === 0) {
-          el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>';
-        } else {
+        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; }
+        else {
           const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
           const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
           const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
           const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
-          
           el.innerHTML = filtered.map(c => {
             const sec = SECTORS.find(s => s.id === c.sector_id);
-            return `
-              <div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
-                <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                      <span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>
-                      ${sec ? `<span>•</span><span>${sec.name}</span>` : ''}
-                    </div>
-                    <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
-                    <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
-                  </div>
-                  <div class="flex flex-col gap-2">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
-                  </div>
+            return `<div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
+              <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 text-xs text-gray-500 mb-1"><span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>${sec ? `<span>•</span><span>${sec.name}</span>` : ''}</div>
+                  <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
+                  <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
                 </div>
-                <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
-                  ${c.complainant_phone ? `<span> ${U.esc(c.complainant_phone)}</span>` : ''}
-                  <span> ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
-                  ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
+                <div class="flex flex-col gap-2">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
+                  <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
                 </div>
               </div>
-            `;
+              <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
+                ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
+                <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
+                ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
+              </div>
+            </div>`;
           }).join('');
         }
       }
     };
-    
     const s = document.getElementById('cSearch'), st = document.getElementById('cStatus'), p = document.getElementById('cPriority'), sc = document.getElementById('cSector');
-    if (s) s.oninput = filter;
-    if (st) st.onchange = filter;
-    if (p) p.onchange = filter;
-    if (sc) sc.onchange = filter;
+    if (s) s.oninput = filter; if (st) st.onchange = filter; if (p) p.onchange = filter; if (sc) sc.onchange = filter;
   }
 }
 
@@ -1690,14 +1996,7 @@ async function handleLogin() {
   const btn = document.getElementById('lgBtn');
   if (!email || !password) { errEl.textContent = 'الرجاء إدخال البريد وكلمة المرور'; errEl.classList.remove('hidden'); return; }
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> جاري الدخول...'; errEl.classList.add('hidden');
-  try {
-    await Auth.login(email, password);
-    U.toast(`مرحباً ${Auth.user.full_name}`, 'success');
-    render();
-  } catch (e) {
-    errEl.textContent = e.message; errEl.classList.remove('hidden');
-    btn.disabled = false; btn.innerHTML = '🔐 تسجيل الدخول';
-  }
+  try { await Auth.login(email, password); U.toast(`مرحباً ${Auth.user.full_name}`, 'success'); render(); } catch (e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); btn.disabled = false; btn.innerHTML = '🔐 تسجيل الدخول'; }
 }
 
 let deferredPrompt;
@@ -1708,19 +2007,14 @@ window.addEventListener('beforeinstallprompt', (e) => {
     const installBtn = document.createElement('button');
     installBtn.className = 'install-pwa-btn';
     installBtn.innerHTML = '📱 تثبيت التطبيق على الهاتف';
-    installBtn.onclick = async () => {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') U.toast('✅ تم تثبيت التطبيق!', 'success');
-      installBtn.remove(); deferredPrompt = null;
-    };
+    installBtn.onclick = async () => { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') U.toast('✅ تم تثبيت التطبيق!', 'success'); installBtn.remove(); deferredPrompt = null; };
     app.appendChild(installBtn);
   }
 });
 
 render();
 updateSyncButton();
-console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (PWA + Full Features + QuickActions)`);
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (PWA + Reports + FollowUp)`);
 </script>
 </body>
 </html>
