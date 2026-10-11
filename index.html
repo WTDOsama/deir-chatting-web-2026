@@ -326,36 +326,24 @@ const DB = {
 async getAll(filters = {}) {
   if (sbConnected) {
     try {
-      // ✅ محاولة جلب مع العلاقة أولاً
-      let q = sb.from('correspondence').select('*, attachments(*), replies(*), follow_ups(*)');
+      let q = sb.from('correspondence').select('*, attachments(*), replies(*)');
       if (filters.sector_id) q = q.eq('sector_id', filters.sector_id);
       if (filters.is_archived !== undefined) q = q.eq('is_archived', filters.is_archived);
       const { data, error } = await q.order('created_at', { ascending: false });
+      if (error) throw error;
       
-      if (error) {
-        console.warn('Relation follow_ups failed, trying without:', error.message);
-        // ✅ fallback: جلب بدون علاقة follow_ups
-        let q2 = sb.from('correspondence').select('*, attachments(*), replies(*)');
-        if (filters.sector_id) q2 = q2.eq('sector_id', filters.sector_id);
-        if (filters.is_archived !== undefined) q2 = q2.eq('is_archived', filters.is_archived);
-        const { data: data2, error: error2 } = await q2.order('created_at', { ascending: false });
+      // ✅ جلب المتابعات بشكل منفصل
+      if (data && data.length > 0) {
+        const corrIds = data.map(r => r.id);
+        const { data: fuData } = await sb.from('follow_ups')
+          .select('*')
+          .in('correspondence_id', corrIds);
         
-        if (error2) throw error2;
-        
-        // ✅ جلب المتابعات بشكل منفصل ودمجها
-        if (data2 && data2.length > 0) {
-          const corrIds = data2.map(r => r.id);
-          const { data: fuData } = await sb.from('follow_ups').select('*').in('correspondence_id', corrIds);
-          
-          if (fuData) {
-            data2.forEach(r => {
-              r.follow_ups = fuData.filter(fu => fu.correspondence_id === r.id);
-            });
-          }
+        if (fuData) {
+          data.forEach(r => {
+            r.follow_ups = fuData.filter(fu => fu.correspondence_id === r.id);
+          });
         }
-        
-        U.save('db_correspondence_cache', data2);
-        return data2;
       }
       
       U.save('db_correspondence_cache', data);
@@ -533,7 +521,7 @@ async getAll(filters = {}) {
     return rec;
   },
   
- async addFollowUp(id, fu) {
+async addFollowUp(id, fu) {
   if (sbConnected) {
     try {
       const { data, error } = await sb.from('follow_ups').insert([{
@@ -542,46 +530,23 @@ async getAll(filters = {}) {
         title: fu.title,
         notes: fu.notes || '',
         due_date: fu.due_date || null,
-        status: fu.status || 'pending',
-        created_by: Auth.user?.full_name
+        status: fu.status || 'pending'
       }]).select().single();
       
       if (error) {
-        console.error('Supabase insert error:', error);
-        throw new Error(error.message || 'فشل حفظ المتابعة في قاعدة البيانات');
+        console.error('Error adding follow-up:', error);
+        throw new Error(error.message || 'فشل حفظ المتابعة');
       }
       
-      // ✅ الإصلاح: تحديث الكاش المحلي بعد النجاح
-      const localData = U.load('db_correspondence', []);
-      const rec = localData.find(d => d.id === id);
-      if (rec) {
-        rec.follow_ups = rec.follow_ups || [];
-        // تجنب التكرار
-        if (!rec.follow_ups.find(f => f.id === data.id)) {
-          rec.follow_ups.push(data);
-        }
-        U.save('db_correspondence', localData);
-        U.save('db_correspondence_cache', localData);
-      }
-      
-      // ✅ تحديث appData في الذاكرة
-      const appRec = appData.correspondence.find(d => d.id === id);
-      if (appRec) {
-        appRec.follow_ups = appRec.follow_ups || [];
-        if (!appRec.follow_ups.find(f => f.id === data.id)) {
-          appRec.follow_ups.push(data);
-        }
-      }
-      
+      U.toast('✅ تمت إضافة المتابعة', 'success');
       return data;
     } catch (e) {
       console.error('Error in addFollowUp:', e);
       throw e;
     }
   } else {
-    // Offline mode
-    const localData = U.load('db_correspondence', []);
-    const rec = localData.find(d => d.id === id);
+    const data = U.load('db_correspondence', []);
+    const rec = data.find(d => d.id === id);
     if (rec) {
       rec.follow_ups = rec.follow_ups || [];
       rec.follow_ups.push({ 
@@ -590,14 +555,13 @@ async getAll(filters = {}) {
         notes: fu.notes || '',
         due_date: fu.due_date || null,
         status: fu.status || 'pending',
-        created_by: Auth.user?.full_name,
         created_at: U.now() 
       });
-      U.save('db_correspondence', localData);
-      U.save('db_correspondence_cache', localData);
+      U.save('db_correspondence', data);
+      U.save('db_correspondence_cache', data);
+      U.toast('💾 تمت إضافة المتابعة محلياً', 'info');
       return rec;
     }
-    throw new Error('المراسلة غير موجودة محلياً');
   }
 },
   
@@ -666,29 +630,18 @@ async getById(id) {
   if (sbConnected) {
     try {
       const { data, error } = await sb.from('correspondence')
-        .select('*, attachments(*), replies(*), follow_ups(*)')
+        .select('*, attachments(*), replies(*)')
         .eq('id', id)
         .single();
       
-      if (error) {
-        console.warn('Relation follow_ups failed in getById, trying fallback:', error.message);
-        // ✅ fallback: جلب بدون علاقة follow_ups
-        const { data: data2, error: error2 } = await sb.from('correspondence')
-          .select('*, attachments(*), replies(*)')
-          .eq('id', id)
-          .single();
-        
-        if (error2) throw error2;
-        
-        // جلب المتابعات بشكل منفصل
-        if (data2) {
-          const { data: fuData } = await sb.from('follow_ups')
-            .select('*')
-            .eq('correspondence_id', id);
-          data2.follow_ups = fuData || [];
-        }
-        
-        return data2;
+      if (error) throw error;
+      
+      // ✅ جلب المتابعات بشكل منفصل
+      if (data) {
+        const { data: fuData } = await sb.from('follow_ups')
+          .select('*')
+          .eq('correspondence_id', id);
+        data.follow_ups = fuData || [];
       }
       
       return data;
