@@ -10,27 +10,17 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="نظام مراسلات وشكاوى إدارة إيواءات دير البلح - يعمل أوفلاين">
 <title>مراسلات إدارة إيواءات دير البلح</title>
-
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <!-- ✅ الأيقونة الجديدة للموقع والمتصفح -->
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="shortcut icon" type="image/png" href="icon.png">
-
-<!-- أيقونة Apple للهواتف -->
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icon.png">
 <link rel="apple-touch-icon" sizes="120x120" href="icon.png">
-
-<!-- PWA Manifest مع الأيقونة الجديدة -->
 <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"مراسلات إدارة إيواءات دير البلح","short_name":"إيواءات دير البلح","start_url":"./","display":"standalone","background_color":"%23064e3b","theme_color":"%23064e3b","orientation":"portrait","description":"نظام المراسلات والشكاوى","icons":[{"src":"icon.png","sizes":"512x512","type":"image/png"},{"src":"icon.png","sizes":"192x192","type":"image/png"}]}'>
-
-<!-- <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"مراسلات إدارة إيواءات دير البلح","short_name":"إيواءات دير البلح","start_url":"./","display":"standalone","background_color":"%230f766e","theme_color":"%230f766e","orientation":"portrait","description":"نظام المراسلات والشكاوى","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 fill=%22%230f766e%22 rx=%2240%22/><text x=%2296%22 y=%22130%22 font-size=%22120%22 text-anchor=%22middle%22 fill=%22white%22>🏢</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'> -->
-<!-- <link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%230f766e" rx="40"/><text x="90" y="125" font-size="110" text-anchor="middle" fill="white">🏢</text></svg>'> -->
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -122,7 +112,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '12.0.1-All-Fixed',
+  VERSION: '12.4.1-BucketFix',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -166,8 +156,9 @@ try {
 // =====================================================
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE_NAME = 'deir-iyawaat-v12.4.0';
-    self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['/', '/icon.png']).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
+    const CACHE_NAME = 'deir-iyawaat-v12.4.1';
+    const ASSETS = ['/'];
+    self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
     self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
     self.addEventListener('fetch', (e) => {
       if (e.request.method !== 'GET') return;
@@ -206,13 +197,8 @@ window.addEventListener('offline', () => {
 function updateSyncButton() {
   const pending = U.load('db_pending_sync', []);
   const syncBtn = document.getElementById('syncBtn');
-  const syncCount = document.getElementById('syncCount');
-  if (pending.length > 0 && isOnline) {
-    syncBtn.classList.remove('hidden');
-    syncCount.textContent = pending.length;
-  } else {
-    syncBtn.classList.add('hidden');
-  }
+  if (pending.length > 0 && isOnline) { syncBtn.classList.remove('hidden'); document.getElementById('syncCount').textContent = pending.length; }
+  else { syncBtn.classList.add('hidden'); }
 }
 
 // =====================================================
@@ -238,7 +224,7 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '📦', other: '📎' }[type] || '📎'),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
     const lowerName = name.toLowerCase();
@@ -255,7 +241,39 @@ const U = {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   },
-  getDownloadLabel: (type) => ({ image: 'تحميل الصورة', excel: 'تحميل Excel', document: 'تحميل الملف', pdf: 'تحميل PDF', archive: 'تحميل الملف', other: 'تحميل الملف' }[type] || 'تحميل الملف')
+  getDownloadLabel: (type) => ({ image: 'تحميل الصورة', excel: 'تحميل Excel', document: 'تحميل الملف', pdf: 'تحميل PDF', archive: 'تحميل الملف', other: 'تحميل الملف' }[type] || 'تحميل الملف'),
+  
+  // ✅ دالة جديدة: الحصول على رابط الملف (Public أو Signed)
+  async getAttachmentUrl(storagePath) {
+    if (!storagePath || !sbConnected) return '#';
+    
+    // محاولة الرابط العام أولاً
+    const publicUrl = `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${storagePath}`;
+    
+    try {
+      const response = await fetch(publicUrl, { method: 'HEAD' });
+      if (response.ok) return publicUrl;
+    } catch (e) {
+      console.warn('Public URL failed, trying signed URL...');
+    }
+    
+    // Fallback: استخدام Signed URL
+    try {
+      const { data, error } = await sb.storage
+        .from('attachments')
+        .createSignedUrl(storagePath, 3600); // صالح لمدة ساعة
+      
+      if (error) {
+        console.error('Signed URL error:', error);
+        return publicUrl; // العودة للرابط العام كـ last resort
+      }
+      
+      return data.signedUrl;
+    } catch (e) {
+      console.error('Error getting signed URL:', e);
+      return publicUrl;
+    }
+  }
 };
 
 // =====================================================
@@ -299,12 +317,8 @@ function subscribeToNotifications() {
       U.toast(`🔔 ${payload.new.title}: ${payload.new.message}`, 'info');
       refreshNotifications();
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${Auth.user.id}` }, () => {
-      refreshNotifications();
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'notifications', filter: `user_id=eq.${Auth.user.id}` }, () => {
-      refreshNotifications();
-    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${Auth.user.id}` }, () => { refreshNotifications(); })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'notifications', filter: `user_id=eq.${Auth.user.id}` }, () => { refreshNotifications(); })
     .subscribe((status) => { console.log('🔔 Realtime subscription status:', status); });
   realtimeSubs.push(notifSub);
 }
@@ -334,27 +348,17 @@ const DB = {
         if (filters.is_archived !== undefined) q = q.eq('is_archived', filters.is_archived);
         const { data, error } = await q.order('created_at', { ascending: false });
         if (error) throw error;
-        // جلب المتابعات بشكل منفصل (fallback)
         if (data && data.length > 0) {
           const corrIds = data.map(r => r.id);
           try {
             const { data: fuData } = await sb.from('follow_ups').select('*').in('correspondence_id', corrIds);
-            if (fuData) {
-              data.forEach(r => { r.follow_ups = fuData.filter(fu => fu.correspondence_id === r.id); });
-            } else {
-              data.forEach(r => { r.follow_ups = []; });
-            }
-          } catch (e) {
-            console.warn('️ Failed to fetch follow_ups separately:', e.message);
-            data.forEach(r => { r.follow_ups = []; });
-          }
+            if (fuData) { data.forEach(r => { r.follow_ups = fuData.filter(fu => fu.correspondence_id === r.id); }); }
+            else { data.forEach(r => { r.follow_ups = []; }); }
+          } catch (e) { console.warn('⚠️ Failed to fetch follow_ups separately:', e.message); data.forEach(r => { r.follow_ups = []; }); }
         }
         U.save('db_correspondence_cache', data);
         return data;
-      } catch (e) {
-        console.error('Error in getAll:', e);
-        return U.load('db_correspondence_cache', []);
-      }
+      } catch (e) { console.error('Error in getAll:', e); return U.load('db_correspondence_cache', []); }
     }
     return U.load('db_correspondence_cache', U.load('db_correspondence', []));
   },
@@ -406,10 +410,7 @@ const DB = {
             } catch (e) { console.error('Failed to upload attachments:', e); }
           }
           return { ...inserted, attachments: atts, replies: [], follow_ups: [] };
-        } catch (e) {
-          console.error('Error creating correspondence:', e);
-          throw e;
-        }
+        } catch (e) { console.error('Error creating correspondence:', e); throw e; }
       }
     } else {
       const recordId = U.uuid();
@@ -432,17 +433,52 @@ const DB = {
 
   async uploadAttachments(correspondenceId, files) {
     if (!sbConnected) return;
+    
+    // ✅ التحقق من وجود الـ bucket أولاً
+    try {
+      const { data: buckets, error: bucketError } = await sb.storage.listBuckets();
+      if (bucketError) {
+        console.warn('⚠️ Could not list buckets:', bucketError.message);
+      } else {
+        const hasAttachmentsBucket = buckets?.some(b => b.name === 'attachments');
+        if (!hasAttachmentsBucket) {
+          U.toast('⚠️ Bucket "attachments" غير موجود. يرجى إنشاؤه من Supabase Dashboard → Storage', 'warning');
+          console.error('Bucket "attachments" not found. Please create it in Supabase Dashboard → Storage');
+        }
+      }
+    } catch (e) {
+      console.warn('Could not verify bucket:', e);
+    }
+    
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const ext = file.name.split('.').pop();
       const path = `${correspondenceId}/${U.uuid()}.${ext}`;
-      const { error: uploadError } = await sb.storage.from('attachments').upload(path, file, { contentType: file.type, upsert: false });
-      if (uploadError) throw new Error(`فشل رفع الملف ${file.name}: ${uploadError.message}`);
-      await sb.from('attachments').insert([{
-        correspondence_id: correspondenceId, file_name: path, original_name: file.name,
-        mime_type: file.type, size_bytes: file.size, file_type: U.getFileType(file.type, file.name),
-        storage_path: path, uploaded_by: Auth.user?.id,
-      }]);
+      
+      try {
+        const { data, error: uploadError } = await sb.storage
+          .from('attachments')
+          .upload(path, file, { contentType: file.type, upsert: false, cacheControl: '3600' });
+        
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          if (uploadError.message?.includes('Bucket not found')) {
+            throw new Error(`Bucket "attachments" غير موجود. يرجى إنشاؤه من Supabase Dashboard → Storage`);
+          }
+          throw new Error(`فشل رفع الملف ${file.name}: ${uploadError.message}`);
+        }
+        
+        await sb.from('attachments').insert([{
+          correspondence_id: correspondenceId, file_name: path, original_name: file.name,
+          mime_type: file.type, size_bytes: file.size, file_type: U.getFileType(file.type, file.name),
+          storage_path: path, uploaded_by: Auth.user?.id,
+        }]);
+        
+        console.log('✅ Uploaded:', path);
+      } catch (e) {
+        console.error(`Failed to upload ${file.name}:`, e);
+        throw e;
+      }
     }
   },
 
@@ -464,10 +500,7 @@ const DB = {
   async remove(id) {
     if (sbConnected) {
       const { error } = await sb.from('correspondence').delete().eq('id', id);
-      if (error) {
-        console.error('Delete error:', error);
-        throw new Error(error.message || 'فشل حذف المراسلة');
-      }
+      if (error) { console.error('Delete error:', error); throw new Error(error.message || 'فشل حذف المراسلة'); }
       const localData = U.load('db_correspondence', []);
       const filtered = localData.filter(d => d.id !== id);
       U.save('db_correspondence', filtered);
@@ -504,10 +537,7 @@ const DB = {
         if (error) throw new Error(error.message || 'فشل حفظ المتابعة');
         U.toast('✅ تمت إضافة المتابعة', 'success');
         return data;
-      } catch (e) {
-        console.error('Error adding follow-up:', e);
-        throw e;
-      }
+      } catch (e) { console.error('Error adding follow-up:', e); throw e; }
     } else {
       const data = U.load('db_correspondence', []);
       const rec = data.find(d => d.id === id);
@@ -525,11 +555,8 @@ const DB = {
   async updateFollowUp(fuId, updates) {
     if (sbConnected) {
       try {
-        const { data, error } = await sb.from('follow_ups')
-          .update({ ...updates, updated_at: new Date().toISOString() })
-          .eq('id', fuId).select().single();
-        if (error) throw error;
-        return data;
+        const { data, error } = await sb.from('follow_ups').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', fuId).select().single();
+        if (error) throw error; return data;
       } catch (e) { console.error('Error updating follow-up:', e); throw e; }
     }
     return null;
@@ -553,9 +580,7 @@ const DB = {
   async getById(id) {
     if (sbConnected) {
       try {
-        const { data, error } = await sb.from('correspondence')
-          .select('*, attachments(*), replies(*)')
-          .eq('id', id).single();
+        const { data, error } = await sb.from('correspondence').select('*, attachments(*), replies(*)').eq('id', id).single();
         if (error) throw error;
         if (data) {
           try {
@@ -572,9 +597,7 @@ const DB = {
   async getNotifications() {
     if (!sbConnected) return [];
     try {
-      const { data, error } = await sb.from('notifications')
-        .select('*').eq('user_id', Auth.user?.id)
-        .order('created_at', { ascending: false }).limit(50);
+      const { data, error } = await sb.from('notifications').select('*').eq('user_id', Auth.user?.id).order('created_at', { ascending: false }).limit(50);
       if (error) { console.error('Error fetching notifications:', error); return []; }
       return data || [];
     } catch (e) { console.error('Error in getNotifications:', e); return []; }
@@ -591,8 +614,7 @@ const DB = {
   async markAllNotificationsRead() {
     if (!sbConnected) return;
     try {
-      const { error } = await sb.from('notifications')
-        .update({ is_read: true }).eq('user_id', Auth.user?.id).eq('is_read', false);
+      const { error } = await sb.from('notifications').update({ is_read: true }).eq('user_id', Auth.user?.id).eq('is_read', false);
       if (error) throw error;
     } catch (e) { console.error('Error marking all notifications as read:', e); throw e; }
   },
@@ -876,7 +898,7 @@ const Views = {
           <div class="text-6xl mb-3">🏢</div>
           <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
           <p class="text-gray-600 text-sm mt-2">نظام المراسلات والشكاوى</p>
-          ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">️ وضع أوفلاين</div>' : ''}
+          ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">⚠️ وضع أوفلاين</div>' : ''}
         </div>
         <div id="loginErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
         <form class="space-y-4" onsubmit="return false;">
@@ -930,8 +952,8 @@ const Views = {
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <button onclick="Router.go('create')" class="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">➕ مراسلة جديدة</button>
           <button onclick="Router.go('general')" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 التقارير</button>
-          <button onclick="Router.go('followups')" class="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> المتابعة</button>
-          <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> الأرشيف</button>
+          <button onclick="Router.go('followups')" class="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 المتابعة</button>
+          <button onclick="Router.go('archive')" class="bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📦 الأرشيف</button>
         </div>
         <div class="glass rounded-2xl shadow-xl p-6">
           <h2 class="text-xl font-bold text-gray-800 mb-4">آخر المراسلات</h2>
@@ -985,7 +1007,7 @@ const Views = {
             </div>
             <div class="flex gap-2 flex-wrap">
               <button onclick="Reports.exportFollowUpsPDF(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-pdf">📄 تصدير PDF</button>
-              <button onclick="Reports.exportFollowUpsExcel(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-excel"> تصدير Excel</button>
+              <button onclick="Reports.exportFollowUpsExcel(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
             </div>
           </div>
           <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -996,7 +1018,7 @@ const Views = {
           </div>
         </div>
         <div class="space-y-3">
-          ${allFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500"> لا توجد مهام متابعة</div>' :
+          ${allFollowUps.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد مهام متابعة</div>' :
             allFollowUps.map(fu => {
               const statusClass = fu.status === 'pending' ? 'followup-status-pending' : fu.status === 'in_progress' ? 'followup-status-progress' : 'followup-status-done';
               const statusLabel = STATUS_LABELS[fu.status] || fu.status;
@@ -1022,7 +1044,7 @@ const Views = {
                       <option value="in_progress" ${fu.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
                       <option value="done" ${fu.status === 'done' ? 'selected' : ''}>مكتملة</option>
                     </select>
-                    ${u.role !== 'sector_staff' ? `<button onclick="UI.deleteFollowUp('${fu.id}', '${fu.correspondence_id}')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg hover:bg-red-200">🗑️ حذف</button>` : ''}
+                    ${u.role !== 'sector_staff' ? `<button onclick="UI.deleteFollowUp('${fu.id}', '${fu.correspondence_id}')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg hover:bg-red-200">️ حذف</button>` : ''}
                   </div>
                 </div>
               </div>`;
@@ -1033,7 +1055,6 @@ const Views = {
     </div>`;
   },
 
-  // ✅ صفحة التنبيهات - جديدة
   async notifications() {
     const u = Auth.user || {};
     let notifications = [];
@@ -1076,11 +1097,11 @@ const Views = {
                       ${!n.is_read ? '<span class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">جديد</span>' : ''}
                     </div>
                     <p class="text-gray-600 text-sm">${U.esc(n.message || '')}</p>
-                    <div class="text-xs text-gray-500 mt-2"> ${U.fmtDate(n.created_at)}</div>
+                    <div class="text-xs text-gray-500 mt-2">📅 ${U.fmtDate(n.created_at)}</div>
                   </div>
                   <div class="flex flex-col gap-2">
                     ${!n.is_read ? `<button onclick="UI.markNotifRead('${n.id}')" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200">✓ مقروء</button>` : ''}
-                    <button onclick="UI.deleteNotif('${n.id}')" class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200">🗑️</button>
+                    <button onclick="UI.deleteNotif('${n.id}')" class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200">️</button>
                   </div>
                 </div>
               </div>`;
@@ -1098,7 +1119,7 @@ const Views = {
       <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
         <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-2xl shadow-xl p-6 mb-6">
           <div class="flex justify-between items-center flex-wrap gap-4">
-            <div><h1 class="text-3xl font-bold">️ الإدارة العامة</h1><p class="opacity-90 mt-1">جميع المراسلات (${filteredData.length})</p></div>
+            <div><h1 class="text-3xl font-bold">🏛️ الإدارة العامة</h1><p class="opacity-90 mt-1">جميع المراسلات (${filteredData.length})</p></div>
             <div class="flex gap-2 flex-wrap">
               <button onclick="Reports.exportCorrespondencePDF(appData.correspondence.filter(r => !r.is_archived), 'جميع القواطع')" class="report-btn report-btn-pdf">📄 تصدير PDF</button>
               <button onclick="Reports.exportCorrespondenceExcel(appData.correspondence.filter(r => !r.is_archived), 'جميع القواطع')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
@@ -1127,7 +1148,7 @@ const Views = {
             <div class="flex gap-2 flex-wrap">
               <button onclick="Router.go('create', {sector:'${sid}'})" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer">➕ مراسلة جديدة</button>
               <button onclick="Reports.exportCorrespondencePDF(appData.correspondence.filter(r => r.sector_id === '${sid}' && !r.is_archived), '${s.name}')" class="report-btn report-btn-pdf">📄 PDF</button>
-              <button onclick="Reports.exportCorrespondenceExcel(appData.correspondence.filter(r => r.sector_id === '${sid}' && !r.is_archived), '${s.name}')" class="report-btn report-btn-excel">📊 Excel</button>
+              <button onclick="Reports.exportCorrespondenceExcel(appData.correspondence.filter(r => r.sector_id === '${sid}' && !r.is_archived), '${s.name}')" class="report-btn report-btn-excel"> Excel</button>
             </div>
           </div>
         </div>
@@ -1155,7 +1176,7 @@ const Views = {
     return `<div class="min-h-screen">${this.navbar()}
       <div class="max-w-3xl mx-auto p-4 md:p-6 fade-in">
         <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
-          <h1 class="text-2xl font-bold text-teal-800 mb-6">➕ مراسلة جديدة</h1>
+          <h1 class="text-2xl font-bold text-teal-800 mb-6"> مراسلة جديدة</h1>
           <form class="space-y-4" onsubmit="return false;">
             <div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label>
               <select id="fSec" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
@@ -1198,6 +1219,43 @@ const Views = {
     const u = Auth.user || {};
     const canArchive = ['super_admin', 'general_admin', 'sector_admin'].includes(u.role);
     const canDelete = ['super_admin', 'general_admin', 'sector_admin'].includes(u.role);
+    
+    // ✅ بناء قسم المرفقات مع استخدام getAttachmentUrl
+    let attachmentsHTML = '';
+    if (attachments.length > 0) {
+      const attachmentCards = await Promise.all(attachments.map(async (att) => {
+        const fileType = U.getFileType(att.mime_type, att.original_name);
+        const fileIcon = U.getFileIcon(fileType);
+        const downloadLabel = U.getDownloadLabel(fileType);
+        const fileSize = U.formatFileSize(att.size_bytes);
+        const storagePath = att.storage_path || att.file_name;
+        
+        // ✅ استخدام الدالة الجديدة للحصول على الرابط
+        const fileUrl = await U.getAttachmentUrl(storagePath);
+        
+        return `<div class="attachment-card">
+          <div class="attachment-info">
+            <div class="attachment-icon">${fileIcon}</div>
+            <div class="min-w-0 flex-1">
+              <div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div>
+              <div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div>
+            </div>
+          </div>
+          <button onclick="UI.downloadAttachment('${storagePath}', '${U.esc(att.original_name || 'ملف')}')" 
+                  class="download-btn" 
+                  title="تحميل الملف">
+            ⬇️ ${downloadLabel}
+          </button>
+        </div>`;
+      }));
+      attachmentsHTML = `<div class="mb-6">
+        <div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div>
+        <div class="space-y-2">${attachmentCards.join('')}</div>
+      </div>`;
+    } else {
+      attachmentsHTML = '<div class="mb-6 text-center text-gray-500 text-sm py-4 bg-gray-50 rounded-xl">📎 لا توجد مرفقات</div>';
+    }
+    
     return `<div class="min-h-screen">${this.navbar()}
       <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
         <button onclick="history.back()" class="mb-4 text-white hover:text-gray-200 font-semibold cursor-pointer">→ رجوع</button>
@@ -1210,18 +1268,11 @@ const Views = {
             <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || '-'}</div></div>
             <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at)}</div></div>
             <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.name || '-'}</div></div>
-            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? ' عالية' : r.priority === 'low' ? '🟢 منخفضة' : r.priority === 'urgent' ? '🚨 عاجلة' : '🔵 عادية'}</div></div>
+            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : r.priority === 'urgent' ? ' عاجلة' : '🔵 عادية'}</div></div>
           </div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || '-')}</h2></div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content || '-')}</div></div>
-          ${attachments.length > 0 ? `<div class="mb-6"><div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div><div class="space-y-2">${attachments.map(att => {
-            const fileType = U.getFileType(att.mime_type, att.original_name);
-            const fileIcon = U.getFileIcon(fileType);
-            const downloadLabel = U.getDownloadLabel(fileType);
-            const fileSize = U.formatFileSize(att.size_bytes);
-            const fileUrl = sbConnected ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}` : (att.data_url || '#');
-            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn" onclick="event.stopPropagation();">⬇️ ${downloadLabel}</a></div>`;
-          }).join('')}</div></div>` : '<div class="mb-6 text-center text-gray-500 text-sm py-4 bg-gray-50 rounded-xl"> لا توجد مرفقات</div>'}
+          ${attachmentsHTML}
           ${followUps.length > 0 ? `<div class="mb-6">
             <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span>📋</span><span>المتابعات (${followUps.length})</span></h3>
             <div class="space-y-2">
@@ -1242,22 +1293,22 @@ const Views = {
           </div>` : ''}
           ${replies.length > 0 ? `<div class="mb-6"><h3 class="font-bold text-lg mb-3">💬 الردود (${replies.length})</h3><div class="space-y-3">${replies.map(rp => `<div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded"><div class="flex justify-between items-center mb-2"><span class="font-semibold text-sm text-blue-800">${U.esc(rp.author_name || rp.author || 'مستخدم')}</span><span class="text-xs text-gray-500">${U.fmtDate(rp.created_at)}</span></div><div class="text-gray-700">${U.esc(rp.content)}</div></div>`).join('')}</div></div>` : ''}
           <div class="border-t pt-4 mt-6">
-            <h3 class="font-bold text-gray-800 mb-3">⚡ إجراءات سريعة</h3>
+            <h3 class="font-bold text-gray-800 mb-3"> إجراءات سريعة</h3>
             <div class="quick-actions">
               <button onclick="UI.reply('${r.id}')" class="qa-reply"><span>💬</span><span>رد</span></button>
               <button onclick="UI.followUp('${r.id}')" class="qa-follow"><span>📌</span><span>متابعة</span></button>
-              ${canArchive ? (r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="qa-restore"><span>♻️</span><span>استعادة</span></button>` : `<button onclick="UI.archive('${r.id}')" class="qa-archive"><span>📦</span><span>أرشفة</span></button>`) : ''}
+              ${canArchive ? (r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="qa-restore"><span>♻️</span><span>استعادة</span></button>` : `<button onclick="UI.archive('${r.id}')" class="qa-archive"><span></span><span>أرشفة</span></button>`) : ''}
               <button onclick="UI.copyAsText('${r.id}')" class="qa-txt"><span>📄</span><span>نسخ</span></button>
               <button onclick="UI.showQR('${r.id}')" class="qa-qr"><span>🔳</span><span>QR</span></button>
               <button onclick="UI.shareWhatsApp('${r.id}')" class="qa-wa"><span>📱</span><span>واتساب</span></button>
-              ${canDelete ? `<button onclick="UI.del('${r.id}')" class="qa-delete"><span>🗑️</span><span>حذف</span></button>` : ''}
+              ${canDelete ? `<button onclick="UI.del('${r.id}')" class="qa-delete"><span>️</span><span>حذف</span></button>` : ''}
             </div>
           </div>
         </div>
       </div>
       <div id="qrModal" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
         <div class="glass rounded-2xl p-6 max-w-sm w-full text-center">
-          <h3 class="font-bold text-lg text-teal-800 mb-3">📱 رمز QR للمراسلة</h3>
+          <h3 class="font-bold text-lg text-teal-800 mb-3"> رمز QR للمراسلة</h3>
           <div id="qrContainer" class="flex justify-center mb-3"></div>
           <p class="text-xs text-gray-600 mb-3">${r.reference_number || ''}</p>
           <button onclick="document.getElementById('qrModal').classList.add('hidden')" class="btn-primary px-6 py-2 rounded-xl font-bold">إغلاق</button>
@@ -1314,7 +1365,7 @@ const Views = {
               <option value="">كل الحالات</option><option value="pending">قيد الانتظار</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option><option value="rejected">مرفوضة</option>
             </select>
             <select id="cPriority" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              <option value="">كل الأولويات</option><option value="urgent"> عاجلة</option><option value="high">🟠 عالية</option><option value="medium">🔵 متوسطة</option><option value="low">⚪ منخفضة</option>
+              <option value="">كل الأولويات</option><option value="urgent">🔴 عاجلة</option><option value="high">🟠 عالية</option><option value="medium">🔵 متوسطة</option><option value="low">⚪ منخفضة</option>
             </select>
             ${isAdmin ? `<select id="cSector" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none"><option value="">كل القواطع</option>${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>` : '<div></div>'}
           </div>
@@ -1339,8 +1390,8 @@ const Views = {
                 </div>
               </div>
               <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
-                ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
-                <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
+                ${c.complainant_phone ? `<span> ${U.esc(c.complainant_phone)}</span>` : ''}
+                <span> ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
                 ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
               </div>
             </div>`;
@@ -1361,9 +1412,9 @@ const Views = {
         </div>
         <div class="flex items-center gap-1 md:gap-2 flex-wrap">
           <button onclick="Router.go('oversightDashboard')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">🏠 الرئيسية</button>
-          <button onclick="Router.go('oversightComplaints')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700">📋 الشكاوى</button>
+          <button onclick="Router.go('oversightComplaints')" class="px-3 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold cursor-pointer text-orange-700"> الشكاوى</button>
           <button onclick="Router.go('createComplaint')" class="px-3 py-1.5 rounded-lg bg-orange-600 text-white hover:bg-orange-700 text-sm font-semibold cursor-pointer">➕ جديدة</button>
-          <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer"> خروج</button>
+          <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
         </div>
       </div>
     </nav>`;
@@ -1375,7 +1426,7 @@ const Views = {
     return `<nav class="glass shadow-lg sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
         <div class="flex items-center gap-3">
-          <span class="text-2xl">🏢</span>
+          <span class="text-2xl"></span>
           <div><div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} ${!isOnline ? '📡' : ''}</div></div>
         </div>
         <div class="flex items-center gap-1 md:gap-2 flex-wrap">
@@ -1384,7 +1435,7 @@ const Views = {
           <button onclick="Router.go('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">📋 المتابعة</button>
           <button onclick="Router.go('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer hidden md:inline">🏛️ الإدارة</button>
           <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative">🔔 التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
-          <button onclick="Router.go('create')" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm font-semibold cursor-pointer">➕ جديد</button>
+          <button onclick="Router.go('create')" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm font-semibold cursor-pointer"> جديد</button>
           <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
         </div>
       </div>
@@ -1407,12 +1458,12 @@ const Views = {
         <h3 class="font-bold text-gray-800 truncate">${U.esc(r.subject)}</h3>
         <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
         <div class="flex gap-2 mt-2 flex-wrap text-xs">
-          ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded"> عالية</span>' : ''}
-          ${r.priority === 'urgent' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded"> عاجلة</span>' : ''}
+          ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
+          ${r.priority === 'urgent' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🚨 عاجلة</span>' : ''}
           ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
-          ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded"> منخفضة</span>' : ''}
+          ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">🟢 منخفضة</span>' : ''}
           ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
-          ${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">💬 ${repliesCount} رد</span>` : ''}
+          ${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold"> ${repliesCount} رد</span>` : ''}
           ${followUpsCount > 0 ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">📌 ${followUpsCount} متابعة</span>` : ''}
         </div>
       </div>
@@ -1446,15 +1497,15 @@ const Views = {
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">إجمالي الشكاوى</div><div class="text-3xl font-bold text-gray-800 mt-1">${stats.total}</div></div><div class="bg-gray-100 rounded-xl p-3 text-2xl">📊</div></div></div>
-          <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">قيد الانتظار</div><div class="text-3xl font-bold text-yellow-600 mt-1">${stats.pending}</div></div><div class="bg-yellow-100 rounded-xl p-3 text-2xl"></div></div></div>
+          <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">قيد الانتظار</div><div class="text-3xl font-bold text-yellow-600 mt-1">${stats.pending}</div></div><div class="bg-yellow-100 rounded-xl p-3 text-2xl">⏳</div></div></div>
           <div class="glass rounded-2xl shadow-lg p-5 card-hover"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">تم الحل</div><div class="text-3xl font-bold text-green-600 mt-1">${stats.resolved}</div></div><div class="bg-green-100 rounded-xl p-3 text-2xl">✅</div></div></div>
           <div class="glass rounded-2xl shadow-lg p-5 card-hover border-2 border-red-200"><div class="flex items-center justify-between"><div><div class="text-xs text-gray-500">عاجلة 🔴</div><div class="text-3xl font-bold text-red-600 mt-1">${stats.urgent}</div></div><div class="bg-red-100 rounded-xl p-3 text-2xl">🚨</div></div></div>
         </div>
         <div class="glass rounded-2xl shadow-xl p-5 mb-6">
           <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ إجراءات سريعة</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button onclick="Router.go('oversightComplaints')" class="bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> جميع الشكاوى</button>
-            <button onclick="Router.go('oversightComplaints', {filter:'pending'})" class="bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> قيد الانتظار</button>
+            <button onclick="Router.go('oversightComplaints')" class="bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📋 جميع الشكاوى</button>
+            <button onclick="Router.go('oversightComplaints', {filter:'pending'})" class="bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">⏳ قيد الانتظار</button>
             <button onclick="Router.go('oversightComplaints', {filter:'urgent'})" class="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition"> العاجلة</button>
             <button onclick="UI.exportOversightReport()" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-4 rounded-xl font-bold shadow-lg cursor-pointer transition">📊 تصدير تقرير</button>
           </div>
@@ -1501,7 +1552,7 @@ const Views = {
               <option value="medium">متوسطة</option>
               <option value="low">منخفضة</option>
             </select>
-            <button onclick="Router.go('createComplaint')" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer"> شكوى جديدة</button>
+            <button onclick="Router.go('createComplaint')" class="btn-primary px-4 py-2 rounded-xl font-bold cursor-pointer">➕ شكوى جديدة</button>
           </div>
         </div>
         <div id="complaintsList" class="space-y-3">
@@ -1549,7 +1600,7 @@ const Views = {
               <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة</p>
             </div>
             <div class="flex gap-2 pt-4">
-              <button type="button" id="submitComplaintBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer">📤 إرسال الشكوى</button>
+              <button type="button" id="submitComplaintBtn" class="btn-primary flex-1 py-3 rounded-xl font-bold cursor-pointer"> إرسال الشكوى</button>
               <button type="button" onclick="history.back()" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold cursor-pointer">إلغاء</button>
             </div>
           </form>
@@ -1567,7 +1618,8 @@ const Views = {
     const canRespond = ['super_admin', 'general_admin', 'sector_admin', 'central_oversight'].includes(u.role);
     const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
     const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
-    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: '🟠 عالية', urgent: ' عاجلة' };
+    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: '🟠 عالية', urgent: '🔴 عاجلة' };
+    
     let attachments = [];
     if (sbConnected) {
       try {
@@ -1575,6 +1627,41 @@ const Views = {
         attachments = data || [];
       } catch (e) { console.error('Error fetching attachments:', e); }
     }
+    
+    // ✅ بناء قسم المرفقات مع استخدام getAttachmentUrl
+    let attachmentsHTML = '';
+    if (attachments.length > 0) {
+      const attachmentCards = await Promise.all(attachments.map(async (att) => {
+        const fileType = U.getFileType(att.mime_type, att.original_name);
+        const fileIcon = U.getFileIcon(fileType);
+        const downloadLabel = U.getDownloadLabel(fileType);
+        const fileSize = U.formatFileSize(att.size_bytes);
+        const storagePath = att.storage_path || att.file_name;
+        
+        // ✅ استخدام الدالة الجديدة
+        const fileUrl = await U.getAttachmentUrl(storagePath);
+        
+        return `<div class="attachment-card">
+          <div class="attachment-info">
+            <div class="attachment-icon">${fileIcon}</div>
+            <div class="min-w-0 flex-1">
+              <div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div>
+              <div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div>
+            </div>
+          </div>
+          <button onclick="UI.downloadAttachment('${storagePath}', '${U.esc(att.original_name || 'ملف')}')" 
+                  class="download-btn" 
+                  title="تحميل الملف">
+            ⬇️ ${downloadLabel}
+          </button>
+        </div>`;
+      }));
+      attachmentsHTML = `<div class="mb-6">
+        <div class="text-xs text-gray-500 mb-2"> المرفقات (${attachments.length})</div>
+        <div class="space-y-2">${attachmentCards.join('')}</div>
+      </div>`;
+    }
+    
     return `<div class="min-h-screen">
       ${u.role === 'central_oversight' ? this.oversightNavbar() : this.navbar()}
       <div class="max-w-4xl mx-auto p-4 md:p-6 fade-in">
@@ -1595,14 +1682,7 @@ const Views = {
             <div><div class="text-xs text-gray-500">أرسلها</div><div class="font-semibold">${U.esc(complaint.submitted_by_name || 'مستخدم')}</div></div>
           </div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">تفاصيل الشكوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(complaint.description)}</div></div>
-          ${attachments.length > 0 ? `<div class="mb-6"><div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div><div class="space-y-2">${attachments.map(att => {
-            const fileType = U.getFileType(att.mime_type, att.original_name);
-            const fileIcon = U.getFileIcon(fileType);
-            const downloadLabel = U.getDownloadLabel(fileType);
-            const fileSize = U.formatFileSize(att.size_bytes);
-            const fileUrl = sbConnected ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}` : '#';
-            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn">⬇️ ${downloadLabel}</a></div>`;
-          }).join('')}</div></div>` : ''}
+          ${attachmentsHTML}
           ${complaint.admin_response ? `<div class="mb-6 bg-green-50 border-r-4 border-green-500 p-4 rounded-xl"><h3 class="font-bold text-gray-800 mb-2">✅ رد الإدارة</h3><div class="whitespace-pre-wrap">${U.esc(complaint.admin_response)}</div>${complaint.resolved_at ? `<div class="text-xs text-gray-500 mt-2">تم الحل في: ${U.fmtDate(complaint.resolved_at)}</div>` : ''}</div>` : ''}
           ${canRespond && complaint.status !== 'resolved' ? `<div class="border-t pt-4 mt-4">
             <h3 class="font-bold text-gray-800 mb-3">⚡ إجراءات</h3>
@@ -1676,11 +1756,11 @@ const UI = {
           U.toast('✅ تمت إضافة المتابعة بنجاح', 'success');
           await render();
         } else {
-          U.toast(' فشل إضافة المتابعة', 'error');
+          U.toast('❌ فشل إضافة المتابعة', 'error');
         }
       } catch (e) {
         console.error('Error adding follow-up:', e);
-        U.toast('❌ خطأ: ' + (e.message || 'فشل حفظ المتابعة'), 'error');
+        U.toast(' خطأ: ' + (e.message || 'فشل حفظ المتابعة'), 'error');
       }
     })();
   },
@@ -1702,7 +1782,7 @@ const UI = {
     } catch (e) { U.toast(e.message, 'error'); }
   },
 
-  // ✅ دوال التنبيهات - جديدة
+  // ✅ دوال التنبيهات
   async markAllNotifRead() {
     try {
       await DB.markAllNotificationsRead();
@@ -1737,6 +1817,65 @@ const UI = {
     } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
   },
 
+  // ✅ دالة تحميل المرفقات الجديدة
+  async downloadAttachment(storagePath, fileName) {
+    if (!sbConnected) {
+      U.toast('⚠️ غير متصل بالإنترنت', 'warning');
+      return;
+    }
+    
+    U.toast('🔄 جاري تحضير الملف للتحميل...', 'info');
+    
+    try {
+      // محاولة 1: استخدام Signed URL
+      const { data, error } = await sb.storage
+        .from('attachments')
+        .createSignedUrl(storagePath, 300); // 5 دقائق
+      
+      if (error) {
+        console.error('Signed URL error:', error);
+        throw error;
+      }
+      
+      if (data?.signedUrl) {
+        // فتح الرابط في نافذة جديدة للتحميل
+        const link = document.createElement('a');
+        link.href = data.signedUrl;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        U.toast('✅ تم بدء التحميل', 'success');
+      } else {
+        throw new Error('لم يتم الحصول على رابط التحميل');
+      }
+    } catch (e) {
+      console.error('Download error:', e);
+      
+      // Fallback: محاولة الرابط العام
+      const publicUrl = `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${storagePath}`;
+      try {
+        const response = await fetch(publicUrl, { method: 'HEAD' });
+        if (response.ok) {
+          const link = document.createElement('a');
+          link.href = publicUrl;
+          link.download = fileName;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          U.toast('✅ تم بدء التحميل', 'success');
+          return;
+        }
+      } catch (err) {
+        console.error('Public URL fallback failed:', err);
+      }
+      
+      U.toast('❌ فشل تحميل الملف. تأكد من وجود Bucket "attachments" في Supabase', 'error');
+    }
+  },
+
   async archive(id) { if (!confirm('تأكيد أرشفة هذه المراسلة؟')) return; try { await DB.archive(id); U.toast('تمت الأرشفة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
   async restore(id) { try { await DB.restore(id); U.toast('تمت الاستعادة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
 
@@ -1756,7 +1895,7 @@ const UI = {
 
   openWhatsApp() { const msg = encodeURIComponent(`مرحباً، أنا من ${CONFIG.ORG}`); window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${msg}`, '_blank'); },
   forgotPassword() { const email = prompt('الرجاء إدخال بريدك الإلكتروني لاستعادة كلمة المرور:'); if (!email) return; if (sbConnected) { sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }).then(() => U.toast('✅ تم إرسال رابط إعادة تعيين كلمة المرور', 'success')).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); } else { U.toast('⚠️ هذه الميزة متاحة فقط عند الاتصال بـ Supabase', 'warning'); } },
-  registerNewUser() { if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; } const email = prompt('البريد الإلكتروني:'); if (!email) return; const password = prompt('كلمة المرور (6 أحرف على الأقل):'); if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; } const fullName = prompt('الاسم الكامل:'); const username = prompt('اسم المستخدم:'); const role = prompt('الدور (super_admin/general_admin/sector_admin/central_oversight/sector_staff):', 'sector_staff'); sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: role || 'sector_staff' } } }).then(({ data, error }) => { if (error) throw error; U.toast('✅ تم إنشاء الحساب بنجاح!', 'success'); }).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); },
+  registerNewUser() { if (!sbConnected) { U.toast('️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; } const email = prompt('البريد الإلكتروني:'); if (!email) return; const password = prompt('كلمة المرور (6 أحرف على الأقل):'); if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; } const fullName = prompt('الاسم الكامل:'); const username = prompt('اسم المستخدم:'); const role = prompt('الدور (super_admin/general_admin/sector_admin/central_oversight/sector_staff):', 'sector_staff'); sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: role || 'sector_staff' } } }).then(({ data, error }) => { if (error) throw error; U.toast('✅ تم إنشاء الحساب بنجاح!', 'success'); }).catch(err => U.toast(' خطأ: ' + err.message, 'error')); },
 
   async submitComplaint() {
     const sector = document.getElementById('compSector').value;
@@ -1802,11 +1941,11 @@ const UI = {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) { U.toast('المراسلة غير موجودة', 'error'); return; }
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
+    const text = ` ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n الموضوع: ${r.subject || '-'}\n التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
     if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text)); } else { this.fallbackCopy(text); }
   },
 
-  fallbackCopy(text) { const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); U.toast('✅ تم نسخ المراسلة كنص', 'success'); } catch (e) { U.toast(' فشل النسخ', 'error'); } document.body.removeChild(textarea); },
+  fallbackCopy(text) { const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); U.toast('✅ تم نسخ المراسلة كنص', 'success'); } catch (e) { U.toast('❌ فشل النسخ', 'error'); } document.body.removeChild(textarea); },
 
   showQR(id) {
     const r = appData.correspondence.find(x => x.id === id);
@@ -1815,7 +1954,7 @@ const UI = {
     const container = document.getElementById('qrContainer');
     if (!modal || !container) return;
     container.innerHTML = '';
-    const qrData = `📋 ${r.reference_number || ''}\n ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
+    const qrData = ` ${r.reference_number || ''}\n ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
     try { new QRCode(container, { text: qrData, width: 220, height: 220, colorDark: '#0f766e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { container.innerHTML = '<div class="text-red-600">فشل إنشاء QR</div>'; }
     modal.classList.remove('hidden');
   },
@@ -1824,7 +1963,7 @@ const UI = {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) return;
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `*${CONFIG.ORG}*\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
+    const text = `*${CONFIG.ORG}*\n\n الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 };
@@ -1879,7 +2018,7 @@ async function render() {
       general: () => Views.general(appData.correspondence),
       archive: () => Views.archive(appData.correspondence),
       followups: () => Views.followups(appData.correspondence),
-      notifications: () => Views.notifications(), // ✅ إضافة صفحة التنبيهات
+      notifications: () => Views.notifications(),
       create: () => Views.create(),
       view: () => Views.view(),
       complaints: () => Views.complaints(),
@@ -1895,7 +2034,6 @@ async function render() {
     bindEvents();
     updateSyncButton();
 
-    // ✅ تحديث عدّاد التنبيهات بعد كل render
     if (Auth.user && sbConnected) {
       setTimeout(() => refreshNotifications(), 500);
     }
@@ -1949,7 +2087,7 @@ function bindEvents() {
       if (sector) filtered = filtered.filter(c => c.sector_id === sector);
       const el = document.getElementById('complaintsList');
       if (el) {
-        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500"> لا توجد نتائج</div>'; }
+        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; }
         else {
           const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
           const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
@@ -1970,7 +2108,7 @@ function bindEvents() {
                 </div>
               </div>
               <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
-                ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
+                ${c.complainant_phone ? `<span> ${U.esc(c.complainant_phone)}</span>` : ''}
                 <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
                 ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
               </div>
@@ -2009,7 +2147,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 render();
 updateSyncButton();
-console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (All Issues Fixed)`);
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (Bucket Fix Applied)`);
 </script>
 </body>
 </html>
