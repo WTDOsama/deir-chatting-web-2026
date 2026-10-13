@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f766e">
+<title>حول البرنامج - مراسلات إدارة إيواءات دير البلح</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Cairo', sans-serif; }
+  body { background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); min-height: 100vh; }
+  .glass { background: rgba(255,255,255,0.97); backdrop-filter: blur(10px); }
+  .fade-in { animation: fadeIn 0.5s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .feature-card { transition: all 0.3s; }
+  .feature-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+  .step-number { background: linear-gradient(135deg, #0f766e, #134e4a); }
+  .section-title { border-right: 5px solid #0f766e; padding-right: 15px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="glass shadow-lg sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="text-4xl"></div>
+      <div>
+        <h1 class="text-xl font-bold text-teal-800">مراسلات إدارة إيواءات دير البلح</h1>
+        <p class="text-xs text-gray-600">دليل الاستخدام الشامل</p>
+      </div>
+    </div>
+    <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg font-semibold transition">
+      🔙 العودة للبرنامج
+    </a>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-4 py-12 fade-in">
+  <div class="glass rounded-3xl shadow-2xl p-8 md:p-12 text-center">
+    <div class="text-8xl mb-4">📘</div>
+    <h2 class="text-4xl font-bold text-teal-800 mb-4">مرحباً بك في دليل البرنامج</h2>
+    <p class="text-xl text-gray-600 mb-6">دليلك الشامل لاستخدام نظام مراسلات وشكاوى إدارة إيواءات دير البلح</p>
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-semibold">✅ يعمل أوفلاين</span>
+      <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">📱 متوافق مع الجوال</span>
+      <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-semibold">🔒 آمن ومشفر</span>
+      <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold">⚡ سريع</span>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">📌 عن البرنامج</h3>
+    <p class="text-gray-700 leading-relaxed text-lg mb-4">
+      نظام <strong>مراسلات إدارة إيواءات دير البلح</strong> هو منصة إلكترونية متكاملة لإدارة المراسلات والشكاوى 
+      في إدارة الإيواءات، تم تصميمه لتسهيل التواصل بين القواطع المختلفة والإدارة المركزية.
+    </p>
+    <div class="grid md:grid-cols-3 gap-4 mt-6">
+      <div class="bg-teal-50 p-4 rounded-xl text-center">
+        <div class="text-3xl mb-2">️</div>
+        <div class="font-bold text-teal-800">إدارة إيواءات دير البلح</div>
+        <div class="text-sm text-gray-600">الجهة المالكة</div>
+      </div>
+      <div class="bg-blue-50 p-4 rounded-xl text-center">
+        <div class="text-3xl mb-2">💻</div>
+        <div class="font-bold text-blue-800">WTDOsama</div>
+        <div class="text-sm text-gray-600">المطور</div>
+      </div>
+      <div class="bg-purple-50 p-4 rounded-xl text-center">
+        <div class="text-3xl mb-2">🚀</div>
+        <div class="font-bold text-purple-800">الإصدار 12.3.0</div>
+        <div class="text-sm text-gray-600">أحدث إصدار</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">✨ المميزات الرئيسية</h3>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="feature-card bg-gradient-to-br from-teal-50 to-teal-100 p-5 rounded-xl">
+        <div class="text-3xl mb-2">📧</div>
+        <h4 class="font-bold text-teal-800 mb-2">إدارة المراسلات</h4>
+        <p class="text-sm text-gray-700">إنشاء وتعميم المراسلات على جميع القواطع مع إرفاق الملفات</p>
+      </div>
+      <div class="feature-card bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl">
+        <div class="text-3xl mb-2">📝</div>
+        <h4 class="font-bold text-blue-800 mb-2">نظام الشكاوى</h4>
+        <p class="text-sm text-gray-700">تسجيل ومتابعة الشكاوى مع إمكانية الرد وتغيير الحالة</p>
+      </div>
+      <div class="feature-card bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-xl">
+        <div class="text-3xl mb-2">📋</div>
+        <h4 class="font-bold text-purple-800 mb-2">نظام المتابعات</h4>
+        <p class="text-sm text-gray-700">إنشاء مهام متابعة مع تحديد تواريخ الاستحقاق والحالات</p>
+      </div>
+      <div class="feature-card bg-gradient-to-br from-red-50 to-red-100 p-5 rounded-xl">
+        <div class="text-3xl mb-2">🔔</div>
+        <h4 class="font-bold text-red-800 mb-2">التنبيهات الفورية</h4>
+        <p class="text-sm text-gray-700">إشعارات لحظية عبر Supabase Realtime عند وصول مراسلات جديدة</p>
+      </div>
+      <div class="feature-card bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-xl">
+        <div class="text-3xl mb-2"></div>
+        <h4 class="font-bold text-green-800 mb-2">التقارير</h4>
+        <p class="text-sm text-gray-700">تصدير تقارير PDF و Excel لجميع البيانات</p>
+      </div>
+      <div class="feature-card bg-gradient-to-br from-orange-50 to-orange-100 p-5 rounded-xl">
+        <div class="text-3xl mb-2">📡</div>
+        <h4 class="font-bold text-orange-800 mb-2">العمل أوفلاين</h4>
+        <p class="text-sm text-gray-700">حفظ البيانات محلياً ومزامنتها تلقائياً عند عودة الاتصال</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How to Use Section -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">🚀 كيفية تشغيل البرنامج</h3>
+    
+    <div class="space-y-6">
+      <!-- Step 1 -->
+      <div class="flex gap-4 items-start">
+        <div class="step-number text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">1</div>
+        <div class="flex-1 bg-gray-50 p-5 rounded-xl">
+          <h4 class="font-bold text-lg text-gray-800 mb-2">فتح الموقع</h4>
+          <p class="text-gray-700">افتح المتصفح (Chrome, Firefox, Safari) واذهب إلى رابط الموقع المنشور على Vercel أو GitHub Pages.</p>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flex gap-4 items-start">
+        <div class="step-number text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">2</div>
+        <div class="flex-1 bg-gray-50 p-5 rounded-xl">
+          <h4 class="font-bold text-lg text-gray-800 mb-2">تسجيل الدخول</h4>
+          <p class="text-gray-700 mb-3">أدخل البريد الإلكتروني وكلمة المرور الخاصة بك.</p>
+          <div class="bg-white p-4 rounded-lg border-r-4 border-teal-500">
+            <div class="text-sm font-semibold text-gray-700 mb-2"> الأدوار المتاحة:</div>
+            <ul class="text-sm text-gray-600 space-y-1">
+              <li>• <strong>مدير عام للنظام (super_admin):</strong> صلاحيات كاملة</li>
+              <li>• <strong>مدير عام (general_admin):</strong> إدارة جميع القواطع</li>
+              <li>• <strong>مدير قاطع (sector_admin):</strong> إدارة قاطع واحد</li>
+              <li>• <strong>الرقابة المركزية (central_oversight):</strong> متابعة الشكاوى</li>
+              <li>• <strong>موظف قاطع (sector_staff):</strong> صلاحيات محدودة</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flex gap-4 items-start">
+        <div class="step-number text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">3</div>
+        <div class="flex-1 bg-gray-50 p-5 rounded-xl">
+          <h4 class="font-bold text-lg text-gray-800 mb-2">تثبيت التطبيق على الهاتف (PWA)</h4>
+          <p class="text-gray-700 mb-3">عند أول زيارة، سيظهر لك زر " تثبيت التطبيق على الهاتف". اضغط عليه لتثبيت البرنامج كتطبيق على هاتفك.</p>
+          <div class="bg-white p-4 rounded-lg border-r-4 border-blue-500">
+            <div class="text-sm font-semibold text-gray-700 mb-2">📲 خطوات التثبيت اليدوي:</div>
+            <ul class="text-sm text-gray-600 space-y-1">
+              <li><strong>Android (Chrome):</strong> القائمة (⋮) → "إضافة إلى الشاشة الرئيسية"</li>
+              <li><strong>iPhone (Safari):</strong> زر المشاركة → "إضافة إلى الشاشة الرئيسية"</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Sections Guide -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">📖 شرح الأقسام الرئيسية</h3>
+    
+    <div class="space-y-6">
+      <!-- Dashboard -->
+      <div class="bg-gradient-to-l from-teal-50 to-white p-6 rounded-xl border-r-4 border-teal-600">
+        <h4 class="text-xl font-bold text-teal-800 mb-3">🏠 لوحة التحكم (Dashboard)</h4>
+        <p class="text-gray-700 mb-3">الصفحة الرئيسية التي تعرض:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>إحصائيات المراسلات (نشطة، مؤرشفة، بها متابعة، الإجمالي)</li>
+          <li>بطاقات القواطع الأربعة (الشرقي، الغربي، الشمالي، الجنوبي)</li>
+          <li>أزرار الإجراءات السريعة</li>
+          <li>آخر 5 مراسلات</li>
+        </ul>
+      </div>
+
+      <!-- Correspondence -->
+      <div class="bg-gradient-to-l from-blue-50 to-white p-6 rounded-xl border-r-4 border-blue-600">
+        <h4 class="text-xl font-bold text-blue-800 mb-3"> إنشاء مراسلة جديدة</h4>
+        <p class="text-gray-700 mb-3">خطوات إنشاء مراسلة:</p>
+        <ol class="list-decimal list-inside text-gray-700 space-y-1">
+          <li>اضغط على "➕ مراسلة جديدة" أو "➕ جديد" في الشريط العلوي</li>
+          <li>اختر القطاع المستهدف (أو "جميع القواطع" للتعميم - للمدراء فقط)</li>
+          <li>أدخل الموضوع والمحتوى</li>
+          <li>حدد الأولوية (عادية، عالية، منخفضة، عاجلة)</li>
+          <li>أرفق الملفات إن وجدت (صور، PDF، Word، Excel)</li>
+          <li>اضغط " حفظ المراسلة"</li>
+        </ol>
+      </div>
+
+      <!-- View Correspondence -->
+      <div class="bg-gradient-to-l from-purple-50 to-white p-6 rounded-xl border-r-4 border-purple-600">
+        <h4 class="text-xl font-bold text-purple-800 mb-3">👁️ عرض تفاصيل المراسلة</h4>
+        <p class="text-gray-700 mb-3">عند الضغط على أي مراسلة، تظهر صفحة التفاصيل مع:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>الرقم المرجعي، التاريخ، القطاع، الأولوية</li>
+          <li>الموضوع والمحتوى الكامل</li>
+          <li>المرفقات مع إمكانية التحميل</li>
+          <li>المتابعات والردود</li>
+          <li>أزرار الإجراءات السريعة (رد، متابعة، أرشفة، نسخ، QR، واتساب، حذف)</li>
+        </ul>
+      </div>
+
+      <!-- Complaints -->
+      <div class="bg-gradient-to-l from-red-50 to-white p-6 rounded-xl border-r-4 border-red-600">
+        <h4 class="text-xl font-bold text-red-800 mb-3">📝 نظام الشكاوى</h4>
+        <p class="text-gray-700 mb-3">يمكنك:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>تسجيل شكوى جديدة مع تحديد القطاع والأولوية</li>
+          <li>تصفية الشكاوى حسب الحالة والأولوية والقطاع</li>
+          <li>البحث في الشكاوى بالعنوان</li>
+          <li>تغيير حالة الشكوى (قيد الانتظار، قيد المعالجة، تم الحل، مرفوضة)</li>
+          <li>إضافة رد الإدارة</li>
+          <li>تصدير تقارير PDF/Excel</li>
+        </ul>
+      </div>
+
+      <!-- Follow-ups -->
+      <div class="bg-gradient-to-l from-pink-50 to-white p-6 rounded-xl border-r-4 border-pink-600">
+        <h4 class="text-xl font-bold text-pink-800 mb-3"> نظام المتابعات</h4>
+        <p class="text-gray-700 mb-3">يتم الوصول إليه من:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>زر "📌 متابعة" داخل أي مراسلة</li>
+          <li>قسم "📋 المتابعة" في الإجراءات السريعة</li>
+        </ul>
+        <p class="text-gray-700 mt-3 mb-2">يمكنك:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>إنشاء مهمة متابعة بعنوان وملاحظات وتاريخ استحقاق</li>
+          <li>تغيير الحالة (قيد الانتظار، قيد المعالجة، مكتملة)</li>
+          <li>حذف المتابعة (للمدراء)</li>
+          <li>تصدير تقارير المتابعات</li>
+        </ul>
+      </div>
+
+      <!-- Notifications -->
+      <div class="bg-gradient-to-l from-indigo-50 to-white p-6 rounded-xl border-r-4 border-indigo-600">
+        <h4 class="text-xl font-bold text-indigo-800 mb-3"> التنبيهات</h4>
+        <p class="text-gray-700 mb-3">تظهر التنبيهات في:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>زر "🔔 التنبيهات" في الشريط العلوي مع عداد للتنبيهات غير المقروءة</li>
+          <li>رسائل Toast فورية عند وصول تنبيه جديد</li>
+        </ul>
+        <p class="text-gray-700 mt-3 mb-2">إجراءات التنبيهات:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>تعليم تنبيه واحد كمقروء</li>
+          <li>تعليم جميع التنبيهات كمقروءة</li>
+          <li>حذف تنبيه محدد</li>
+          <li>مسح جميع التنبيهات</li>
+        </ul>
+      </div>
+
+      <!-- Reports -->
+      <div class="bg-gradient-to-l from-green-50 to-white p-6 rounded-xl border-r-4 border-green-600">
+        <h4 class="text-xl font-bold text-green-800 mb-3">📊 التقارير والتصدير</h4>
+        <p class="text-gray-700 mb-3">يمكن تصدير تقارير:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li><strong>PDF:</strong> تقرير مصور يحتوي على إحصائيات وجداول</li>
+          <li><strong>Excel:</strong> ملف جداول بيانات قابل للتعديل</li>
+        </ul>
+        <p class="text-gray-700 mt-3">التقارير متاحة لـ: المراسلات، الشكاوى، المتابعات</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Offline Mode -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">📡 العمل بدون إنترنت (Offline Mode)</h3>
+    <div class="bg-yellow-50 border-r-4 border-yellow-500 p-6 rounded-xl mb-4">
+      <h4 class="font-bold text-yellow-800 mb-2">⚠️ عند انقطاع الاتصال:</h4>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>يظهر شريط أحمر في أعلى الشاشة: "️ أنت تعمل بدون إنترنت"</li>
+        <li>يتم حفظ جميع البيانات محلياً على جهازك</li>
+        <li>تستمر في العمل بشكل طبيعي</li>
+      </ul>
+    </div>
+    <div class="bg-green-50 border-r-4 border-green-500 p-6 rounded-xl">
+      <h4 class="font-bold text-green-800 mb-2">✅ عند عودة الاتصال:</h4>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>يظهر زر "🔄 مزامنة البيانات" في أسفل الشاشة مع عدد العناصر المعلقة</li>
+        <li>اضغط على الزر لمزامنة جميع البيانات مع الخادم</li>
+        <li>تظهر رسالة تأكيد بعد نجاح المزامنة</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Actions -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">⚡ الإجراءات السريعة</h3>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="bg-teal-50 p-4 rounded-xl">
+        <h4 class="font-bold text-teal-800 mb-2">💬 رد</h4>
+        <p class="text-sm text-gray-700">إضافة رد نصي على المراسلة</p>
+      </div>
+      <div class="bg-purple-50 p-4 rounded-xl">
+        <h4 class="font-bold text-purple-800 mb-2">📌 متابعة</h4>
+        <p class="text-sm text-gray-700">إنشاء مهمة متابعة للمراسلة</p>
+      </div>
+      <div class="bg-gray-100 p-4 rounded-xl">
+        <h4 class="font-bold text-gray-800 mb-2">📦 أرشفة</h4>
+        <p class="text-sm text-gray-700">نقل المراسلة للأرشيف</p>
+      </div>
+      <div class="bg-blue-50 p-4 rounded-xl">
+        <h4 class="font-bold text-blue-800 mb-2">📄 نسخ</h4>
+        <p class="text-sm text-gray-700">نسخ محتوى المراسلة كنص</p>
+      </div>
+      <div class="bg-indigo-50 p-4 rounded-xl">
+        <h4 class="font-bold text-indigo-800 mb-2"> QR</h4>
+        <p class="text-sm text-gray-700">إنشاء رمز QR للمراسلة</p>
+      </div>
+      <div class="bg-green-50 p-4 rounded-xl">
+        <h4 class="font-bold text-green-800 mb-2">📱 واتساب</h4>
+        <p class="text-sm text-gray-700">مشاركة المراسلة عبر واتساب</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tips -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">💡 نصائح مهمة</h3>
+    <div class="space-y-3">
+      <div class="flex items-start gap-3 bg-blue-50 p-4 rounded-xl">
+        <span class="text-2xl">🔒</span>
+        <div>
+          <h4 class="font-bold text-blue-800">الأمان</h4>
+          <p class="text-sm text-gray-700">لا تشارك بيانات الدخول مع الآخرين، وغيّر كلمة المرور دورياً</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 bg-green-50 p-4 rounded-xl">
+        <span class="text-2xl">💾</span>
+        <div>
+          <h4 class="font-bold text-green-800">النسخ الاحتياطي</h4>
+          <p class="text-sm text-gray-700">النظام يحفظ تلقائياً، لكن يُنصح بتصدير التقارير المهمة دورياً</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 bg-purple-50 p-4 rounded-xl">
+        <span class="text-2xl">🔄</span>
+        <div>
+          <h4 class="font-bold text-purple-800">التحديث</h4>
+          <p class="text-sm text-gray-700">اضغط Ctrl+F5 (أو Cmd+Shift+R على Mac) لتحديث الكاش ورؤية آخر التحديثات</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 bg-orange-50 p-4 rounded-xl">
+        <span class="text-2xl">📊</span>
+        <div>
+          <h4 class="font-bold text-orange-800">الفلاتر</h4>
+          <p class="text-sm text-gray-700">استخدم الفلاتر في صفحة الشكاوى للوصول السريع للبيانات المطلوبة</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in">
+  <div class="glass rounded-2xl shadow-xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-teal-800 section-title mb-6">❓ الأسئلة الشائعة</h3>
+    <div class="space-y-4">
+      <details class="bg-gray-50 p-4 rounded-xl cursor-pointer">
+        <summary class="font-bold text-gray-800">كيف أنشئ حساب مستخدم جديد؟</summary>
+        <p class="text-gray-700 mt-3">من صفحة تسجيل الدخول، اضغط "📝 تسجيل مستخدم جديد" وأدخل البيانات. (يتطلب اتصال بالإنترنت)</p>
+      </details>
+      <details class="bg-gray-50 p-4 rounded-xl cursor-pointer">
+        <summary class="font-bold text-gray-800">ماذا أفعل إذا نسيت كلمة المرور؟</summary>
+        <p class="text-gray-700 mt-3">اضغط "هل نسيت كلمة المرور؟" وأدخل بريدك الإلكتروني. سيصلك رابط إعادة التعيين.</p>
+      </details>
+      <details class="bg-gray-50 p-4 rounded-xl cursor-pointer">
+        <summary class="font-bold text-gray-800">كيف أعمم مراسلة على جميع القواطع؟</summary>
+        <p class="text-gray-700 mt-3">اختر " جميع القواطع (تعميم)" من قائمة القطاع. (متاح للمدراء العامين فقط)</p>
+      </details>
+      <details class="bg-gray-50 p-4 rounded-xl cursor-pointer">
+        <summary class="font-bold text-gray-800">لماذا لا تظهر التنبيهات؟</summary>
+        <p class="text-gray-700 mt-3">تأكد من: 1) الاتصال بالإنترنت، 2) تسجيل الدخول بحساب صحيح، 3) تفعيل Realtime في Supabase</p>
+      </details>
+      <details class="bg-gray-50 p-4 rounded-xl cursor-pointer">
+        <summary class="font-bold text-gray-800">كيف أحذف مراسلة؟</summary>
+        <p class="text-gray-700 mt-3">اضغط على المراسلة → زر "🗑️ حذف" في الإجراءات السريعة → تأكيد الحذف. (للمدراء فقط)</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section class="max-w-7xl mx-auto px-4 py-8 fade-in mb-8">
+  <div class="glass rounded-2xl shadow-xl p-8 text-center">
+    <h3 class="text-2xl font-bold text-teal-800 mb-4"> الدعم الفني</h3>
+    <p class="text-gray-700 mb-4">لأي استفسارات أو مشاكل تقنية، يمكنك التواصل عبر:</p>
+    <div class="flex flex-wrap justify-center gap-4">
+      <a href="https://wa.me/970592227958" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2">
+         واتساب
+      </a>
+      <a href="mailto:support@deir-albalah.ps" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2">
+        📧 البريد الإلكتروني
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="glass mt-8 py-6">
+  <div class="max-w-7xl mx-auto px-4 text-center">
+    <p class="text-gray-700 mb-2">© 2026 إدارة إيواءات دير البلح - جميع الحقوق محفوظة</p>
+    <p class="text-sm text-gray-600">تطوير: <strong>WTDOsama – وتد لبرمجة مواقع الويب</strong></p>
+    <div class="mt-4">
+      <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-semibold transition inline-block">
+        🔙 العودة للبرنامج
+      </a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
