@@ -252,30 +252,47 @@ const U = {
 const Auth = {
   user: null,
   load() { this.user = U.load('db_user', null); return this.user; },
-  async login(email, password) {
-    if (sbConnected) {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw new Error(error.message);
-      const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
-      this.user = profile || { id: data.user.id, full_name: email.split('@')[0], role: 'sector_staff' };
-      
-      // ✅ إذا كان الحساب الموحد، لا نشترك في التنبيهات (سيطلب رمز المركز)
-      if (this.user.email === CONFIG.CENTER_ACCOUNT_EMAIL || this.user.role === 'center_manager') {
-        this.user.role = 'center_manager';
-      } else {
-        subscribeToNotifications();
-        setTimeout(() => refreshNotifications(), 1000);
-      }
-    } else {
-      if (email === 'admin@deir-albalah.ps' && password === 'password') {
-        this.user = { id: 'demo-1', username: 'admin', full_name: 'المدير العام', role: 'super_admin', sector_id: null };
-      } else {
-        throw new Error('بيانات الدخول غير صحيحة أو لا يوجد اتصال بالإنترنت');
-      }
-    }
+ async login(email, password) {
+  // ✅ دعم الحسابات التجريبية (تعمل أوفلاين وأونلاين)
+  if (email === 'user@gmail.com' && password === 'user') {
+    this.user = { 
+      id: 'demo-user-1', 
+      email: 'user@gmail.com',
+      username: 'user', 
+      full_name: 'مدير مركز إيواء', 
+      role: 'sector_staff', 
+      sector_id: '4c64a3cc-489c-4e90-8a75-394fae14023d' // القاطع الشرقي
+    };
     U.save('db_user', this.user);
     return this.user;
-  },
+  }
+  
+  if (email === 'admin@deir-albalah.ps' && password === 'password') {
+    this.user = { 
+      id: 'demo-1', 
+      email: 'admin@deir-albalah.ps',
+      username: 'admin', 
+      full_name: 'المدير العام', 
+      role: 'super_admin', 
+      sector_id: null 
+    };
+    U.save('db_user', this.user);
+    return this.user;
+  }
+  
+  if (sbConnected) {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
+    this.user = profile ? { ...profile, email: data.user.email } : { id: data.user.id, email: data.user.email, full_name: email.split('@')[0], role: 'sector_staff' };
+    subscribeToNotifications();
+    setTimeout(() => refreshNotifications(), 1000);
+  } else {
+    throw new Error('بيانات الدخول غير صحيحة أو لا يوجد اتصال بالإنترنت');
+  }
+  U.save('db_user', this.user);
+  return this.user;
+}
   async logout() {
     if (sbConnected) { await sb.auth.signOut(); realtimeSubs.forEach(s => s?.unsubscribe()); realtimeSubs = []; }
     this.user = null;
