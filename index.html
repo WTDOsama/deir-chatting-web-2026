@@ -252,20 +252,27 @@ const Auth = {
   load() { this.user = U.load('db_user', null); return this.user; },
   
   // ✅ تسجيل الدخول - يعتمد فقط على الحسابات الفعلية في Supabase
-  async login(email, password) {
-    if (sbConnected) {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw new Error(error.message);
-      const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
-      this.user = profile ? { ...profile, email: data.user.email } : { id: data.user.id, email: data.user.email, full_name: email.split('@')[0], role: 'sector_staff' };
+async login(email, password) {
+  if (sbConnected) {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
+    this.user = profile ? { ...profile, email: data.user.email } : { id: data.user.id, email: data.user.email, full_name: email.split('@')[0], role: 'sector_staff' };
+    
+    // ✅ التحقق من الحساب الموحد لمديري المراكز
+    if (this.user.email === 'user@gmail.com') {
+      this.user.role = 'center_manager';
+      this.user.full_name = 'مدير مركز إيواء';
+    } else {
       subscribeToNotifications();
       setTimeout(() => refreshNotifications(), 1000);
-    } else {
-      throw new Error('بيانات الدخول غير صحيحة أو لا يوجد اتصال بالإنترنت');
     }
-    U.save('db_user', this.user);
-    return this.user;
-  },
+  } else {
+    throw new Error('بيانات الدخول غير صحيحة أو لا يوجد اتصال بالإنترنت');
+  }
+  U.save('db_user', this.user);
+  return this.user;
+},
   
   async logout() {
     if (sbConnected) { await sb.auth.signOut(); realtimeSubs.forEach(s => s?.unsubscribe()); realtimeSubs = []; }
