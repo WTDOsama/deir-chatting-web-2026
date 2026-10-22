@@ -315,12 +315,11 @@ async validateCenterCode(code) {
     sectorName: sector ? sector.name : 'غير محدد',
   };
   
-  // ✅ الحل: الاحتفاظ بنفس ID المستخدم الأصلي (user@gmail.com)
-  // بدلاً من إنشاء ID مزيف يبدأ بـ "center-"
-  this.user.sector_id = data.sector_id;
-  this.user.full_name = data.center_name;
-  this.user.role = 'center_manager';
-  // لا نغير this.user.id - نتركه كما هو من تسجيل الدخول
+  // ✅ الحل: لا نغير user.id - نحتفظ بالـ UUID الأصلي
+// ✅ نحتفظ بـ user.id الأصلي (UUID من Supabase)
+this.user.sector_id = data.sector_id;
+this.user.full_name = data.center_name;
+this.user.role = 'center_manager';
   
   sessionStorage.setItem('center_session', JSON.stringify(centerSession));
   U.save('db_user', this.user);
