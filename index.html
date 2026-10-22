@@ -286,24 +286,15 @@ async login(email, password) {
   // ✅ التحقق من رمز المركز
 async validateCenterCode(code) {
   if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
-  
-  // ✅ إزالة جميع المسافات من الرمز
-  const cleanCode = code.replace(/\s+/g, '').toUpperCase();
-  
-  console.log('🔍 البحث عن الرمز:', cleanCode);
-  
-  if (cleanCode.length < 4) throw new Error('الرمز غير صالح');
+  if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
   
   const { data, error } = await sb.from('center_access_codes')
     .select('*')
-    .eq('code', cleanCode)
+    .eq('code', code.trim().toUpperCase())
     .eq('is_active', true)
     .single();
   
-  console.log('📊 النتيجة:', { data, error });
-  
   if (error || !data) {
-    console.error('❌ خطأ:', error);
     throw new Error('رمز غير صحيح أو ملغى');
   }
   
@@ -324,13 +315,12 @@ async validateCenterCode(code) {
     sectorName: sector ? sector.name : 'غير محدد',
   };
   
-  this.user = {
-    id: 'center-' + data.id,
-    email: 'center@local',
-    full_name: data.center_name,
-    role: 'center_manager',
-    sector_id: data.sector_id,
-  };
+  // ✅ الحل: الاحتفاظ بنفس ID المستخدم الأصلي (user@gmail.com)
+  // بدلاً من إنشاء ID مزيف يبدأ بـ "center-"
+  this.user.sector_id = data.sector_id;
+  this.user.full_name = data.center_name;
+  this.user.role = 'center_manager';
+  // لا نغير this.user.id - نتركه كما هو من تسجيل الدخول
   
   sessionStorage.setItem('center_session', JSON.stringify(centerSession));
   U.save('db_user', this.user);
