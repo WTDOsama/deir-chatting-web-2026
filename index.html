@@ -288,6 +288,7 @@ async validateCenterCode(code) {
   if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
   if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
   
+  // ✅ استخدام query مباشر بدلاً من RPC
   const { data, error } = await sb.from('center_access_codes')
     .select('*')
     .eq('code', code.trim().toUpperCase())
@@ -308,18 +309,27 @@ async validateCenterCode(code) {
   
   const sector = SECTORS.find(s => s.id === data.sector_id);
   
+  // ✅ الحل: إذا كان this.user null، أنشئ مستخدم جديد
+  if (!this.user) {
+    this.user = {
+      id: 'center-user-' + data.id,
+      email: 'center@local',
+      full_name: data.center_name,
+      role: 'center_manager',
+      sector_id: data.sector_id,
+    };
+  } else {
+    this.user.sector_id = data.sector_id;
+    this.user.full_name = data.center_name;
+    this.user.role = 'center_manager';
+  }
+  
   centerSession = {
     codeId: data.id,
     centerName: data.center_name,
     sectorId: data.sector_id,
     sectorName: sector ? sector.name : 'غير محدد',
   };
-  
-  // ✅ الحل: لا نغير user.id - نحتفظ بالـ UUID الأصلي
-// ✅ نحتفظ بـ user.id الأصلي (UUID من Supabase)
-this.user.sector_id = data.sector_id;
-this.user.full_name = data.center_name;
-this.user.role = 'center_manager';
   
   sessionStorage.setItem('center_session', JSON.stringify(centerSession));
   U.save('db_user', this.user);
@@ -1841,7 +1851,7 @@ async generateCodeFromLogin() {
   successEl.classList.add('hidden');
   
   try {
-    // ✅ 1. تسجيل دخول المدير العام
+    // ✅ التحقق من بيانات المدير
     const { data: authData, error: authError } = await sb.auth.signInWithPassword({ 
       email: adminEmail, 
       password: adminPassword 
@@ -1851,7 +1861,6 @@ async generateCodeFromLogin() {
       throw new Error('بيانات المدير غير صحيحة');
     }
     
-    // ✅ 2. التحقق من صلاحية المدير
     const { data: profile } = await sb.from('profiles')
       .select('*')
       .eq('id', authData.user.id)
@@ -1861,7 +1870,7 @@ async generateCodeFromLogin() {
       throw new Error('ليس لديك صلاحية توليد الرموز');
     }
     
-    // ✅ 3. توليد رمز عشوائي من 8 أحرف
+    // ✅ توليد رمز عشوائي
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 8; i++) {
@@ -1869,25 +1878,21 @@ async generateCodeFromLogin() {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     
-    // ✅ 4. حفظ الرمز في قاعدة البيانات (المدير مسجل دخول الآن)
-    const { data, error: insertError } = await sb.from('center_access_codes').insert([{
+    // ✅ حفظ الرمز
+    const { error: insertError } = await sb.from('center_access_codes').insert([{
       code: code,
       center_name: centerName,
       sector_id: sectorId,
       is_active: true,
       created_by: profile.id
-    }]).select().single();
+    }]);
     
-    if (insertError) {
-      console.error('Insert error:', insertError);
-      throw new Error('فشل حفظ الرمز: ' + insertError.message);
-    }
+    if (insertError) throw insertError;
     
     successEl.textContent = `✅ تم توليد الرمز: ${code}`;
     successEl.classList.remove('hidden');
     
-    // ✅ 5. إغلاق Modal وإظهار حقل إدخال الرمز
-    // ⚠️ لا نسجل الخروج! نترك المدير مسجل دخول
+    // ✅ لا نسجل الخروج! نترك المدير مسجل دخول
     setTimeout(() => {
       document.getElementById('generateCodeModal').classList.add('hidden');
       document.getElementById('codeInputSection').classList.remove('hidden');
@@ -1897,9 +1902,6 @@ async generateCodeFromLogin() {
       document.getElementById('newCenterName').value = '';
       document.getElementById('adminEmail').value = '';
       document.getElementById('adminPassword').value = '';
-      
-      // ✅ تحديث واجهة المستخدم لإظهار أن المدير مسجل دخول
-      U.toast(`✅ تم توليد الرمز. المدير: ${profile.full_name}`, 'success');
     }, 1500);
     
   } catch (e) {
