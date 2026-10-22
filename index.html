@@ -1852,7 +1852,7 @@ async generateCodeFromLogin() {
   successEl.classList.add('hidden');
   
   try {
-    // ✅ التحقق من بيانات المدير
+    // ✅ 1. تسجيل دخول المدير العام مؤقتاً
     const { data: authData, error: authError } = await sb.auth.signInWithPassword({ 
       email: adminEmail, 
       password: adminPassword 
@@ -1862,6 +1862,7 @@ async generateCodeFromLogin() {
       throw new Error('بيانات المدير غير صحيحة');
     }
     
+    // ✅ 2. التحقق من صلاحية المدير
     const { data: profile } = await sb.from('profiles')
       .select('*')
       .eq('id', authData.user.id)
@@ -1871,7 +1872,7 @@ async generateCodeFromLogin() {
       throw new Error('ليس لديك صلاحية توليد الرموز');
     }
     
-    // ✅ توليد رمز عشوائي من 8 أحرف
+    // ✅ 3. توليد رمز عشوائي
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 8; i++) {
@@ -1879,14 +1880,14 @@ async generateCodeFromLogin() {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     
-    // ✅ حفظ الرمز في قاعدة البيانات
-    const { error: insertError } = await sb.from('center_access_codes').insert([{
+    // ✅ 4. حفظ الرمز في قاعدة البيانات (الآن المستخدم مسجل دخول)
+    const { data, error: insertError } = await sb.from('center_access_codes').insert([{
       code: code,
       center_name: centerName,
       sector_id: sectorId,
       is_active: true,
       created_by: profile.id
-    }]);
+    }]).select().single();
     
     if (insertError) {
       console.error('Insert error:', insertError);
@@ -1896,35 +1897,19 @@ async generateCodeFromLogin() {
     successEl.textContent = `✅ تم توليد الرمز: ${code}`;
     successEl.classList.remove('hidden');
     
-    // ✅ تسجيل خروج المدير العام تلقائياً
+    // ✅ 5. تسجيل خروج المدير العام
     await sb.auth.signOut();
-    Auth.user = null;
-    localStorage.removeItem('db_user');
     
-    // ✅ إغلاق Modal وإظهار حقل إدخال الرمز
+    // ✅ 6. إغلاق Modal وإظهار حقل إدخال الرمز
     setTimeout(() => {
       document.getElementById('generateCodeModal').classList.add('hidden');
-      
-      // ✅ مسح حقول البريد وكلمة المرور
-      document.getElementById('lgEmail').value = '';
-      document.getElementById('lgPass').value = '';
-      
-      // ✅ إظهار قسم إدخال الرمز
       document.getElementById('codeInputSection').classList.remove('hidden');
       document.getElementById('centerCodeInput').value = code;
       
-      // ✅ مسح حقول التوليد
+      // مسح الحقول
       document.getElementById('newCenterName').value = '';
       document.getElementById('adminEmail').value = '';
       document.getElementById('adminPassword').value = '';
-      
-      // ✅ إخفاء زر تسجيل الدخول العادي
-      const loginForm = document.getElementById('lgBtn');
-      if (loginForm) {
-        loginForm.parentElement.classList.add('hidden');
-      }
-      
-      U.toast('✅ تم توليد الرمز وتسجيل الخروج. اضغط "دخول بالرمز" للمتابعة', 'success');
     }, 1500);
     
   } catch (e) {
