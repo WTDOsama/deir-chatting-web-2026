@@ -1852,7 +1852,7 @@ async generateCodeFromLogin() {
   successEl.classList.add('hidden');
   
   try {
-    // ✅ 1. تسجيل دخول المدير العام مؤقتاً
+    // ✅ 1. تسجيل دخول المدير العام
     const { data: authData, error: authError } = await sb.auth.signInWithPassword({ 
       email: adminEmail, 
       password: adminPassword 
@@ -1872,7 +1872,7 @@ async generateCodeFromLogin() {
       throw new Error('ليس لديك صلاحية توليد الرموز');
     }
     
-    // ✅ 3. توليد رمز عشوائي
+    // ✅ 3. توليد رمز عشوائي من 8 أحرف
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 8; i++) {
@@ -1880,7 +1880,7 @@ async generateCodeFromLogin() {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     
-    // ✅ 4. حفظ الرمز في قاعدة البيانات (الآن المستخدم مسجل دخول)
+    // ✅ 4. حفظ الرمز في قاعدة البيانات (المدير مسجل دخول الآن)
     const { data, error: insertError } = await sb.from('center_access_codes').insert([{
       code: code,
       center_name: centerName,
@@ -1897,19 +1897,20 @@ async generateCodeFromLogin() {
     successEl.textContent = `✅ تم توليد الرمز: ${code}`;
     successEl.classList.remove('hidden');
     
-    // ✅ 5. تسجيل خروج المدير العام
-    await sb.auth.signOut();
-    
-    // ✅ 6. إغلاق Modal وإظهار حقل إدخال الرمز
+    // ✅ 5. إغلاق Modal وإظهار حقل إدخال الرمز
+    // ⚠️ لا نسجل الخروج! نترك المدير مسجل دخول
     setTimeout(() => {
       document.getElementById('generateCodeModal').classList.add('hidden');
       document.getElementById('codeInputSection').classList.remove('hidden');
       document.getElementById('centerCodeInput').value = code;
       
-      // مسح الحقول
+      // مسح حقول التوليد فقط
       document.getElementById('newCenterName').value = '';
       document.getElementById('adminEmail').value = '';
       document.getElementById('adminPassword').value = '';
+      
+      // ✅ تحديث واجهة المستخدم لإظهار أن المدير مسجل دخول
+      U.toast(`✅ تم توليد الرمز. المدير: ${profile.full_name}`, 'success');
     }, 1500);
     
   } catch (e) {
@@ -1939,28 +1940,25 @@ async loginWithCode() {
   }
 },
   
- async loginWithCode() {
+async loginWithCode() {
   const codeInput = document.getElementById('centerCodeInput');
   const errEl = document.getElementById('loginErr');
   
   if (!codeInput) return;
   
-  const code = codeInput.value.trim().replace(/\s+/g, '').toUpperCase();
-  
+  const code = codeInput.value.trim();
   if (!code) {
-    errEl.textContent = '❌ الرجاء إدخال الرمز';
+    errEl.textContent = 'الرجاء إدخال الرمز';
     errEl.classList.remove('hidden');
     return;
   }
   
-  errEl.classList.add('hidden');
-  
   try {
     await Auth.validateCenterCode(code);
-    U.toast('✅ تم التحقق بنجاح - جاري الدخول...', 'success');
+    U.toast('✅ تم التحقق بنجاح', 'success');
     render();
   } catch (e) {
-    errEl.textContent = '❌ ' + (e.message || 'رمز غير صحيح');
+    errEl.textContent = e.message;
     errEl.classList.remove('hidden');
   }
 },
