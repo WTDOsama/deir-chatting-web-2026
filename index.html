@@ -1896,20 +1896,36 @@ async generateCodeFromLogin() {
     successEl.textContent = `✅ تم توليد الرمز: ${code}`;
     successEl.classList.remove('hidden');
     
+    // ✅ تسجيل خروج المدير العام تلقائياً
+    await sb.auth.signOut();
+    Auth.user = null;
+    localStorage.removeItem('db_user');
+    
     // ✅ إغلاق Modal وإظهار حقل إدخال الرمز
     setTimeout(() => {
       document.getElementById('generateCodeModal').classList.add('hidden');
+      
+      // ✅ مسح حقول البريد وكلمة المرور
+      document.getElementById('lgEmail').value = '';
+      document.getElementById('lgPass').value = '';
+      
+      // ✅ إظهار قسم إدخال الرمز
       document.getElementById('codeInputSection').classList.remove('hidden');
       document.getElementById('centerCodeInput').value = code;
       
-      // تسجيل خروج المدير
-      sb.auth.signOut();
-      
-      // مسح الحقول
+      // ✅ مسح حقول التوليد
       document.getElementById('newCenterName').value = '';
       document.getElementById('adminEmail').value = '';
       document.getElementById('adminPassword').value = '';
-    }, 2000);
+      
+      // ✅ إخفاء زر تسجيل الدخول العادي
+      const loginForm = document.getElementById('lgBtn');
+      if (loginForm) {
+        loginForm.parentElement.classList.add('hidden');
+      }
+      
+      U.toast('✅ تم توليد الرمز وتسجيل الخروج. اضغط "دخول بالرمز" للمتابعة', 'success');
+    }, 1500);
     
   } catch (e) {
     errEl.textContent = '❌ ' + (e.message || 'فشل التوليد');
@@ -1938,28 +1954,32 @@ async loginWithCode() {
   }
 },
   
-  async loginWithCode() {
+ async loginWithCode() {
   const codeInput = document.getElementById('centerCodeInput');
   const errEl = document.getElementById('loginErr');
   
   if (!codeInput) return;
   
-  const code = codeInput.value.trim();
+  const code = codeInput.value.trim().replace(/\s+/g, '').toUpperCase();
+  
   if (!code) {
-    errEl.textContent = 'الرجاء إدخال الرمز';
+    errEl.textContent = '❌ الرجاء إدخال الرمز';
     errEl.classList.remove('hidden');
     return;
   }
   
+  errEl.classList.add('hidden');
+  
   try {
     await Auth.validateCenterCode(code);
-    U.toast('✅ تم التحقق بنجاح', 'success');
+    U.toast('✅ تم التحقق بنجاح - جاري الدخول...', 'success');
     render();
   } catch (e) {
-    errEl.textContent = e.message;
+    errEl.textContent = '❌ ' + (e.message || 'رمز غير صحيح');
     errEl.classList.remove('hidden');
   }
 },
+  
   
   // ✅ دالة التحقق من رمز المركز (للشاشة المنفصلة)
 async validateCenterCode() {
