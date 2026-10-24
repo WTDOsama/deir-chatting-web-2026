@@ -288,14 +288,20 @@ async validateCenterCode(code) {
   if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
   if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
   
-  // ✅ استخدام query مباشر بدلاً من RPC
+  // ✅ إزالة المسافات من الرمز
+  const cleanCode = code.replace(/\s+/g, '').toUpperCase();
+  console.log('🔍 البحث عن الرمز:', cleanCode);
+  
   const { data, error } = await sb.from('center_access_codes')
     .select('*')
-    .eq('code', code.trim().toUpperCase())
+    .eq('code', cleanCode)
     .eq('is_active', true)
     .single();
   
+  console.log('📊 النتيجة:', { data, error });
+  
   if (error || !data) {
+    console.error('❌ خطأ:', error);
     throw new Error('رمز غير صحيح أو ملغى');
   }
   
@@ -309,27 +315,18 @@ async validateCenterCode(code) {
   
   const sector = SECTORS.find(s => s.id === data.sector_id);
   
-  // ✅ الحل: إذا كان this.user null، أنشئ مستخدم جديد
-  if (!this.user) {
-    this.user = {
-      id: 'center-user-' + data.id,
-      email: 'center@local',
-      full_name: data.center_name,
-      role: 'center_manager',
-      sector_id: data.sector_id,
-    };
-  } else {
-    this.user.sector_id = data.sector_id;
-    this.user.full_name = data.center_name;
-    this.user.role = 'center_manager';
-  }
-  
   centerSession = {
     codeId: data.id,
     centerName: data.center_name,
     sectorId: data.sector_id,
     sectorName: sector ? sector.name : 'غير محدد',
   };
+  
+  // ✅ نحتفظ بـ user.id الأصلي (UUID من Supabase)
+this.user.sector_id = data.sector_id;
+this.user.full_name = data.center_name;
+this.user.role = 'center_manager';
+// لا نغير this.user.id
   
   sessionStorage.setItem('center_session', JSON.stringify(centerSession));
   U.save('db_user', this.user);
