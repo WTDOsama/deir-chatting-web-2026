@@ -20,8 +20,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icon.png">
 <link rel="apple-touch-icon" sizes="120x120" href="icon.png">
-<link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"مراسلات إدارة إيواءات دير البلح","short_name":"إيواءات دير البلح","start_url":"./","display":"standalone","background_color":"%230f766e","theme_color":"%230f766e","orientation":"portrait","description":"نظام المراسلات والشكاوى","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 fill=%22%230f766e%22 rx=%2240%22/><text x=%2296%22 y=%22130%22 font-size=%22120%22 text-anchor=%22middle%22 fill=%22white%22>🏢</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
-<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%230f766e" rx="40"/><text x="90" y="125" font-size="110" text-anchor="middle" fill="white">🏢</text></svg>'>
+<link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"مراسلات إدارة إيواءات دير البلح","short_name":"إيواءات دير البلح","start_url":"./","display":"standalone","background_color":"%23064e3b","theme_color":"%23064e3b","orientation":"portrait","description":"نظام المراسلات والشكاوى","icons":[{"src":"icon.png","sizes":"512x512","type":"image/png"},{"src":"icon.png","sizes":"192x192","type":"image/png"}]}'>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -112,7 +111,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '12.5.1-CenterManager-WhatsApp',
+  VERSION: '12.5.2-CenterManager-Clean',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -132,7 +131,7 @@ const ROLES = {
   sector_admin: 'مدير قاطع',
   central_oversight: 'الرقابة المركزية',
   sector_staff: 'موظف قاطع',
-  center_manager: 'مدير مركز إيواء',
+  center_manager: 'مدير مركز إيواء'
 };
 
 const STATUS_LABELS = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة', done: 'مكتملة' };
@@ -149,7 +148,7 @@ try {
     sb = window.supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
     sbConnected = isOnline;
     console.log('✓ Supabase client created (online: ' + isOnline + ')');
-  } else { console.log('ℹ Local mode'); }
+  } else { console.log(' Local mode'); }
 } catch (e) { console.error('Supabase init failed:', e); }
 
 // =====================================================
@@ -157,7 +156,7 @@ try {
 // =====================================================
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE_NAME = 'deir-iyawaat-v12.5.1';
+    const CACHE_NAME = 'deir-iyawaat-v12.5.2';
     const ASSETS = ['/'];
     self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
     self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -229,7 +228,7 @@ const U = {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   },
-  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '', pdf: '📕', archive: '📦', other: '📎' }[type] || '📎'),
+  getFileIcon: (type) => ({ image: '🖼️', excel: '📊', document: '📄', pdf: '📕', archive: '', other: '📎' }[type] || '📎'),
   getFileType: (mime, name) => {
     mime = mime || ''; name = name || '';
     const lowerName = name.toLowerCase();
@@ -261,8 +260,6 @@ const Auth = {
       if (error) throw new Error(error.message);
       const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
       this.user = profile ? { ...profile, email: data.user.email } : { id: data.user.id, email: data.user.email, full_name: email.split('@')[0], role: 'sector_staff' };
-      
-      // ✅ التحقق من الحساب الموحد لمديري المراكز
       if (this.user.email === 'user@gmail.com' || this.user.role === 'center_manager') {
         this.user.role = 'center_manager';
       } else {
@@ -290,16 +287,13 @@ const Auth = {
     const { data, error } = await sb.rpc('validate_center_access_code', { p_code: code });
     if (error) throw new Error(error.message);
     if (!data || !data.valid) throw new Error(data?.error || 'رمز الدخول غير صحيح أو ملغى');
-    
     this.user.sector_id = data.sector_id;
     this.user.full_name = data.center_name;
     this.user.role = 'center_manager';
-    
     sessionStorage.setItem('center_session', JSON.stringify({
       sector_id: data.sector_id,
       center_name: data.center_name
     }));
-    
     U.save('db_user', this.user);
     return this.user;
   }
@@ -351,7 +345,7 @@ const DB = {
             const { data: fuData } = await sb.from('follow_ups').select('*').in('correspondence_id', corrIds);
             if (fuData) { data.forEach(r => { r.follow_ups = fuData.filter(fu => fu.correspondence_id === r.id); }); }
             else { data.forEach(r => { r.follow_ups = []; }); }
-          } catch (e) { console.warn('️ Failed to fetch follow_ups separately:', e.message); data.forEach(r => { r.follow_ups = []; }); }
+          } catch (e) { console.warn('⚠️ Failed to fetch follow_ups separately:', e.message); data.forEach(r => { r.follow_ups = []; }); }
         }
         U.save('db_correspondence_cache', data);
         return data;
@@ -651,7 +645,7 @@ const DB = {
       complaints.push(record);
       U.save('db_complaints', complaints);
       U.save('db_complaints_cache', complaints);
-      U.toast(' تم حفظ الشكوى محلياً', 'info');
+      U.toast('💾 تم حفظ الشكوى محلياً', 'info');
       updateSyncButton();
       return record;
     }
@@ -686,7 +680,7 @@ const DB = {
     };
   },
   async syncPending() {
-    if (!sbConnected) { U.toast('⚠️ لا يوجد اتصال بالإنترنت', 'warning'); return; }
+    if (!sbConnected) { U.toast('️ لا يوجد اتصال بالإنترنت', 'warning'); return; }
     const pending = U.load('db_pending_sync', []);
     if (pending.length === 0) { U.toast('✅ لا توجد بيانات للمزامنة', 'success'); return; }
     U.toast(`🔄 جاري مزامنة ${pending.length} عنصر...`, 'info');
@@ -858,7 +852,7 @@ const Views = {
         </form>
         <div class="mt-6 pt-6 border-t border-gray-200">
           <p class="text-center text-gray-600 text-sm mb-3">ليس لديك حساب؟</p>
-          <button type="button" onclick="UI.registerNewUser()" class="w-full bg-white border-2 border-teal-600 text-teal-600 hover:bg-teal-50 py-3 rounded-xl font-bold cursor-pointer transition">📝 تسجيل مستخدم جديد</button>
+          <button type="button" onclick="UI.registerNewUser()" class="w-full bg-white border-2 border-teal-600 text-teal-600 hover:bg-teal-50 py-3 rounded-xl font-bold cursor-pointer transition"> تسجيل مستخدم جديد</button>
         </div>
         <div class="mt-4 text-xs text-gray-500 text-center"><p>الإصدار ${CONFIG.VERSION}</p><p class="mt-1">© 2026 ${CONFIG.ORG}</p></div>
       </div>
@@ -967,7 +961,7 @@ const Views = {
               <p class="opacity-90 mt-1">إدارة مهام المتابعة (${allFollowUps.length} متابعة)</p>
             </div>
             <div class="flex gap-2 flex-wrap">
-              <button onclick="Reports.exportFollowUpsPDF(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-pdf">📄 تصدير PDF</button>
+              <button onclick="Reports.exportFollowUpsPDF(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-pdf"> تصدير PDF</button>
               <button onclick="Reports.exportFollowUpsExcel(appData._allFollowUps || [], '${sectorName}')" class="report-btn report-btn-excel">📊 تصدير Excel</button>
             </div>
           </div>
@@ -1020,7 +1014,7 @@ const Views = {
     let notifications = [];
     if (sbConnected) {
       try { notifications = await DB.getNotifications(); }
-      catch (e) { console.error('Error loading notifications:', e); U.toast(' خطأ في تحميل التنبيهات', 'error'); }
+      catch (e) { console.error('Error loading notifications:', e); U.toast('❌ خطأ في تحميل التنبيهات', 'error'); }
     } else { U.toast('⚠️ غير متصل بالإنترنت', 'warning'); }
     const unreadCount = notifications.filter(n => !n.is_read).length;
     const readCount = notifications.filter(n => n.is_read).length;
@@ -1044,9 +1038,9 @@ const Views = {
           </div>
         </div>
         <div class="space-y-3">
-          ${notifications.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500"> لا توجد تنبيهات</div>' :
+          ${notifications.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">🔕 لا توجد تنبيهات</div>' :
           notifications.map(n => {
-            const typeIcon = n.type === 'warning' ? '⚠️' : n.type === 'success' ? '✅' : n.type === 'new_correspondence' ? '' : 'ℹ️';
+            const typeIcon = n.type === 'warning' ? '⚠️' : n.type === 'success' ? '✅' : n.type === 'new_correspondence' ? '📩' : 'ℹ️';
             const bgColor = n.is_read ? 'bg-white' : 'bg-blue-50 border-r-4 border-blue-500';
             return `<div class="notif-card ${bgColor}">
               <div class="flex justify-between items-start gap-3">
@@ -1106,7 +1100,7 @@ const Views = {
             <div class="flex gap-2 flex-wrap">
               <button onclick="Router.go('create', {sector:'${sid}'})" class="bg-white text-gray-800 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer">➕ مراسلة جديدة</button>
               <button onclick="Reports.exportCorrespondencePDF(appData.correspondence.filter(r => r.sector_id === '${sid}' && !r.is_archived), '${s.name}')" class="report-btn report-btn-pdf">📄 PDF</button>
-              <button onclick="Reports.exportCorrespondenceExcel(appData.correspondence.filter(r => r.sector_id === '${sid}' && !r.is_archived), '${s.name}')" class="report-btn report-btn-excel">📊 Excel</button>
+              <button onclick="Reports.exportCorrespondenceExcel(appData.correspondence.filter(r => r.sector_id === '${sid}' && !r.is_archived), '${s.name}')" class="report-btn report-btn-excel"> Excel</button>
             </div>
           </div>
         </div>
@@ -1163,7 +1157,7 @@ const Views = {
     return `<div class="min-h-screen">${this.navbar()}
       <div class="max-w-3xl mx-auto p-4 md:p-6 fade-in">
         <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
-          <h1 class="text-2xl font-bold text-teal-800 mb-6"> مراسلة جديدة</h1>
+          <h1 class="text-2xl font-bold text-teal-800 mb-6">➕ مراسلة جديدة</h1>
           <form class="space-y-4" onsubmit="return false;">
             <div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label>
               <select id="fSec" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
@@ -1217,11 +1211,11 @@ const Views = {
             <div><div class="text-xs text-gray-500">الرقم المرجعي</div><div class="font-bold text-lg text-teal-700">${r.reference_number || '-'}</div></div>
             <div><div class="text-xs text-gray-500">التاريخ</div><div class="font-semibold">${U.fmtDate(r.created_at)}</div></div>
             <div><div class="text-xs text-gray-500">القطاع</div><div class="font-semibold">${s?.name || '-'}</div></div>
-            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : r.priority === 'urgent' ? '🚨 عاجلة' : '🔵 عادية'}</div></div>
+            <div><div class="text-xs text-gray-500">الأولوية</div><div class="font-semibold">${r.priority === 'high' ? '🔴 عالية' : r.priority === 'low' ? '🟢 منخفضة' : r.priority === 'urgent' ? ' عاجلة' : '🔵 عادية'}</div></div>
           </div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">الموضوع</div><h2 class="text-xl font-bold text-gray-800">${U.esc(r.subject || '-')}</h2></div>
           <div class="mb-6"><div class="text-xs text-gray-500 mb-1">المحتوى</div><div class="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap leading-relaxed">${U.esc(r.content || '-')}</div></div>
-          ${attachments.length > 0 ? `<div class="mb-6"><div class="text-xs text-gray-500 mb-2">📎 المرفقات (${attachments.length})</div><div class="space-y-2">${attachments.map(att => {
+          ${attachments.length > 0 ? `<div class="mb-6"><div class="text-xs text-gray-500 mb-2"> المرفقات (${attachments.length})</div><div class="space-y-2">${attachments.map(att => {
             const fileType = U.getFileType(att.mime_type, att.original_name);
             const fileIcon = U.getFileIcon(fileType);
             const downloadLabel = U.getDownloadLabel(fileType);
@@ -1253,7 +1247,7 @@ const Views = {
             <div class="quick-actions">
               <button onclick="UI.reply('${r.id}')" class="qa-reply"><span>💬</span><span>رد</span></button>
               <button onclick="UI.followUp('${r.id}')" class="qa-follow"><span>📌</span><span>متابعة</span></button>
-              ${canArchive ? (r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="qa-restore"><span>️</span><span>استعادة</span></button>` : `<button onclick="UI.archive('${r.id}')" class="qa-archive"><span>📦</span><span>أرشفة</span></button>`) : ''}
+              ${canArchive ? (r.is_archived ? `<button onclick="UI.restore('${r.id}')" class="qa-restore"><span>♻️</span><span>استعادة</span></button>` : `<button onclick="UI.archive('${r.id}')" class="qa-archive"><span>📦</span><span>أرشفة</span></button>`) : ''}
               <button onclick="UI.copyAsText('${r.id}')" class="qa-txt"><span>📄</span><span>نسخ</span></button>
               <button onclick="UI.showQR('${r.id}')" class="qa-qr"><span>🔳</span><span>QR</span></button>
               <button onclick="UI.shareWhatsApp('${r.id}')" class="qa-wa"><span>📱</span><span>واتساب</span></button>
@@ -1298,10 +1292,10 @@ const Views = {
       <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
         <div class="glass rounded-2xl shadow-xl p-6 mb-6">
           <div class="flex justify-between items-center flex-wrap gap-4">
-            <div><h1 class="text-3xl font-bold text-teal-800">📝 نظام الشكاوى</h1><p class="text-gray-600 mt-1">${isAdmin ? 'جميع شكاوى القواطع' : 'شكاوى القطاع'} (${allComplaints.length})</p></div>
+            <div><h1 class="text-3xl font-bold text-teal-800"> نظام الشكاوى</h1><p class="text-gray-600 mt-1">${isAdmin ? 'جميع شكاوى القواطع' : 'شكاوى القطاع'} (${allComplaints.length})</p></div>
             <div class="flex gap-2 flex-wrap">
-              <button onclick="Router.go('createComplaint')" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer">➕ تسجيل شكوى جديدة</button>
-              <button onclick="Reports.exportComplaintsPDF(allComplaints, '${sectorName}')" class="report-btn report-btn-pdf"> PDF</button>
+              <button onclick="Router.go('createComplaint')" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer"> تسجيل شكوى جديدة</button>
+              <button onclick="Reports.exportComplaintsPDF(allComplaints, '${sectorName}')" class="report-btn report-btn-pdf">📄 PDF</button>
               <button onclick="Reports.exportComplaintsExcel(allComplaints, '${sectorName}')" class="report-btn report-btn-excel">📊 Excel</button>
             </div>
           </div>
@@ -1310,7 +1304,7 @@ const Views = {
             <div class="bg-yellow-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-yellow-700">${stats.pending}</div><div class="text-xs text-gray-600">قيد الانتظار</div></div>
             <div class="bg-blue-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-blue-700">${stats.in_progress}</div><div class="text-xs text-gray-600">قيد المعالجة</div></div>
             <div class="bg-green-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-green-700">${stats.resolved}</div><div class="text-xs text-gray-600">تم الحل</div></div>
-            <div class="bg-red-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-700">${stats.urgent}</div><div class="text-xs text-gray-600">عاجلة 🔴</div></div>
+            <div class="bg-red-50 p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-700">${stats.urgent}</div><div class="text-xs text-gray-600">عاجلة </div></div>
           </div>
         </div>
         <div class="glass rounded-2xl shadow-xl p-4 mb-4">
@@ -1346,7 +1340,7 @@ const Views = {
               </div>
               <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
                 ${c.complainant_phone ? `<span> ${U.esc(c.complainant_phone)}</span>` : ''}
-                <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
+                <span> ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
                 ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
               </div>
             </div>`;
@@ -1397,14 +1391,14 @@ const Views = {
           <div><div class="font-bold text-teal-800 text-sm md:text-base">${CONFIG.APP_NAME}</div><div class="text-xs text-gray-600 hidden md:block">${U.esc(u.full_name)} ${!isOnline ? '📡' : ''}</div></div>
         </div>
         <div class="flex items-center gap-1 md:gap-2 flex-wrap">
-          <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🏠 الرئيسية</button>
+          <button onclick="Router.go('dashboard')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer"> الرئيسية</button>
           <button onclick="Router.go('complaints')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">📝 الشكاوى</button>
           <button onclick="Router.go('followups')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">📋 المتابعة</button>
           <button onclick="Router.go('general')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer hidden md:inline">🏛️ الإدارة</button>
           ${['super_admin', 'general_admin'].includes(u.role) ? `<button onclick="Router.go('adminCenterCodes')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer">🔑 رموز المراكز</button>` : ''}
           <button onclick="Router.go('notifications')" class="px-3 py-1.5 rounded-lg hover:bg-teal-50 text-sm font-semibold cursor-pointer relative">🔔 التنبيهات<span id="notifBadge" class="notification-badge hidden">0</span></button>
           <button onclick="Router.go('create')" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm font-semibold cursor-pointer">➕ جديد</button>
-          <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer"> خروج</button>
+          <button onclick="Auth.logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer">🚪 خروج</button>
         </div>
       </div>
     </nav>`;
@@ -1426,7 +1420,7 @@ const Views = {
         <p class="text-sm text-gray-600 mt-1">${U.esc((r.content || '').substring(0, 150))}</p>
         <div class="flex gap-2 mt-2 flex-wrap text-xs">
           ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🔴 عالية</span>' : ''}
-          ${r.priority === 'urgent' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🚨 عاجلة</span>' : ''}
+          ${r.priority === 'urgent' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded"> عاجلة</span>' : ''}
           ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
           ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">🟢 منخفضة</span>' : ''}
           ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
@@ -1533,7 +1527,7 @@ const Views = {
       ${u.role === 'central_oversight' ? this.oversightNavbar() : this.navbar()}
       <div class="max-w-3xl mx-auto p-4 md:p-6 fade-in">
         <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
-          <h1 class="text-2xl font-bold text-teal-800 mb-6"> تسجيل شكوى جديدة</h1>
+          <h1 class="text-2xl font-bold text-teal-800 mb-6">📝 تسجيل شكوى جديدة</h1>
           <form class="space-y-4" onsubmit="return false;">
             <div><label class="block text-sm font-semibold mb-1 text-gray-700">القطاع *</label>
               <select id="compSector" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
@@ -1559,7 +1553,7 @@ const Views = {
               </div>
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-1 text-gray-700"> المرفقات</label>
+              <label class="block text-sm font-semibold mb-1 text-gray-700">📎 المرفقات</label>
               <input type="file" id="compFiles" multiple class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
               <p class="text-xs text-gray-500 mt-1">يمكنك اختيار ملفات متعددة</p>
             </div>
@@ -1581,7 +1575,7 @@ const Views = {
     const canRespond = ['super_admin', 'general_admin', 'sector_admin', 'central_oversight'].includes(u.role);
     const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
     const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
-    const priorityLabels = { low: '⚪ منخفضة', medium: '🔵 متوسطة', high: ' عالية', urgent: '🔴 عاجلة' };
+    const priorityLabels = { low: '⚪ منخفضة', medium: ' متوسطة', high: '🟠 عالية', urgent: '🔴 عاجلة' };
     let attachments = [];
     if (sbConnected) {
       try {
@@ -1596,7 +1590,7 @@ const Views = {
         <div class="glass rounded-2xl shadow-xl p-6 md:p-8">
           <div class="border-b-2 border-teal-600 pb-4 mb-6">
             <div class="flex justify-between items-start flex-wrap gap-3">
-              <div><h1 class="text-2xl font-bold text-teal-800">📝 ${U.esc(complaint.title)}</h1><p class="text-gray-500 text-sm mt-1">#${complaint.id.substring(0, 8)} • ${U.fmtDate(complaint.created_at)}</p></div>
+              <div><h1 class="text-2xl font-bold text-teal-800"> ${U.esc(complaint.title)}</h1><p class="text-gray-500 text-sm mt-1">#${complaint.id.substring(0, 8)} • ${U.fmtDate(complaint.created_at)}</p></div>
               <span class="px-3 py-1 rounded-full text-sm font-bold ${statusColors[complaint.status]}">${statusLabels[complaint.status]}</span>
             </div>
           </div>
@@ -1615,7 +1609,7 @@ const Views = {
             const downloadLabel = U.getDownloadLabel(fileType);
             const fileSize = U.formatFileSize(att.size_bytes);
             const fileUrl = sbConnected ? `${CONFIG.SB_URL}/storage/v1/object/public/attachments/${att.storage_path || att.file_name}` : '#';
-            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn">️ ${downloadLabel}</a></div>`;
+            return `<div class="attachment-card"><div class="attachment-info"><div class="attachment-icon">${fileIcon}</div><div class="min-w-0 flex-1"><div class="attachment-name">${U.esc(att.original_name || 'ملف')}</div><div class="attachment-size">${fileSize} • ${fileType.toUpperCase()}</div></div></div><a href="${fileUrl}" download="${U.esc(att.original_name || 'ملف')}" target="_blank" class="download-btn">⬇️ ${downloadLabel}</a></div>`;
           }).join('')}</div></div>` : ''}
           ${complaint.admin_response ? `<div class="mb-6 bg-green-50 border-r-4 border-green-500 p-4 rounded-xl"><h3 class="font-bold text-gray-800 mb-2">✅ رد الإدارة</h3><div class="whitespace-pre-wrap">${U.esc(complaint.admin_response)}</div>${complaint.resolved_at ? `<div class="text-xs text-gray-500 mt-2">تم الحل في: ${U.fmtDate(complaint.resolved_at)}</div>` : ''}</div>` : ''}
           ${canRespond && complaint.status !== 'resolved' ? `<div class="border-t pt-4 mt-4">
@@ -1659,12 +1653,13 @@ const Views = {
         </div>
       </div>
       <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
-        ${c.complainant_name ? `<span>👤 ${U.esc(c.complainant_name)}</span>` : ''}
+        ${c.complainant_name ? `<span> ${U.esc(c.complainant_name)}</span>` : ''}
         ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
         ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : ''}
       </div>
     </div>`;
   },
+  // ✅ لوحة إدارة رموز المراكز (مبسطة - بدون هاتف)
   async adminCenterCodes() {
     const u = Auth.user || {};
     if (u.role !== 'super_admin' && u.role !== 'general_admin') {
@@ -1680,8 +1675,8 @@ const Views = {
       <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
         <div class="glass rounded-2xl shadow-xl p-6 mb-6">
           <div class="flex justify-between items-center flex-wrap gap-4">
-            <div><h1 class="text-2xl font-bold text-teal-800"> إدارة رموز دخول المراكز</h1></div>
-            <button onclick="UI.showGenerateCodeModal()" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer">➕ توليد رمز جديد</button>
+            <div><h1 class="text-2xl font-bold text-teal-800">🔑 إدارة رموز دخول المراكز</h1></div>
+            <button onclick="UI.showGenerateCodeModal()" class="btn-primary px-6 py-3 rounded-xl font-bold cursor-pointer"> توليد رمز جديد</button>
           </div>
         </div>
         <div class="glass rounded-2xl shadow-xl overflow-hidden">
@@ -1691,13 +1686,12 @@ const Views = {
                 <th class="p-4 font-bold text-teal-800">الرمز</th>
                 <th class="p-4 font-bold text-teal-800">اسم المركز</th>
                 <th class="p-4 font-bold text-teal-800">القطاع</th>
-                <th class="p-4 font-bold text-teal-800">الهاتف</th>
                 <th class="p-4 font-bold text-teal-800">الحالة</th>
                 <th class="p-4 font-bold text-teal-800">إجراءات</th>
               </tr>
             </thead>
             <tbody>
-              ${codes.length === 0 ? '<tr><td colspan="6" class="p-8 text-center text-gray-500">لا توجد رموز مولدة</td></tr>' :
+              ${codes.length === 0 ? '<tr><td colspan="5" class="p-8 text-center text-gray-500">لا توجد رموز مولدة</td></tr>' :
                 codes.map(c => {
                   const sector = SECTORS.find(s => s.id === c.sector_id);
                   return `
@@ -1705,21 +1699,15 @@ const Views = {
                     <td class="p-4 font-mono font-bold text-lg">${c.code}</td>
                     <td class="p-4">${U.esc(c.center_name)}</td>
                     <td class="p-4">${sector?.name || 'غير محدد'}</td>
-                    <td class="p-4">${c.phone || '-'}</td>
                     <td class="p-4">
                       <span class="px-3 py-1 rounded-full text-xs font-bold ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
                         ${c.is_active ? 'نشط' : 'ملغى'}
                       </span>
                     </td>
                     <td class="p-4">
-                      <div class="flex gap-2 flex-wrap">
-                        <button onclick="UI.toggleCenterCode('${c.id}', ${!c.is_active})" class="text-sm px-3 py-1 rounded-lg ${c.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}">
-                          ${c.is_active ? 'إلغاء' : 'تفعيل'}
-                        </button>
-                        ${c.phone ? `<button onclick="UI.sendCodeWhatsApp('${c.code}', '${c.center_name}', '${c.phone}', '${sector?.name || ''}')" class="text-sm px-3 py-1 rounded-lg bg-green-500 text-white hover:bg-green-600 flex items-center gap-1">
-                          📱 واتساب
-                        </button>` : ''}
-                      </div>
+                      <button onclick="UI.toggleCenterCode('${c.id}', ${!c.is_active})" class="text-sm px-3 py-1 rounded-lg ${c.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}">
+                        ${c.is_active ? 'إلغاء' : 'تفعيل'}
+                      </button>
                     </td>
                   </tr>
                 `}).join('')}
@@ -1727,10 +1715,10 @@ const Views = {
           </table>
         </div>
       </div>
-      <!-- Modal توليد رمز -->
+      <!-- Modal توليد رمز (بدون هاتف) -->
       <div id="generateCodeModal" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
         <div class="glass rounded-2xl p-6 max-w-md w-full">
-          <h3 class="text-xl font-bold text-teal-800 mb-4">توليد رمز دخول جديد</h3>
+          <h3 class="text-xl font-bold text-teal-800 mb-4">🔑 توليد رمز دخول جديد</h3>
           <div id="codeModalSuccess" class="hidden bg-green-100 border-r-4 border-green-500 text-green-700 p-3 rounded mb-4 text-sm"></div>
           <form class="space-y-4" onsubmit="return false;">
             <div>
@@ -1742,11 +1730,6 @@ const Views = {
               <select id="newSectorId" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
                 ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
               </select>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-1">رقم هاتف المدير (اختياري)</label>
-              <input type="tel" id="newCenterPhone" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="مثال: 970599999999">
-              <p class="text-xs text-gray-500 mt-1">💡 مع رمز الدولة (بدون + أو 00)</p>
             </div>
             <div class="flex gap-2 pt-2">
               <button type="button" onclick="UI.generateCenterCode()" class="btn-primary flex-1 py-3 rounded-xl font-bold">توليد وحفظ</button>
@@ -1770,7 +1753,7 @@ const UI = {
     const notes = prompt('ملاحظات (اختياري):') || '';
     const dueDate = prompt('تاريخ الاستحقاق (YYYY-MM-DD) - اختياري:') || null;
     if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
-      U.toast('⚠️ صيغة التاريخ غير صحيحة. استخدم YYYY-MM-DD', 'warning');
+      U.toast('️ صيغة التاريخ غير صحيحة. استخدم YYYY-MM-DD', 'warning');
       return;
     }
     (async () => {
@@ -1780,7 +1763,7 @@ const UI = {
           U.toast('✅ تمت إضافة المتابعة بنجاح', 'success');
           await render();
         } else {
-          U.toast('❌ فشل إضافة المتابعة', 'error');
+          U.toast(' فشل إضافة المتابعة', 'error');
         }
       } catch (e) {
         console.error('Error adding follow-up:', e);
@@ -1796,7 +1779,7 @@ const UI = {
     } catch (e) { U.toast(e.message, 'error'); }
   },
   async deleteFollowUp(fuId, corrId) {
-    if (!confirm('⚠️ هل تريد حذف هذه المتابعة؟')) return;
+    if (!confirm('️ هل تريد حذف هذه المتابعة؟')) return;
     try {
       await DB.deleteFollowUp(fuId, corrId);
       U.toast('✅ تم حذف المتابعة', 'success');
@@ -1836,7 +1819,7 @@ const UI = {
   async archive(id) { if (!confirm('تأكيد أرشفة هذه المراسلة؟')) return; try { await DB.archive(id); U.toast('تمت الأرشفة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
   async restore(id) { try { await DB.restore(id); U.toast('تمت الاستعادة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
   async del(id) {
-    if (!confirm('⚠️ حذف نهائي؟')) return;
+    if (!confirm('️ حذف نهائي؟')) return;
     try {
       await DB.remove(id);
       U.toast('✅ تم الحذف', 'success');
@@ -1891,7 +1874,7 @@ const UI = {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) { U.toast('المراسلة غير موجودة', 'error'); return; }
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `📋 ${CONFIG.ORG}\n\n الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
+    const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
     if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text)); } else { this.fallbackCopy(text); }
   },
   fallbackCopy(text) { const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); U.toast('✅ تم نسخ المراسلة كنص', 'success'); } catch (e) { U.toast('❌ فشل النسخ', 'error'); } document.body.removeChild(textarea); },
@@ -1902,7 +1885,7 @@ const UI = {
     const container = document.getElementById('qrContainer');
     if (!modal || !container) return;
     container.innerHTML = '';
-    const qrData = ` ${r.reference_number || ''}\n📌 ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
+    const qrData = `📋 ${r.reference_number || ''}\n📌 ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
     try { new QRCode(container, { text: qrData, width: 220, height: 220, colorDark: '#0f766e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { container.innerHTML = '<div class="text-red-600">فشل إنشاء QR</div>'; }
     modal.classList.remove('hidden');
   },
@@ -1910,63 +1893,70 @@ const UI = {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) return;
     const s = SECTORS.find(x => x.id === r.sector_id);
-    const text = `*${CONFIG.ORG}*\n\n الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
+    const text = `*${CONFIG.ORG}*\n\n🔢 الرقم: ${r.reference_number || '-'}\n الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   },
-  
-  // ✅ دوال إدارة رموز المراكز
+  // ✅ دوال إدارة رموز المراكز (مبسطة - بدون هاتف)
   showGenerateCodeModal() {
     document.getElementById('generateCodeModal').classList.remove('hidden');
+    // مسح الحقول
+    document.getElementById('newCenterName').value = '';
+    document.getElementById('codeModalSuccess').classList.add('hidden');
   },
-  
   async generateCenterCode() {
     const centerName = document.getElementById('newCenterName').value.trim();
     const sectorId = document.getElementById('newSectorId').value;
-    const phone = document.getElementById('newCenterPhone').value.trim();
     const successEl = document.getElementById('codeModalSuccess');
     
-    if (!centerName) { U.toast('الرجاء إدخال اسم المركز', 'warning'); return; }
+    if (!centerName) { 
+      U.toast('الرجاء إدخال اسم المركز', 'warning'); 
+      return; 
+    }
     
     // توليد رمز عشوائي آمن (مثال: A1B2-C3D4)
-    const code = Array.from({length: 2}, () => Math.random().toString(36).substring(2, 6).toUpperCase()).join('-');
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      if (i === 4) code += '-';
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
     
     try {
       const { error } = await sb.from('center_access_codes').insert([{
         code: code,
         center_name: centerName,
         sector_id: sectorId,
-        phone: phone || null,
         is_active: true,
         created_by: Auth.user?.id
       }]);
       if (error) throw error;
       
-      successEl.innerHTML = `✅ تم توليد الرمز بنجاح: <strong class="text-lg font-mono">${code}</strong>`;
+      // ✅ عرض الرمز في رسالة النجاح
+      successEl.innerHTML = `
+        <div class="text-center">
+          <div class="text-lg font-bold mb-2">✅ تم توليد الرمز بنجاح</div>
+          <div class="bg-white border-2 border-green-500 rounded-lg p-4 mb-2">
+            <div class="text-3xl font-mono font-bold text-teal-700 tracking-wider">${code}</div>
+          </div>
+          <div class="text-sm text-gray-600 mb-2">
+            <div>📍 المركز: <strong>${U.esc(centerName)}</strong></div>
+            <div>🏢 القطاع: <strong>${SECTORS.find(s => s.id === sectorId)?.name || ''}</strong></div>
+          </div>
+          <div class="text-xs text-orange-600 font-semibold">️ احفظ هذا الرمز الآن - لن يظهر مرة أخرى</div>
+        </div>
+      `;
       successEl.classList.remove('hidden');
       
-      // ✅ إذا تم إدخال رقم هاتف، اعرض زر الإرسال عبر واتساب
-      if (phone) {
-        const sector = SECTORS.find(s => s.id === sectorId);
-        const message = `مرحباً ${centerName}،\n\nتم إنشاء رمز الدخول الخاص بمركزكم:\n\n🔑 *الرمز:* ${code}\n📍 *القطاع:* ${sector?.name || ''}\n\nيرجى استخدام هذا الرمز للدخول إلى نظام المراسلات.\n\nمع التحية،\nإدارة إيواءات دير البلح`;
-        const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        
-        successEl.innerHTML += `
-          <a href="${waLink}" target="_blank" class="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white transition hover:opacity-90" style="background: #25D366;">
-            📱 إرسال الرمز عبر واتساب
-          </a>
-        `;
-      }
-      
+      // إغلاق Modal تلقائياً بعد 4 ثوانٍ
       setTimeout(() => {
         document.getElementById('generateCodeModal').classList.add('hidden');
         render();
-      }, 3000);
+      }, 4000);
       
     } catch (e) {
       U.toast('❌ خطأ: ' + e.message, 'error');
     }
   },
-  
   async toggleCenterCode(id, isActive) {
     try {
       const { error } = await sb.from('center_access_codes').update({ is_active: isActive }).eq('id', id);
@@ -1976,13 +1966,6 @@ const UI = {
     } catch (e) {
       U.toast('❌ خطأ: ' + e.message, 'error');
     }
-  },
-  
-  // ✅ إرسال الرمز عبر واتساب
-  sendCodeWhatsApp(code, centerName, phone, sectorName) {
-    const message = `مرحباً ${centerName}،\n\nرمز الدخول الخاص بمركزكم:\n\n *الرمز:* ${code}\n *القطاع:* ${sectorName}\n\nيرجى استخدام هذا الرمز للدخول إلى نظام المراسلات.\n\nمع التحية،\nإدارة إيواءات دير البلح`;
-    const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(waLink, '_blank');
   }
 };
 
@@ -2042,15 +2025,12 @@ async function render() {
         Auth.user.role = 'center_manager';
       }
     }
-    
     if (Auth.user.role === 'center_manager' && Router.page !== 'create') {
       Router.page = 'create';
     }
-    
     whatsappBtn.classList.remove('hidden');
     const u = Auth.user;
     if (u.role === 'central_oversight' && Router.page === 'dashboard') Router.page = 'oversightDashboard';
-
     if (sbConnected) {
       try {
         let filters = {};
@@ -2073,7 +2053,6 @@ async function render() {
       appData.correspondence = U.load('db_correspondence_cache', U.load('db_correspondence', []));
       appData.complaints = U.load('db_complaints_cache', U.load('db_complaints', []));
     }
-
     const views = {
       dashboard: () => Views.dashboard(appData.correspondence),
       sector: () => Views.sector(appData.correspondence),
@@ -2091,13 +2070,11 @@ async function render() {
       viewComplaint: () => Views.viewComplaint(),
       adminCenterCodes: () => Views.adminCenterCodes(),
     };
-
     const viewFn = views[Router.page] || (u.role === 'central_oversight' ? views.oversightDashboard : views.dashboard);
     const html = await viewFn();
     app.innerHTML = html;
     bindEvents();
     updateSyncButton();
-
     if (Auth.user && sbConnected) {
       setTimeout(() => refreshNotifications(), 500);
     }
@@ -2157,7 +2134,7 @@ function bindEvents() {
       if (sector) filtered = filtered.filter(c => c.sector_id === sector);
       const el = document.getElementById('complaintsList');
       if (el) {
-        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500"> لا توجد نتائج</div>'; }
+        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; }
         else {
           const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
           const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
@@ -2212,12 +2189,13 @@ window.addEventListener('beforeinstallprompt', (e) => {
     installBtn.innerHTML = '📱 تثبيت التطبيق على الهاتف';
     installBtn.onclick = async () => { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') U.toast('✅ تم تثبيت التطبيق!', 'success'); installBtn.remove(); deferredPrompt = null; };
     app.appendChild(installBtn);
+
   }
 });
 
 render();
 updateSyncButton();
-console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (Center Manager WhatsApp Integration)`);
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (Center Manager Clean)`);
 </script>
 </body>
 </html>
