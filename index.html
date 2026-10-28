@@ -282,21 +282,64 @@ const Auth = {
     sessionStorage.removeItem('center_session');
     render();
   },
-  async validateCenterCode(code) {
-    if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
-    const { data, error } = await sb.rpc('validate_center_access_code', { p_code: code });
-    if (error) throw new Error(error.message);
-    if (!data || !data.valid) throw new Error(data?.error || 'رمز الدخول غير صحيح أو ملغى');
+async validateCenterCode(code) {
+  if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
+  if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
+  
+  const cleanCode = code.replace(/\s+/g, '').toUpperCase();
+  console.log('🔍 البحث عن الرمز:', cleanCode);
+  
+  const { data, error } = await sb.from('center_access_codes')
+    .select('*')
+    .eq('code', cleanCode)
+    .eq('is_active', true)
+    .single();
+  
+  console.log('📊 النتيجة:', { data, error });
+  
+  if (error || !data) {
+    console.error('❌ خطأ:', error);
+    throw new Error('رمز غير صحيح أو ملغى');
+  }
+  
+  if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    throw new Error('الرمز منتهي الصلاحية');
+  }
+  
+  await sb.from('center_access_codes')
+    .update({ last_used_at: new Date().toISOString() })
+    .eq('id', data.id);
+  
+  const sector = SECTORS.find(s => s.id === data.sector_id);
+  
+  centerSession = {
+    codeId: data.id,
+    centerName: data.center_name,
+    sectorId: data.sector_id,
+    sectorName: sector ? sector.name : 'غير محدد',
+  };
+  
+  // ✅ الحل: إذا كان this.user null، أنشئ مستخدم جديد بـ UUID صالح
+  if (!this.user) {
+    this.user = {
+      id: data.id,  // ✅ استخدم data.id مباشرة (UUID صالح من center_access_codes)
+      email: 'center@local',
+      full_name: data.center_name,
+      role: 'center_manager',
+      sector_id: data.sector_id,
+    };
+  } else {
+    // ✅ المستخدم موجود، عدّل خصائصه فقط
     this.user.sector_id = data.sector_id;
     this.user.full_name = data.center_name;
     this.user.role = 'center_manager';
-    sessionStorage.setItem('center_session', JSON.stringify({
-      sector_id: data.sector_id,
-      center_name: data.center_name
-    }));
-    U.save('db_user', this.user);
-    return this.user;
   }
+  
+  sessionStorage.setItem('center_session', JSON.stringify(centerSession));
+  U.save('db_user', this.user);
+  
+  return centerSession;
+}
 };
 
 function subscribeToNotifications() {
