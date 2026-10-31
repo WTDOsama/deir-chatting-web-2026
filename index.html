@@ -278,57 +278,58 @@ const Auth = {
     render();
   },
   // ✅ FIXED: استخدام data.id مباشرة كـ UUID صالح + تأكيد الدخول
-  async validateCenterCode(code) {
-    if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
-    if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
-    
-    const cleanCode = code.replace(/\s+/g, '').toUpperCase();
-    console.log('🔍 البحث عن الرمز:', cleanCode);
-    
-    const { data, error } = await sb.from('center_access_codes')
-      .select('*')
-      .eq('code', cleanCode)
-      .eq('is_active', true)
-      .single();
-    
-    console.log('📊 النتيجة:', { data, error });
-    
-    if (error || !data) {
-      console.error('❌ خطأ:', error);
-      throw new Error('رمز غير صحيح أو ملغى');
-    }
-    
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      throw new Error('الرمز منتهي الصلاحية');
-    }
-    
-    await sb.from('center_access_codes')
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('id', data.id);
-    
-    const sector = SECTORS.find(s => s.id === data.sector_id);
-    
-    centerSession = {
-      codeId: data.id,
-      centerName: data.center_name,
-      sectorId: data.sector_id,
-      sectorName: sector ? sector.name : 'غير محدد',
-    };
-    
-    // ✅ FIX: استخدام data.id مباشرة (UUID صالح من center_access_codes)
-    this.user = {
-      id: data.id,  // ✅ UUID صالح
-      email: 'center@local',
-      full_name: data.center_name,
-      role: 'center_manager',
-      sector_id: data.sector_id,
-    };
-    
-    sessionStorage.setItem('center_session', JSON.stringify(centerSession));
-    U.save('db_user', this.user);
-    
-    return centerSession;
+async validateCenterCode(code) {
+  if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
+  if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
+  
+  const cleanCode = code.replace(/\s+/g, '').toUpperCase();
+  console.log('🔍 البحث عن الرمز:', cleanCode);
+  
+  const { data, error } = await sb.from('center_access_codes')
+    .select('*')
+    .eq('code', cleanCode)
+    .eq('is_active', true)
+    .single();
+  
+  console.log('📊 النتيجة:', { data, error });
+  
+  if (error || !data) {
+    console.error('❌ خطأ:', error);
+    throw new Error('رمز غير صحيح أو ملغى');
   }
+  
+  if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    throw new Error('الرمز منتهي الصلاحية');
+  }
+  
+  await sb.from('center_access_codes')
+    .update({ last_used_at: new Date().toISOString() })
+    .eq('id', data.id);
+  
+  const sector = SECTORS.find(s => s.id === data.sector_id);
+  
+  centerSession = {
+    codeId: data.id,
+    centerName: data.center_name,
+    sectorId: data.sector_id,
+    sectorName: sector ? sector.name : 'غير محدد',
+  };
+  
+  // ✅ الحل: دائماً ننشئ مستخدم جديد لمدير المركز (نتجاهل المستخدم الحالي)
+  this.user = {
+    id: data.id,  // ✅ UUID صالح من center_access_codes
+    email: 'center@local',
+    full_name: data.center_name,
+    role: 'center_manager',
+    sector_id: data.sector_id,
+  };
+  
+  sessionStorage.setItem('center_session', JSON.stringify(centerSession));
+  U.save('db_user', this.user);
+  
+  console.log('✅ تم إنشاء جلسة مدير المركز:', centerSession);
+  return centerSession;
+}
 };
 
 function subscribeToNotifications() {
@@ -1893,115 +1894,108 @@ const UI = {
     document.getElementById('generateCodeModal').classList.remove('hidden');
   },
   
-  async generateCodeFromLogin() {
-    const centerName = document.getElementById('newCenterName').value.trim();
-    const sectorId = document.getElementById('newSectorId').value;
-    const adminEmail = document.getElementById('adminEmail').value.trim();
-    const adminPassword = document.getElementById('adminPassword').value;
-    const errEl = document.getElementById('codeModalErr');
-    const successEl = document.getElementById('codeModalSuccess');
-    
-    if (!centerName || !sectorId || !adminEmail || !adminPassword) {
-      errEl.textContent = '❌ الرجاء ملء جميع الحقول';
-      errEl.classList.remove('hidden');
-      successEl.classList.add('hidden');
-      return;
-    }
-    
-    errEl.classList.add('hidden');
+async generateCodeFromLogin() {
+  const centerName = document.getElementById('newCenterName').value.trim();
+  const sectorId = document.getElementById('newSectorId').value;
+  const adminEmail = document.getElementById('adminEmail').value.trim();
+  const adminPassword = document.getElementById('adminPassword').value;
+  const errEl = document.getElementById('codeModalErr');
+  const successEl = document.getElementById('codeModalSuccess');
+  
+  if (!centerName || !sectorId || !adminEmail || !adminPassword) {
+    errEl.textContent = '❌ الرجاء ملء جميع الحقول';
+    errEl.classList.remove('hidden');
     successEl.classList.add('hidden');
+    return;
+  }
+  
+  errEl.classList.add('hidden');
+  successEl.classList.add('hidden');
+  
+  try {
+    const { data: authData, error: authError } = await sb.auth.signInWithPassword({ 
+      email: adminEmail, 
+      password: adminPassword 
+    });
     
-    try {
-      // ✅ التحقق من بيانات المدير
-      const { data: authData, error: authError } = await sb.auth.signInWithPassword({ 
-        email: adminEmail, 
-        password: adminPassword 
-      });
-      
-      if (authError) {
-        throw new Error('بيانات المدير غير صحيحة');
-      }
-      
-      const { data: profile } = await sb.from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-      
-      if (!profile || !['super_admin', 'general_admin'].includes(profile.role)) {
-        throw new Error('ليس لديك صلاحية توليد الرموز');
-      }
-      
-      // ✅ توليد رمز عشوائي
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let code = '';
-      for (let i = 0; i < 8; i++) {
-        if (i === 4) code += '-';
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      
-      // ✅ حفظ الرمز
-      const { error: insertError } = await sb.from('center_access_codes').insert([{
-        code: code,
-        center_name: centerName,
-        sector_id: sectorId,
-        is_active: true,
-        created_by: profile.id
-      }]);
-      
-      if (insertError) throw insertError;
-      
-      successEl.textContent = `✅ تم توليد الرمز: ${code}`;
-      successEl.classList.remove('hidden');
-      
-      // ✅ إغلاق Modal وإظهار حقل إدخال الرمز
-      setTimeout(() => {
-        document.getElementById('generateCodeModal').classList.add('hidden');
-        document.getElementById('codeInputSection').classList.remove('hidden');
-        document.getElementById('centerCodeInput').value = code;
-        
-        // مسح حقول التوليد فقط
-        document.getElementById('newCenterName').value = '';
-        document.getElementById('adminEmail').value = '';
-        document.getElementById('adminPassword').value = '';
-      }, 1500);
-      
-    } catch (e) {
-      errEl.textContent = '❌ ' + (e.message || 'فشل التوليد');
-      errEl.classList.remove('hidden');
+    if (authError) throw new Error('بيانات المدير غير صحيحة');
+    
+    const { data: profile } = await sb.from('profiles')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+    
+    if (!profile || !['super_admin', 'general_admin'].includes(profile.role)) {
+      throw new Error('ليس لديك صلاحية توليد الرموز');
     }
-  },
+    
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      if (i === 4) code += '-';
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    const { error: insertError } = await sb.from('center_access_codes').insert([{
+      code: code,
+      center_name: centerName,
+      sector_id: sectorId,
+      is_active: true,
+      created_by: profile.id
+    }]);
+    
+    if (insertError) throw insertError;
+    
+    // ✅ تسجيل خروج المدير العام بعد التوليد
+    await sb.auth.signOut();
+    Auth.user = null;
+    localStorage.removeItem('db_user');
+    
+    successEl.textContent = `✅ تم توليد الرمز: ${code}`;
+    successEl.classList.remove('hidden');
+    
+    setTimeout(() => {
+      document.getElementById('generateCodeModal').classList.add('hidden');
+      document.getElementById('codeInputSection').classList.remove('hidden');
+      document.getElementById('centerCodeInput').value = code;
+      document.getElementById('newCenterName').value = '';
+      document.getElementById('adminEmail').value = '';
+      document.getElementById('adminPassword').value = '';
+    }, 1500);
+    
+  } catch (e) {
+    errEl.textContent = '❌ ' + (e.message || 'فشل التوليد');
+    errEl.classList.remove('hidden');
+  }
+},
   
   // ✅ الدخول بالرمز مع تأكيد
-  async loginWithCode() {
-    const codeInput = document.getElementById('centerCodeInput');
-    const errEl = document.getElementById('loginErr');
-    
-    if (!codeInput) return;
-    
-    const code = codeInput.value.trim();
-    if (!code) {
-      errEl.textContent = '❌ الرجاء إدخال الرمز';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    
-    try {
-      await Auth.validateCenterCode(code);
-      
-      // ✅ تأكيد الدخول
-      const confirmLogin = confirm(`✅ تم التحقق من الرمز بنجاح!\n\nالمركز: ${centerSession.centerName}\nالقطاع: ${centerSession.sectorName}\n\nهل تريد الدخول الآن؟`);
-      
-      if (confirmLogin) {
-        U.toast('✅ تم الدخول بنجاح', 'success');
-        render();
-      } else {
-        Auth.logout();
-      }
-    } catch (e) {
-      errEl.textContent = '❌ ' + e.message;
-      errEl.classList.remove('hidden');
-    }
-  },
+async loginWithCode() {
+  const codeInput = document.getElementById('centerCodeInput');
+  const errEl = document.getElementById('loginErr');
+  
+  if (!codeInput) return;
+  
+  const code = codeInput.value.trim();
+  if (!code) {
+    errEl.textContent = 'الرجاء إدخال الرمز';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  
+  // ✅ إعادة تعيين المستخدم قبل التحقق (لمنع التداخل مع المدير العام)
+  Auth.user = null;
+  localStorage.removeItem('db_user');
+  
+  try {
+    await Auth.validateCenterCode(code);
+    U.toast('✅ تم التحقق بنجاح - مرحباً ' + centerSession.centerName, 'success');
+    render();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+},
   
   // ✅ دالة التحقق من رمز المركز (للشاشة المنفصلة)
   async validateCenterCode() {
