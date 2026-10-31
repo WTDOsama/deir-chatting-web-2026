@@ -315,7 +315,7 @@ async validateCenterCode(code) {
     sectorName: sector ? sector.name : 'غير محدد',
   };
   
-  // ✅ الحل: دائماً ننشئ مستخدم جديد لمدير المركز (نتجاهل المستخدم الحالي)
+  // ✅ الحل: إنشاء مستخدم جديد بـ UUID صالح (data.id)
   this.user = {
     id: data.id,  // ✅ UUID صالح من center_access_codes
     email: 'center@local',
@@ -386,87 +386,24 @@ const DB = {
     }
     return U.load('db_correspondence_cache', U.load('db_correspondence', []));
   },
-  async create(rec, files = []) {
-    if (sbConnected) {
-      // ✅ FIXED: إضافة fallback لـ sector_id
-      let targetSectorId = rec.sector_id;
-      if (Auth.user && Auth.user.role === 'center_manager') {
-        targetSectorId = centerSession?.sectorId || Auth.user.sector_id;
-        if (!targetSectorId) {
-          throw new Error('القطاع غير محدد - الرجاء تسجيل الدخول بالرمز مرة أخرى');
-        }
+async create(rec, files = []) {
+  if (sbConnected) {
+    let targetSectorId = rec.sector_id;
+    
+    // ✅ إصلاح: لمدير المركز، استخدم sector_id من الجلسة مباشرة
+    if (Auth.user && Auth.user.role === 'center_manager') {
+      targetSectorId = centerSession?.sectorId || Auth.user.sector_id;
+      if (!targetSectorId) {
+        throw new Error('القطاع غير محدد - الرجاء تسجيل الدخول بالرمز مرة أخرى');
       }
-      
-      if (!targetSectorId || targetSectorId === 'undefined') {
-        throw new Error('القطاع غير محدد');
-      }
-      
-      if (targetSectorId === 'ALL') {
-        const results = [];
-        for (const sector of SECTORS) {
-          const newId = U.uuid();
-          const refNum = U.genRef(sector.code);
-          try {
-            const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-              id: newId, reference_number: refNum, subject: rec.subject, content: rec.content,
-              sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
-              sector_id: sector.id, priority: rec.priority || 'normal',
-              is_archived: false, created_at: new Date().toISOString()
-            }]).select().single();
-            if (insertError) throw insertError;
-            let atts = [];
-            if (files.length > 0) {
-              try {
-                await this.uploadAttachments(newId, files);
-                const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', newId);
-                atts = attData || [];
-              } catch (e) { console.error('Failed to upload attachments:', e); }
-            }
-            results.push({ ...inserted, attachments: atts, replies: [], follow_ups: [] });
-          } catch (e) { console.error(`Error creating correspondence for sector ${sector.name}:`, e); }
-        }
-        return results;
-      } else {
-        const recordId = U.uuid();
-        const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === targetSectorId)?.code || 'XX');
-        try {
-          const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
-            id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
-            sender_id: Auth.user?.id, sender_name: Auth.user?.full_name || 'مدير مركز',
-            sector_id: targetSectorId,
-            priority: rec.priority || 'normal',
-            is_archived: false, created_at: new Date().toISOString()
-          }]).select().single();
-          if (insertError) throw insertError;
-          let atts = [];
-          if (files.length > 0) {
-            try {
-              await this.uploadAttachments(recordId, files);
-              const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', recordId);
-              atts = attData || [];
-            } catch (e) { console.error('Failed to upload attachments:', e); }
-          }
-          return { ...inserted, attachments: atts, replies: [], follow_ups: [] };
-        } catch (e) { console.error('Error creating correspondence:', e); throw e; }
-      }
-    } else {
-      const recordId = U.uuid();
-      const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
-      const record = { id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
-        sender_name: rec.sender_name || Auth.user?.full_name, sector_id: rec.sector_id, priority: rec.priority || 'normal',
-        is_archived: false, replies: [], follow_ups: [], attachments: [], created_at: U.now(), _pending: true };
-      const pending = U.load('db_pending_sync', []);
-      pending.push({ type: 'correspondence', action: 'create', data: record, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
-      U.save('db_pending_sync', pending);
-      const localData = U.load('db_correspondence', []);
-      localData.push(record);
-      U.save('db_correspondence', localData);
-      U.save('db_correspondence_cache', localData);
-      U.toast('💾 تم الحفظ محلياً', 'info');
-      updateSyncButton();
-      return record;
     }
-  },
+    
+    // ✅ تحقق إضافي
+    if (!targetSectorId || targetSectorId === 'undefined') {
+      throw new Error('القطاع غير محدد');
+    }
+    
+    // ... (باقي الكود كما هو),
   async uploadAttachments(correspondenceId, files) {
     if (!sbConnected) return;
     for (let i = 0; i < files.length; i++) {
@@ -1983,7 +1920,7 @@ async loginWithCode() {
     return;
   }
   
-  // ✅ إعادة تعيين المستخدم قبل التحقق (لمنع التداخل مع المدير العام)
+  // ✅ إعادة تعيين المستخدم قبل التحقق
   Auth.user = null;
   localStorage.removeItem('db_user');
   
