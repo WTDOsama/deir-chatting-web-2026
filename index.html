@@ -104,14 +104,11 @@ input, textarea, select { font-family: 'Cairo', sans-serif; }
 </div>
 <div id="reportContainer"></div>
 <script>
-// =====================================================
-// CONFIGURATION
-// =====================================================
 const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '12.8.0-CenterManager-Only',
+  VERSION: '12.9.0-Final-Fix',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -119,10 +116,10 @@ const CONFIG = {
 };
 
 const SECTORS = [
-  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' },
-  { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 16c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 8c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>' },
-  { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>' },
-  { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' },
+  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '☀️' },
+  { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '🌊' },
+  { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '⛰️' },
+  { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '☀️' },
 ];
 
 const ROLES = {
@@ -145,21 +142,17 @@ let isOnline = navigator.onLine;
 let centerSession = null;
 
 try {
-  if (CONFIG.USE_SB && CONFIG.SB_URL && CONFIG.SB_KEY && CONFIG.SB_URL.includes('supabase.co') && !CONFIG.SB_KEY.includes('YOUR')) {
+  if (CONFIG.USE_SB && CONFIG.SB_URL && CONFIG.SB_KEY) {
     sb = window.supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
     sbConnected = isOnline;
     console.log('✓ Supabase client created (online: ' + isOnline + ')');
-  } else { console.log('ℹ Local mode'); }
+  }
 } catch (e) { console.error('Supabase init failed:', e); }
 
-// =====================================================
-// PWA SERVICE WORKER
-// =====================================================
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE_NAME = 'deir-iyawaat-v12.8.0';
-    const ASSETS = ['/'];
-    self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
+    const CACHE_NAME = 'deir-iyawaat-v12.9.0';
+    self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['/'])).then(() => self.skipWaiting())); });
     self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
     self.addEventListener('fetch', (e) => {
       if (e.request.method !== 'GET') return;
@@ -177,9 +170,6 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register(swUrl).then((reg) => console.log('✓ Service Worker registered')).catch((err) => console.log('⚠ SW failed:', err.message));
 }
 
-// =====================================================
-// ONLINE/OFFLINE
-// =====================================================
 window.addEventListener('online', () => {
   isOnline = true; sbConnected = true;
   document.getElementById('offlineBanner').classList.add('hidden');
@@ -201,9 +191,6 @@ function updateSyncButton() {
   else { syncBtn.classList.add('hidden'); }
 }
 
-// =====================================================
-// UTILS
-// =====================================================
 const U = {
   uuid: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
@@ -244,9 +231,6 @@ const U = {
   getDownloadLabel: (type) => ({ image: 'تحميل الصورة', excel: 'تحميل Excel', document: 'تحميل الملف', pdf: 'تحميل PDF', archive: 'تحميل الملف', other: 'تحميل الملف' }[type] || 'تحميل الملف')
 };
 
-// =====================================================
-// AUTH
-// =====================================================
 const Auth = {
   user: null,
   load() { this.user = U.load('db_user', null); return this.user; },
@@ -277,59 +261,47 @@ const Auth = {
     sessionStorage.removeItem('center_session');
     render();
   },
-  // ✅ FIXED: استخدام data.id مباشرة كـ UUID صالح + تأكيد الدخول
-async validateCenterCode(code) {
-  if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
-  if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
-  
-  const cleanCode = code.replace(/\s+/g, '').toUpperCase();
-  console.log('🔍 البحث عن الرمز:', cleanCode);
-  
-  const { data, error } = await sb.from('center_access_codes')
-    .select('*')
-    .eq('code', cleanCode)
-    .eq('is_active', true)
-    .single();
-  
-  console.log('📊 النتيجة:', { data, error });
-  
-  if (error || !data) {
-    console.error('❌ خطأ:', error);
-    throw new Error('رمز غير صحيح أو ملغى');
+  async validateCenterCode(code) {
+    if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
+    if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
+    const cleanCode = code.replace(/\s+/g, '').toUpperCase();
+    console.log('🔍 البحث عن الرمز:', cleanCode);
+    const { data, error } = await sb.from('center_access_codes')
+      .select('*')
+      .eq('code', cleanCode)
+      .eq('is_active', true)
+      .single();
+    console.log('📊 النتيجة:', { data, error });
+    if (error || !data) {
+      console.error('❌ خطأ:', error);
+      throw new Error('رمز غير صحيح أو ملغى');
+    }
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      throw new Error('الرمز منتهي الصلاحية');
+    }
+    await sb.from('center_access_codes')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', data.id);
+    const sector = SECTORS.find(s => s.id === data.sector_id);
+    centerSession = {
+      codeId: data.id,
+      centerName: data.center_name,
+      sectorId: data.sector_id,
+      sectorName: sector ? sector.name : 'غير محدد',
+    };
+    // ✅ FIX: استخدام data.id مباشرة (UUID صالح) بدلاً من 'center-' + data.id
+    this.user = {
+      id: data.id,
+      email: 'center@local',
+      full_name: data.center_name,
+      role: 'center_manager',
+      sector_id: data.sector_id,
+    };
+    sessionStorage.setItem('center_session', JSON.stringify(centerSession));
+    U.save('db_user', this.user);
+    console.log('✅ تم إنشاء جلسة مدير المركز:', centerSession);
+    return centerSession;
   }
-  
-  if (data.expires_at && new Date(data.expires_at) < new Date()) {
-    throw new Error('الرمز منتهي الصلاحية');
-  }
-  
-  await sb.from('center_access_codes')
-    .update({ last_used_at: new Date().toISOString() })
-    .eq('id', data.id);
-  
-  const sector = SECTORS.find(s => s.id === data.sector_id);
-  
-  centerSession = {
-    codeId: data.id,
-    centerName: data.center_name,
-    sectorId: data.sector_id,
-    sectorName: sector ? sector.name : 'غير محدد',
-  };
-  
-  // ✅ الحل: إنشاء مستخدم جديد بـ UUID صالح (data.id)
-  this.user = {
-    id: data.id,  // ✅ UUID صالح من center_access_codes
-    email: 'center@local',
-    full_name: data.center_name,
-    role: 'center_manager',
-    sector_id: data.sector_id,
-  };
-  
-  sessionStorage.setItem('center_session', JSON.stringify(centerSession));
-  U.save('db_user', this.user);
-  
-  console.log('✅ تم إنشاء جلسة مدير المركز:', centerSession);
-  return centerSession;
-}
 };
 
 function subscribeToNotifications() {
@@ -360,9 +332,6 @@ async function refreshNotifications() {
   } catch (e) { console.error('Error in refreshNotifications:', e); }
 }
 
-// =====================================================
-// DATA SERVICE
-// =====================================================
 const DB = {
   async getAll(filters = {}) {
     if (sbConnected) {
@@ -386,24 +355,85 @@ const DB = {
     }
     return U.load('db_correspondence_cache', U.load('db_correspondence', []));
   },
-async create(rec, files = []) {
-  if (sbConnected) {
-    let targetSectorId = rec.sector_id;
-    
-    // ✅ إصلاح: لمدير المركز، استخدم sector_id من الجلسة مباشرة
-    if (Auth.user && Auth.user.role === 'center_manager') {
-      targetSectorId = centerSession?.sectorId || Auth.user.sector_id;
-      if (!targetSectorId) {
-        throw new Error('القطاع غير محدد - الرجاء تسجيل الدخول بالرمز مرة أخرى');
+  async create(rec, files = []) {
+    if (sbConnected) {
+      // ✅ FIXED: إضافة fallback لـ sector_id
+      let targetSectorId = rec.sector_id;
+      if (Auth.user && Auth.user.role === 'center_manager') {
+        targetSectorId = centerSession?.sectorId || Auth.user.sector_id;
+        if (!targetSectorId) {
+          throw new Error('القطاع غير محدد - الرجاء تسجيل الدخول بالرمز مرة أخرى');
+        }
       }
+      if (!targetSectorId || targetSectorId === 'undefined') {
+        throw new Error('القطاع غير محدد');
+      }
+      if (targetSectorId === 'ALL') {
+        const results = [];
+        for (const sector of SECTORS) {
+          const newId = U.uuid();
+          const refNum = U.genRef(sector.code);
+          try {
+            const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
+              id: newId, reference_number: refNum, subject: rec.subject, content: rec.content,
+              sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
+              sector_id: sector.id, priority: rec.priority || 'normal',
+              is_archived: false, created_at: new Date().toISOString()
+            }]).select().single();
+            if (insertError) throw insertError;
+            let atts = [];
+            if (files.length > 0) {
+              try {
+                await this.uploadAttachments(newId, files);
+                const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', newId);
+                atts = attData || [];
+              } catch (e) { console.error('Failed to upload attachments:', e); }
+            }
+            results.push({ ...inserted, attachments: atts, replies: [], follow_ups: [] });
+          } catch (e) { console.error(`Error creating correspondence for sector ${sector.name}:`, e); }
+        }
+        return results;
+      } else {
+        const recordId = U.uuid();
+        const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === targetSectorId)?.code || 'XX');
+        try {
+          const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
+            id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
+            sender_id: Auth.user?.id, sender_name: Auth.user?.full_name || 'مدير مركز',
+            sector_id: targetSectorId,
+            priority: rec.priority || 'normal',
+            is_archived: false, created_at: new Date().toISOString()
+          }]).select().single();
+          if (insertError) throw insertError;
+          let atts = [];
+          if (files.length > 0) {
+            try {
+              await this.uploadAttachments(recordId, files);
+              const { data: attData } = await sb.from('attachments').select('*').eq('correspondence_id', recordId);
+              atts = attData || [];
+            } catch (e) { console.error('Failed to upload attachments:', e); }
+          }
+          return { ...inserted, attachments: atts, replies: [], follow_ups: [] };
+        } catch (e) { console.error('Error creating correspondence:', e); throw e; }
+      }
+    } else {
+      const recordId = U.uuid();
+      const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
+      const record = { id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
+        sender_name: rec.sender_name || Auth.user?.full_name, sector_id: rec.sector_id, priority: rec.priority || 'normal',
+        is_archived: false, replies: [], follow_ups: [], attachments: [], created_at: U.now(), _pending: true };
+      const pending = U.load('db_pending_sync', []);
+      pending.push({ type: 'correspondence', action: 'create', data: record, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
+      U.save('db_pending_sync', pending);
+      const localData = U.load('db_correspondence', []);
+      localData.push(record);
+      U.save('db_correspondence', localData);
+      U.save('db_correspondence_cache', localData);
+      U.toast('💾 تم الحفظ محلياً', 'info');
+      updateSyncButton();
+      return record;
     }
-    
-    // ✅ تحقق إضافي
-    if (!targetSectorId || targetSectorId === 'undefined') {
-      throw new Error('القطاع غير محدد');
-    }
-    
-    // ... (باقي الكود كما هو),
+  },
   async uploadAttachments(correspondenceId, files) {
     if (!sbConnected) return;
     for (let i = 0; i < files.length; i++) {
@@ -678,18 +708,12 @@ async create(rec, files = []) {
   }
 };
 
-// =====================================================
-// ROUTER
-// =====================================================
 const Router = {
   page: 'dashboard',
   params: {},
   go(page, params = {}) { this.page = page; this.params = params; render(); window.scrollTo(0, 0); }
 };
 
-// =====================================================
-// REPORTS SERVICE
-// =====================================================
 const Reports = {
   buildReportHTML(title, subtitle, headers, rows, stats = null) {
     let html = `<div style="padding: 30px; background: white; direction: rtl; font-family: 'Cairo', sans-serif;">
@@ -806,91 +830,78 @@ const Reports = {
   }
 };
 
-// =====================================================
-// VIEWS
-// =====================================================
 const Views = {
-  // ✅ شاشة تسجيل الدخول - للمدير العام فقط + زر توليد الرمز
-login() {
-  return `<div class="min-h-screen flex items-center justify-center p-4">
-    <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in">
-      <div class="text-center mb-6">
-        <div class="text-6xl mb-3">🏢</div>
-        <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
-        <p class="text-gray-600 text-sm mt-2">نظام المراسلات والشكاوى</p>
-        ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">⚠️ وضع أوفلاين</div>' : ''}
-      </div>
-      <div id="loginErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
-      <form class="space-y-4" onsubmit="return false;">
-        <div><label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label><input type="email" id="lgEmail" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="name@example.com"></div>
-        <div><label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label><input type="password" id="lgPass" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••"></div>
-        <div class="flex items-center justify-between text-sm">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"><span class="text-gray-600">تذكرني</span></label>
-          <button type="button" onclick="UI.forgotPassword()" class="text-teal-600 hover:text-teal-800 font-semibold cursor-pointer">هل نسيت كلمة المرور؟</button>
+  login() {
+    return `<div class="min-h-screen flex items-center justify-center p-4">
+      <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in">
+        <div class="text-center mb-6">
+          <div class="text-6xl mb-3">🏢</div>
+          <h1 class="text-2xl font-bold text-teal-800">${CONFIG.APP_NAME}</h1>
+          <p class="text-gray-600 text-sm mt-2">نظام المراسلات والشكاوى</p>
+          ${!isOnline ? '<div class="mt-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs inline-block">⚠️ وضع أوفلاين</div>' : ''}
         </div>
-        <button type="button" id="lgBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">🔐 تسجيل الدخول</button>
-      </form>
-      
-      <!-- ✅ قسم توليد رمز الدخول + حقل إدخال الرمز (ظاهر دائماً) -->
-      <div class="mt-6 pt-6 border-t border-gray-200">
-        <button type="button" onclick="UI.showGenerateCodeFromLogin()" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-xl font-bold cursor-pointer transition mb-3 flex items-center justify-center gap-2">
-          <span class="text-xl">🔑</span>
-          <span>توليد رمز دخول جديد</span>
-        </button>
-        
-        <!-- ✅ حقل إدخال الرمز - ظاهر دائماً (بدون class="hidden") -->
-        <div id="codeInputSection">
-          <label class="block text-sm font-semibold mb-2 text-gray-700">🔑 رمز الدخول</label>
-          <input type="text" id="centerCodeInput" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none text-center text-2xl tracking-widest font-mono" placeholder="XXXX-XXXX" style="text-transform: uppercase;">
-          <button type="button" onclick="UI.loginWithCode()" class="btn-primary w-full py-3 rounded-xl font-bold mt-2">🚪 دخول بالرمز</button>
+        <div id="loginErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
+        <form class="space-y-4" onsubmit="return false;">
+          <div><label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label><input type="email" id="lgEmail" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="name@example.com"></div>
+          <div><label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label><input type="password" id="lgPass" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••"></div>
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"><span class="text-gray-600">تذكرني</span></label>
+            <button type="button" onclick="UI.forgotPassword()" class="text-teal-600 hover:text-teal-800 font-semibold cursor-pointer">هل نسيت كلمة المرور؟</button>
+          </div>
+          <button type="button" id="lgBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">🔐 تسجيل الدخول</button>
+        </form>
+        <div class="mt-6 pt-6 border-t border-gray-200">
+          <button type="button" onclick="UI.showGenerateCodeFromLogin()" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-xl font-bold cursor-pointer transition mb-3 flex items-center justify-center gap-2">
+            <span class="text-xl">🔑</span>
+            <span>توليد رمز دخول جديد</span>
+          </button>
+          <div id="codeInputSection">
+            <label class="block text-sm font-semibold mb-2 text-gray-700">🔑 رمز الدخول</label>
+            <input type="text" id="centerCodeInput" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none text-center text-2xl tracking-widest font-mono" placeholder="XXXX-XXXX" style="text-transform: uppercase;">
+            <button type="button" onclick="UI.loginWithCode()" class="btn-primary w-full py-3 rounded-xl font-bold mt-2">🚪 دخول بالرمز</button>
+          </div>
+        </div>
+        <div class="mt-4 text-xs text-gray-500 text-center">
+          <p>الإصدار ${CONFIG.VERSION}</p>
+          <p class="mt-1">© 2026 ${CONFIG.ORG}</p>
         </div>
       </div>
-      
-      <div class="mt-4 text-xs text-gray-500 text-center">
-        <p>الإصدار ${CONFIG.VERSION}</p>
-        <p class="mt-1">© 2026 ${CONFIG.ORG}</p>
-      </div>
-    </div>
-    
-    <!-- ✅ Modal توليد الرمز -->
-    <div id="generateCodeModal" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
-      <div class="glass rounded-2xl p-6 max-w-md w-full">
-        <h3 class="text-xl font-bold text-teal-800 mb-4">🔑 توليد رمز دخول جديد</h3>
-        <div id="codeModalErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
-        <div id="codeModalSuccess" class="hidden bg-green-100 border-r-4 border-green-500 text-green-700 p-3 rounded mb-4 text-sm"></div>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-semibold mb-1">اسم المركز *</label>
-            <input type="text" id="newCenterName" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="مثال: مركز النور">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1">القطاع *</label>
-            <select id="newSectorId" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-              ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="border-t pt-4 mt-4">
-            <p class="text-xs text-gray-600 mb-3">⚠️ يجب إدخال بيانات المدير العام للتحقق من الصلاحية</p>
+      <div id="generateCodeModal" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
+        <div class="glass rounded-2xl p-6 max-w-md w-full">
+          <h3 class="text-xl font-bold text-teal-800 mb-4">🔑 توليد رمز دخول جديد</h3>
+          <div id="codeModalErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
+          <div id="codeModalSuccess" class="hidden bg-green-100 border-r-4 border-green-500 text-green-700 p-3 rounded mb-4 text-sm"></div>
+          <div class="space-y-4">
             <div>
-              <label class="block text-sm font-semibold mb-1">بريد المدير العام *</label>
-              <input type="email" id="adminEmail" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin@example.com">
+              <label class="block text-sm font-semibold mb-1">اسم المركز *</label>
+              <input type="text" id="newCenterName" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="مثال: مركز النور">
             </div>
-            <div class="mt-3">
-              <label class="block text-sm font-semibold mb-1">كلمة مرور المدير *</label>
-              <input type="password" id="adminPassword" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
+            <div>
+              <label class="block text-sm font-semibold mb-1">القطاع *</label>
+              <select id="newSectorId" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
+                ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+              </select>
             </div>
-          </div>
-          <div class="flex gap-2 pt-2">
-            <button type="button" onclick="UI.generateCodeFromLogin()" class="btn-primary flex-1 py-3 rounded-xl font-bold">توليد الرمز</button>
-            <button type="button" onclick="document.getElementById('generateCodeModal').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+            <div class="border-t pt-4 mt-4">
+              <p class="text-xs text-gray-600 mb-3">⚠️ يجب إدخال بيانات المدير العام للتحقق من الصلاحية</p>
+              <div>
+                <label class="block text-sm font-semibold mb-1">بريد المدير العام *</label>
+                <input type="email" id="adminEmail" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin@example.com">
+              </div>
+              <div class="mt-3">
+                <label class="block text-sm font-semibold mb-1">كلمة مرور المدير *</label>
+                <input type="password" id="adminPassword" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
+              </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+              <button type="button" onclick="UI.generateCodeFromLogin()" class="btn-primary flex-1 py-3 rounded-xl font-bold">توليد الرمز</button>
+              <button type="button" onclick="document.getElementById('generateCodeModal').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>`;
-},
-  
-  // ✅ شاشة دخول مدير المركز بالرمز فقط (مع تأكيد)
+    </div>`;
+  },
   centerCodeLogin() {
     return `<div class="min-h-screen flex items-center justify-center p-4">
       <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in text-center">
@@ -913,7 +924,6 @@ login() {
       </div>
     </div>`;
   },
-
   dashboard(data) {
     data = data || appData.correspondence || [];
     const u = Auth.user || {};
@@ -937,7 +947,7 @@ login() {
           ${SECTORS.map(s => {
             const count = active.filter(r => r.sector_id === s.id).length;
             return `<button onclick="Router.go('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right cursor-pointer">
-              <div class="bg-gradient-to-br ${s.color} text-white rounded-xl p-3 inline-flex items-center justify-center mb-2">${s.icon}</div>
+              <div class="bg-gradient-to-br ${s.color} text-white rounded-xl p-3 inline-flex items-center justify-center mb-2 text-3xl">${s.icon}</div>
               <h3 class="font-bold text-gray-800">${s.name}</h3>
               <div class="text-sm text-gray-500 mt-1">${count} مراسلة</div>
             </button>`;
@@ -958,7 +968,6 @@ login() {
       </div>
     </div>`;
   },
-
   async followups(data) {
     data = data || appData.correspondence || [];
     const u = Auth.user || {};
@@ -1049,7 +1058,6 @@ login() {
       </div>
     </div>`;
   },
-
   async notifications() {
     const u = Auth.user || {};
     let notifications = [];
@@ -1106,7 +1114,6 @@ login() {
       </div>
     </div>`;
   },
-
   general(data) {
     data = data || appData.correspondence || [];
     const filteredData = data.filter(r => !r.is_archived);
@@ -1125,7 +1132,6 @@ login() {
       </div>
     </div>`;
   },
-
   sector(data) {
     data = data || appData.correspondence || [];
     const sid = Router.params.id;
@@ -1137,7 +1143,7 @@ login() {
         <div class="bg-gradient-to-br ${s.color} text-white rounded-2xl shadow-xl p-6 mb-6">
           <div class="flex items-center justify-between flex-wrap gap-3">
             <div class="flex items-center gap-4">
-              <div class="bg-white/20 rounded-xl p-3">${s.icon}</div>
+              <div class="bg-white/20 rounded-xl p-3 text-3xl">${s.icon}</div>
               <div><h1 class="text-3xl font-bold">${s.name}</h1><p class="opacity-90 mt-1">${filteredData.length} مراسلة نشطة</p></div>
             </div>
             <div class="flex gap-2 flex-wrap">
@@ -1151,7 +1157,6 @@ login() {
       </div>
     </div>`;
   },
-
   archive(data) {
     data = data || appData.correspondence || [];
     const filteredData = data.filter(r => r.is_archived);
@@ -1164,11 +1169,9 @@ login() {
       </div>
     </div>`;
   },
-
   create() {
     const u = Auth.user || {};
     const isAdmin = u.role === 'super_admin' || u.role === 'general_admin';
-    // ✅ واجهة مبسطة لمدير المركز
     if (u.role === 'center_manager') {
       const sector = SECTORS.find(s => s.id === u.sector_id);
       return `<div class="min-h-screen">${this.navbar()}
@@ -1216,7 +1219,6 @@ login() {
         </div>
       </div>`;
     }
-    // الواجهة العادية لباقي الأدوار
     const preSector = Router.params.sector || '';
     return `<div class="min-h-screen">${this.navbar()}
       <div class="max-w-3xl mx-auto p-4 md:p-6 fade-in">
@@ -1252,7 +1254,6 @@ login() {
       </div>
     </div>`;
   },
-
   async view() {
     const id = Router.params.id;
     const r = await DB.getById(id);
@@ -1331,7 +1332,6 @@ login() {
       </div>
     </div>`;
   },
-
   async complaints() {
     const u = Auth.user || {};
     const isAdmin = u.role === 'super_admin' || u.role === 'general_admin';
@@ -1415,7 +1415,6 @@ login() {
       </div>
     </div>`;
   },
-
   oversightNavbar() {
     const u = Auth.user || {};
     if (!u.id) return '';
@@ -1434,11 +1433,9 @@ login() {
       </div>
     </nav>`;
   },
-
   navbar() {
     const u = Auth.user || {};
     if (!u.id) return '';
-    // ✅ شريط مبسط لمدير المركز
     if (u.role === 'center_manager') {
       return `<nav class="glass shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
@@ -1456,7 +1453,6 @@ login() {
         </div>
       </nav>`;
     }
-    // شريط التنقل العادي
     return `<nav class="glass shadow-lg sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
         <div class="flex items-center gap-3">
@@ -1476,7 +1472,6 @@ login() {
       </div>
     </nav>`;
   },
-
   card(r) {
     const s = SECTORS.find(x => x.id === r.sector_id);
     const pc = r.priority === 'high' ? 'priority-high' : r.priority === 'low' ? 'priority-low' : r.priority === 'urgent' ? 'priority-urgent' : 'priority-normal';
@@ -1512,7 +1507,6 @@ login() {
       </div>
     </div>`;
   },
-
   async oversightDashboard() {
     const u = Auth.user || {};
     const sector = SECTORS.find(s => s.id === u.sector_id);
@@ -1524,7 +1518,7 @@ login() {
         <div class="oversight-gradient rounded-2xl shadow-xl p-6 mb-6 text-white">
           <div class="flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center gap-4">
-              <div class="bg-white/20 rounded-xl p-3">${sector.icon}</div>
+              <div class="bg-white/20 rounded-xl p-3 text-3xl">${sector.icon}</div>
               <div><h1 class="text-3xl font-bold">🛡️ لوحة الرقابة المركزية</h1><p class="opacity-90 mt-1">${sector.name} – ${U.esc(u.full_name)}</p></div>
             </div>
             <button onclick="Router.go('createComplaint')" class="bg-white text-orange-700 px-6 py-3 rounded-xl font-bold shadow-lg cursor-pointer hover:bg-orange-50 transition">➕ تسجيل شكوى جديدة</button>
@@ -1556,7 +1550,6 @@ login() {
       </div>
     </div>`;
   },
-
   async oversightComplaints() {
     const u = Auth.user || {};
     const sector = SECTORS.find(s => s.id === u.sector_id);
@@ -1566,7 +1559,7 @@ login() {
       <div class="max-w-7xl mx-auto p-4 md:p-6 fade-in">
         <div class="oversight-gradient rounded-2xl shadow-xl p-6 mb-6 text-white">
           <div class="flex items-center gap-4">
-            <div class="bg-white/20 rounded-xl p-3">${sector?.icon || ''}</div>
+            <div class="bg-white/20 rounded-xl p-3 text-3xl">${sector?.icon || ''}</div>
             <div><h1 class="text-3xl font-bold">📋 إدارة الشكاوى</h1><p class="opacity-90 mt-1">${sector?.name || ''} – ${allComplaints.length} شكوى</p></div>
           </div>
         </div>
@@ -1596,7 +1589,6 @@ login() {
       </div>
     </div>`;
   },
-
   createComplaint() {
     const u = Auth.user || {};
     const isAdmin = u.role === 'super_admin' || u.role === 'general_admin';
@@ -1643,7 +1635,6 @@ login() {
       </div>
     </div>`;
   },
-
   async viewComplaint() {
     const id = Router.params.id;
     const complaint = await DB.getComplaintById(id);
@@ -1709,7 +1700,6 @@ login() {
       </div>
     </div>`;
   },
-
   complaintCard(c) {
     const sector = SECTORS.find(s => s.id === c.sector_id);
     const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
@@ -1738,8 +1728,6 @@ login() {
       </div>
     </div>`;
   },
-
-  // ✅ لوحة إدارة رموز المراكز (للمدراء فقط)
   async adminCenterCodes() {
     const u = Auth.user || {};
     if (u.role !== 'super_admin' && u.role !== 'general_admin') {
@@ -1795,7 +1783,6 @@ login() {
           </table>
         </div>
       </div>
-      <!-- Modal توليد رمز -->
       <div id="generateCodeModal" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
         <div class="glass rounded-2xl p-6 max-w-md w-full">
           <h3 class="text-xl font-bold text-teal-800 mb-4">🔑 توليد رمز دخول جديد</h3>
@@ -1822,152 +1809,107 @@ login() {
   }
 };
 
-// =====================================================
-// UI ACTIONS
-// =====================================================
 const UI = {
-  // ✅ دوال توليد الرمز من شاشة الدخول
   showGenerateCodeFromLogin() {
     document.getElementById('generateCodeModal').classList.remove('hidden');
   },
-  
-async generateCodeFromLogin() {
-  const centerName = document.getElementById('newCenterName').value.trim();
-  const sectorId = document.getElementById('newSectorId').value;
-  const adminEmail = document.getElementById('adminEmail').value.trim();
-  const adminPassword = document.getElementById('adminPassword').value;
-  const errEl = document.getElementById('codeModalErr');
-  const successEl = document.getElementById('codeModalSuccess');
-  
-  if (!centerName || !sectorId || !adminEmail || !adminPassword) {
-    errEl.textContent = '❌ الرجاء ملء جميع الحقول';
-    errEl.classList.remove('hidden');
+  async generateCodeFromLogin() {
+    const centerName = document.getElementById('newCenterName').value.trim();
+    const sectorId = document.getElementById('newSectorId').value;
+    const adminEmail = document.getElementById('adminEmail').value.trim();
+    const adminPassword = document.getElementById('adminPassword').value;
+    const errEl = document.getElementById('codeModalErr');
+    const successEl = document.getElementById('codeModalSuccess');
+    if (!centerName || !sectorId || !adminEmail || !adminPassword) {
+      errEl.textContent = '❌ الرجاء ملء جميع الحقول';
+      errEl.classList.remove('hidden');
+      successEl.classList.add('hidden');
+      return;
+    }
+    errEl.classList.add('hidden');
     successEl.classList.add('hidden');
-    return;
-  }
-  
-  errEl.classList.add('hidden');
-  successEl.classList.add('hidden');
-  
-  try {
-    const { data: authData, error: authError } = await sb.auth.signInWithPassword({ 
-      email: adminEmail, 
-      password: adminPassword 
-    });
-    
-    if (authError) throw new Error('بيانات المدير غير صحيحة');
-    
-    const { data: profile } = await sb.from('profiles')
-      .select('*')
-      .eq('id', authData.user.id)
-      .single();
-    
-    if (!profile || !['super_admin', 'general_admin'].includes(profile.role)) {
-      throw new Error('ليس لديك صلاحية توليد الرموز');
+    try {
+      const { data: authData, error: authError } = await sb.auth.signInWithPassword({
+        email: adminEmail,
+        password: adminPassword
+      });
+      if (authError) throw new Error('بيانات المدير غير صحيحة');
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', authData.user.id).single();
+      if (!profile || !['super_admin', 'general_admin'].includes(profile.role)) {
+        throw new Error('ليس لديك صلاحية توليد الرموز');
+      }
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) {
+        if (i === 4) code += '-';
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const { error: insertError } = await sb.from('center_access_codes').insert([{
+        code: code,
+        center_name: centerName,
+        sector_id: sectorId,
+        is_active: true,
+        created_by: profile.id
+      }]);
+      if (insertError) throw insertError;
+      successEl.textContent = `✅ تم توليد الرمز: ${code}`;
+      successEl.classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('generateCodeModal').classList.add('hidden');
+        document.getElementById('codeInputSection').classList.remove('hidden');
+        document.getElementById('centerCodeInput').value = code;
+        document.getElementById('newCenterName').value = '';
+        document.getElementById('adminEmail').value = '';
+        document.getElementById('adminPassword').value = '';
+      }, 1500);
+    } catch (e) {
+      errEl.textContent = '❌ ' + (e.message || 'فشل التوليد');
+      errEl.classList.remove('hidden');
     }
-    
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 8; i++) {
-      if (i === 4) code += '-';
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    const { error: insertError } = await sb.from('center_access_codes').insert([{
-      code: code,
-      center_name: centerName,
-      sector_id: sectorId,
-      is_active: true,
-      created_by: profile.id
-    }]);
-    
-    if (insertError) throw insertError;
-    
-    // ✅ تسجيل خروج المدير العام بعد التوليد
-    await sb.auth.signOut();
-    Auth.user = null;
-    localStorage.removeItem('db_user');
-    
-    successEl.textContent = `✅ تم توليد الرمز: ${code}`;
-    successEl.classList.remove('hidden');
-    
-    setTimeout(() => {
-      document.getElementById('generateCodeModal').classList.add('hidden');
-      document.getElementById('codeInputSection').classList.remove('hidden');
-      document.getElementById('centerCodeInput').value = code;
-      document.getElementById('newCenterName').value = '';
-      document.getElementById('adminEmail').value = '';
-      document.getElementById('adminPassword').value = '';
-    }, 1500);
-    
-  } catch (e) {
-    errEl.textContent = '❌ ' + (e.message || 'فشل التوليد');
-    errEl.classList.remove('hidden');
-  }
-},
-  
-  // ✅ الدخول بالرمز مع تأكيد
-async loginWithCode() {
-  const codeInput = document.getElementById('centerCodeInput');
-  const errEl = document.getElementById('loginErr');
-  
-  if (!codeInput) return;
-  
-  const code = codeInput.value.trim();
-  if (!code) {
-    errEl.textContent = 'الرجاء إدخال الرمز';
-    errEl.classList.remove('hidden');
-    return;
-  }
-  
-  // ✅ إعادة تعيين المستخدم قبل التحقق
-  Auth.user = null;
-  localStorage.removeItem('db_user');
-  
-  try {
-    await Auth.validateCenterCode(code);
-    U.toast('✅ تم التحقق بنجاح - مرحباً ' + centerSession.centerName, 'success');
-    render();
-  } catch (e) {
-    errEl.textContent = e.message;
-    errEl.classList.remove('hidden');
-  }
-},
-  
-  // ✅ دالة التحقق من رمز المركز (للشاشة المنفصلة)
-  async validateCenterCode() {
+  },
+  async loginWithCode() {
     const codeInput = document.getElementById('centerCodeInput');
-    const errEl = document.getElementById('codeErr');
-    const successEl = document.getElementById('codeSuccess');
-    const btn = document.getElementById('validateCodeBtn');
-    
+    const errEl = document.getElementById('loginErr');
     if (!codeInput) return;
     const code = codeInput.value.trim();
-    
     if (!code) {
       errEl.textContent = 'الرجاء إدخال الرمز';
       errEl.classList.remove('hidden');
       return;
     }
-    
+    // ✅ إعادة تعيين المستخدم قبل التحقق
+    Auth.user = null;
+    localStorage.removeItem('db_user');
+    try {
+      await Auth.validateCenterCode(code);
+      U.toast('✅ تم التحقق بنجاح - مرحباً ' + centerSession.centerName, 'success');
+      render();
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove('hidden');
+    }
+  },
+  async validateCenterCode() {
+    const codeInput = document.getElementById('centerCodeInput');
+    const errEl = document.getElementById('codeErr');
+    const successEl = document.getElementById('codeSuccess');
+    const btn = document.getElementById('validateCodeBtn');
+    if (!codeInput) return;
+    const code = codeInput.value.trim();
+    if (!code) {
+      errEl.textContent = 'الرجاء إدخال الرمز';
+      errEl.classList.remove('hidden');
+      return;
+    }
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> جاري التحقق...';
     errEl.classList.add('hidden');
     successEl.classList.add('hidden');
-    
     try {
       const session = await Auth.validateCenterCode(code);
-      
-      // ✅ تأكيد الدخول
-      const confirmLogin = confirm(`✅ تم التحقق من الرمز بنجاح!\n\nالمركز: ${session.centerName}\nالقطاع: ${session.sectorName}\n\nهل تريد الدخول الآن؟`);
-      
-      if (confirmLogin) {
-        successEl.textContent = `✅ مرحباً ${session.centerName} - ${session.sectorName}`;
-        successEl.classList.remove('hidden');
-        setTimeout(() => { Router.page = 'create'; render(); }, 800);
-      } else {
-        Auth.logout();
-      }
+      successEl.textContent = `✅ مرحباً ${session.centerName} - ${session.sectorName}`;
+      successEl.classList.remove('hidden');
+      setTimeout(() => { Router.page = 'create'; render(); }, 800);
     } catch (e) {
       errEl.textContent = '❌ ' + (e.message || 'فشل التحقق');
       errEl.classList.remove('hidden');
@@ -1975,9 +1917,7 @@ async loginWithCode() {
       btn.innerHTML = 'تحقق ودخول';
     }
   },
-
   reply(id) { const content = prompt('نص الرد:'); if (!content) return; try { DB.addReply(id, content); U.toast('تم إضافة الرد', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
-  
   followUp(id) {
     const title = prompt('عنوان المهمة:');
     if (!title) return;
@@ -2002,7 +1942,6 @@ async loginWithCode() {
       }
     })();
   },
-  
   async changeFollowUpStatus(fuId, corrId, newStatus) {
     try {
       await DB.updateFollowUp(fuId, { status: newStatus });
@@ -2010,7 +1949,6 @@ async loginWithCode() {
       render();
     } catch (e) { U.toast(e.message, 'error'); }
   },
-  
   async deleteFollowUp(fuId, corrId) {
     if (!confirm('⚠️ هل تريد حذف هذه المتابعة؟')) return;
     try {
@@ -2019,7 +1957,6 @@ async loginWithCode() {
       render();
     } catch (e) { U.toast(e.message, 'error'); }
   },
-  
   async markAllNotifRead() {
     try {
       await DB.markAllNotificationsRead();
@@ -2027,7 +1964,6 @@ async loginWithCode() {
       render();
     } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
   },
-  
   async markNotifRead(id) {
     try {
       await DB.markNotificationRead(id);
@@ -2035,7 +1971,6 @@ async loginWithCode() {
       render();
     } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
   },
-  
   async deleteNotif(id) {
     if (!confirm('هل تريد حذف هذا التنبيه؟')) return;
     try {
@@ -2044,7 +1979,6 @@ async loginWithCode() {
       render();
     } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
   },
-  
   async clearAllNotifs() {
     if (!confirm('هل تريد مسح جميع التنبيهات؟')) return;
     try {
@@ -2053,10 +1987,8 @@ async loginWithCode() {
       render();
     } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
   },
-  
   async archive(id) { if (!confirm('تأكيد أرشفة هذه المراسلة؟')) return; try { await DB.archive(id); U.toast('تمت الأرشفة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
   async restore(id) { try { await DB.restore(id); U.toast('تمت الاستعادة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
-  
   async del(id) {
     if (!confirm('⚠️ حذف نهائي؟')) return;
     try {
@@ -2070,13 +2002,9 @@ async loginWithCode() {
       U.toast('❌ فشل الحذف: ' + (e.message || 'خطأ غير معروف'), 'error');
     }
   },
-  
   openWhatsApp() { const msg = encodeURIComponent(`مرحباً، أنا من ${CONFIG.ORG}`); window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${msg}`, '_blank'); },
-  
   forgotPassword() { const email = prompt('الرجاء إدخال بريدك الإلكتروني لاستعادة كلمة المرور:'); if (!email) return; if (sbConnected) { sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }).then(() => U.toast('✅ تم إرسال رابط إعادة تعيين كلمة المرور', 'success')).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); } else { U.toast('⚠️ هذه الميزة متاحة فقط عند الاتصال بـ Supabase', 'warning'); } },
-  
   registerNewUser() { if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; } const email = prompt('البريد الإلكتروني:'); if (!email) return; const password = prompt('كلمة المرور (6 أحرف على الأقل):'); if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; } const fullName = prompt('الاسم الكامل:'); const username = prompt('اسم المستخدم:'); const role = prompt('الدور (super_admin/general_admin/sector_admin/central_oversight/sector_staff):', 'sector_staff'); sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: role || 'sector_staff' } } }).then(({ data, error }) => { if (error) throw error; U.toast('✅ تم إنشاء الحساب بنجاح!', 'success'); }).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); },
-  
   async submitComplaint() {
     const sector = document.getElementById('compSector').value;
     const title = document.getElementById('compTitle').value.trim();
@@ -2097,7 +2025,6 @@ async loginWithCode() {
       Router.go(u.role === 'central_oversight' ? 'oversightDashboard' : 'complaints');
     } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); btn.disabled = false; btn.innerHTML = '📤 إرسال الشكوى'; }
   },
-  
   async updateComplaint(id) {
     const status = document.getElementById('updateStatus').value;
     const response = document.getElementById('adminResponse').value.trim();
@@ -2105,7 +2032,6 @@ async loginWithCode() {
     if (status === 'resolved') { updates.resolved_by = Auth.user?.id; updates.resolved_at = new Date().toISOString(); }
     try { await DB.updateComplaint(id, updates); U.toast('✅ تم تحديث الشكوى', 'success'); Router.go('viewComplaint', { id }); } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); }
   },
-  
   async exportOversightReport() {
     const u = Auth.user || {};
     const complaints = await DB.getComplaints({ sector_id: u.sector_id });
@@ -2114,9 +2040,7 @@ async loginWithCode() {
     if (format === '1') { await Reports.exportComplaintsPDF(complaints, sector?.name || ''); }
     else if (format === '2') { Reports.exportComplaintsExcel(complaints, sector?.name || ''); }
   },
-  
   async syncOfflineData() { await DB.syncPending(); },
-  
   copyAsText(id) {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) { U.toast('المراسلة غير موجودة', 'error'); return; }
@@ -2124,9 +2048,7 @@ async loginWithCode() {
     const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
     if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text)); } else { this.fallbackCopy(text); }
   },
-  
   fallbackCopy(text) { const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); U.toast('✅ تم نسخ المراسلة كنص', 'success'); } catch (e) { U.toast('❌ فشل النسخ', 'error'); } document.body.removeChild(textarea); },
-  
   showQR(id) {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) return;
@@ -2138,7 +2060,6 @@ async loginWithCode() {
     try { new QRCode(container, { text: qrData, width: 220, height: 220, colorDark: '#0f766e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { container.innerHTML = '<div class="text-red-600">فشل إنشاء QR</div>'; }
     modal.classList.remove('hidden');
   },
-  
   shareWhatsApp(id) {
     const r = appData.correspondence.find(x => x.id === id);
     if (!r) return;
@@ -2146,28 +2067,25 @@ async loginWithCode() {
     const text = `*${CONFIG.ORG}*\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   },
-  
-  // ✅ دوال إدارة رموز المراكز
   showGenerateCodeModal() {
     document.getElementById('generateCodeModal').classList.remove('hidden');
     document.getElementById('newCenterName').value = '';
     document.getElementById('codeModalSuccess').classList.add('hidden');
   },
-  
   async generateCenterCode() {
     const centerName = document.getElementById('newCenterName').value.trim();
     const sectorId = document.getElementById('newSectorId').value;
     const successEl = document.getElementById('codeModalSuccess');
-    
-    if (!centerName) { U.toast('الرجاء إدخال اسم المركز', 'warning'); return; }
-    
+    if (!centerName) {
+      U.toast('الرجاء إدخال اسم المركز', 'warning');
+      return;
+    }
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 8; i++) {
       if (i === 4) code += '-';
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    
     try {
       const { error } = await sb.from('center_access_codes').insert([{
         code: code,
@@ -2177,7 +2095,6 @@ async loginWithCode() {
         created_by: Auth.user?.id
       }]);
       if (error) throw error;
-      
       successEl.innerHTML = `
         <div class="text-center">
           <div class="text-lg font-bold mb-2">✅ تم توليد الرمز بنجاح</div>
@@ -2192,7 +2109,6 @@ async loginWithCode() {
         </div>
       `;
       successEl.classList.remove('hidden');
-      
       setTimeout(() => {
         document.getElementById('generateCodeModal').classList.add('hidden');
         render();
@@ -2201,7 +2117,6 @@ async loginWithCode() {
       U.toast('❌ خطأ: ' + e.message, 'error');
     }
   },
-  
   async toggleCenterCode(id, isActive) {
     try {
       const { error } = await sb.from('center_access_codes').update({ is_active: isActive }).eq('id', id);
@@ -2214,9 +2129,6 @@ async loginWithCode() {
   }
 };
 
-// =====================================================
-// MAIN RENDER
-// =====================================================
 async function render() {
   Auth.load();
   const app = document.getElementById('app');
@@ -2231,7 +2143,6 @@ async function render() {
       if (btn) { btn.onclick = handleLogin; document.getElementById('lgPass').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); }); }
     }, 0);
   } else {
-    // ✅ التحقق من جلسة مدير المركز
     if (Auth.user.role === 'center_manager') {
       const savedSession = sessionStorage.getItem('center_session');
       if (savedSession) {
@@ -2243,7 +2154,6 @@ async function render() {
           centerSession = null;
         }
       }
-      
       if (!centerSession) {
         app.innerHTML = Views.centerCodeLogin();
         whatsappBtn.classList.add('hidden');
@@ -2256,17 +2166,12 @@ async function render() {
         return;
       }
     }
-    
     whatsappBtn.classList.remove('hidden');
     const u = Auth.user;
-    
-    // ✅ تقييد التصفح لمدير المركز
     if (u.role === 'center_manager' && Router.page !== 'create') {
       Router.page = 'create';
     }
-    
     if (u.role === 'central_oversight' && Router.page === 'dashboard') Router.page = 'oversightDashboard';
-
     if (sbConnected) {
       try {
         let filters = {};
@@ -2289,7 +2194,6 @@ async function render() {
       appData.correspondence = U.load('db_correspondence_cache', U.load('db_correspondence', []));
       appData.complaints = U.load('db_complaints_cache', U.load('db_complaints', []));
     }
-
     const views = {
       dashboard: () => Views.dashboard(appData.correspondence),
       sector: () => Views.sector(appData.correspondence),
@@ -2307,13 +2211,11 @@ async function render() {
       viewComplaint: () => Views.viewComplaint(),
       adminCenterCodes: () => Views.adminCenterCodes(),
     };
-
     const viewFn = views[Router.page] || (u.role === 'central_oversight' ? views.oversightDashboard : views.dashboard);
     const html = await viewFn();
     app.innerHTML = html;
     bindEvents();
     updateSyncButton();
-
     if (Auth.user && sbConnected && u.role !== 'center_manager') {
       setTimeout(() => refreshNotifications(), 500);
     }
@@ -2335,7 +2237,11 @@ function bindEvents() {
         if (!subject || !content) { U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); return; }
         saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
         try {
-          const result = await DB.create({ sector_id: sector, subject, content, sender_name: sender, priority }, files);
+          const rec = { subject, content, sender_name: sender, priority };
+          if (sector && sector !== 'undefined') {
+            rec.sector_id = sector;
+          }
+          const result = await DB.create(rec, files);
           if (Array.isArray(result)) {
             U.toast(`✅ تم تعميم المراسلة على ${result.length} قواطع`, 'success');
             appData.correspondence = [...result, ...appData.correspondence];
@@ -2344,8 +2250,6 @@ function bindEvents() {
             appData.correspondence = [result, ...appData.correspondence];
           }
           U.save('db_correspondence_cache', appData.correspondence);
-          
-          // ✅ لمدير المركز: ابقَ في نفس الصفحة وامسح النموذج
           if (Auth.user.role === 'center_manager') {
             document.getElementById('fSub').value = '';
             document.getElementById('fCon').value = '';
@@ -2435,7 +2339,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 render();
 updateSyncButton();
-console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (Center Manager Only - Confirmed Login)`);
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (Final Fix)`);
 </script>
 </body>
 </html>
