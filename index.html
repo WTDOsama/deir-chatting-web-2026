@@ -1147,6 +1147,8 @@ const UI = {
         center_name: centerName,
         sector_id: sectorId,
         is_active: true
+        created_by: profile.id,  // ✅ تأكد من وجود هذا السطر
+        created_at: new Date().toISOString()
       }]);
       if (insertError) throw insertError;
       successEl.textContent = `✅ تم توليد الرمز: ${code}`;
