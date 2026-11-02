@@ -104,11 +104,14 @@ input, textarea, select { font-family: 'Cairo', sans-serif; }
 </div>
 <div id="reportContainer"></div>
 <script>
+// =====================================================
+// CONFIGURATION
+// =====================================================
 const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '12.9.1-Clean-Auth',
+  VERSION: '12.9.3-Final-Stable',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -116,10 +119,10 @@ const CONFIG = {
 };
 
 const SECTORS = [
-  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' },
-  { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 16c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 8c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>' },
-  { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>' },
-  { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' },
+  { id: '4c64a3cc-489c-4e90-8a75-394fae14023d', name: 'القاطع الشرقي', code: 'EAST', color: 'from-yellow-500 to-orange-600', icon: '☀️' },
+  { id: 'ed3f75d5-380d-40c7-bae9-ac83881f3f49', name: 'القاطع الغربي', code: 'WEST', color: 'from-blue-500 to-blue-700', icon: '🌊' },
+  { id: '655618a6-1465-471a-bed3-0cdfbba1e87c', name: 'القاطع الشمالي', code: 'NORTH', color: 'from-purple-500 to-purple-700', icon: '⛰️' },
+  { id: 'bce65411-4d2f-4cee-9602-83604232664d', name: 'القاطع الجنوبي', code: 'SOUTH', color: 'from-red-500 to-red-700', icon: '🌵' },
 ];
 
 const ROLES = {
@@ -128,7 +131,7 @@ const ROLES = {
   sector_admin: 'مدير قاطع',
   central_oversight: 'الرقابة المركزية',
   sector_staff: 'موظف قاطع',
-  center_manager: 'مدير مركز إيواء'
+  center_manager: 'مدير مركز إيواء',
 };
 
 const STATUS_LABELS = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة', done: 'مكتملة' };
@@ -139,18 +142,22 @@ let sbConnected = false;
 let realtimeSubs = [];
 let appData = { correspondence: [], complaints: [], _allFollowUps: [] };
 let isOnline = navigator.onLine;
+let centerSession = null;
 
 try {
   if (CONFIG.USE_SB && CONFIG.SB_URL && CONFIG.SB_KEY && CONFIG.SB_URL.includes('supabase.co') && !CONFIG.SB_KEY.includes('YOUR')) {
     sb = window.supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
     sbConnected = isOnline;
     console.log('✓ Supabase client created (online: ' + isOnline + ')');
-  } else { console.log(' Local mode'); }
+  } else { console.log('ℹ Local mode'); }
 } catch (e) { console.error('Supabase init failed:', e); }
 
+// =====================================================
+// PWA SERVICE WORKER
+// =====================================================
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE_NAME = 'deir-iyawaat-v12.9.1';
+    const CACHE_NAME = 'deir-iyawaat-v12.9.3';
     const ASSETS = ['/'];
     self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(err => console.log('Cache add failed:', err))).then(() => self.skipWaiting())); });
     self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -170,6 +177,9 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register(swUrl).then((reg) => console.log('✓ Service Worker registered')).catch((err) => console.log('⚠ SW failed:', err.message));
 }
 
+// =====================================================
+// ONLINE/OFFLINE
+// =====================================================
 window.addEventListener('online', () => {
   isOnline = true; sbConnected = true;
   document.getElementById('offlineBanner').classList.add('hidden');
@@ -187,15 +197,13 @@ window.addEventListener('offline', () => {
 function updateSyncButton() {
   const pending = U.load('db_pending_sync', []);
   const syncBtn = document.getElementById('syncBtn');
-  const syncCount = document.getElementById('syncCount');
-  if (pending.length > 0 && isOnline) {
-    syncBtn.classList.remove('hidden');
-    syncCount.textContent = pending.length;
-  } else {
-    syncBtn.classList.add('hidden');
-  }
+  if (pending.length > 0 && isOnline) { syncBtn.classList.remove('hidden'); document.getElementById('syncCount').textContent = pending.length; }
+  else { syncBtn.classList.add('hidden'); }
 }
 
+// =====================================================
+// UTILS
+// =====================================================
 const U = {
   uuid: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
@@ -236,56 +244,39 @@ const U = {
   getDownloadLabel: (type) => ({ image: 'تحميل الصورة', excel: 'تحميل Excel', document: 'تحميل الملف', pdf: 'تحميل PDF', archive: 'تحميل الملف', other: 'تحميل الملف' }[type] || 'تحميل الملف')
 };
 
+// =====================================================
+// AUTH
+// =====================================================
 const Auth = {
   user: null,
   load() { this.user = U.load('db_user', null); return this.user; },
-  
-  // ✅ تم تنظيف منطق الدخول: user@gmail.com/user فقط للمراكز، والباقي يعتمد على Supabase
   async login(email, password) {
-    // استثناء واحد فقط: حساب تجريبي مخصص لمديري المراكز
-    if (email === 'user@gmail.com' && password === 'user') {
-      this.user = {
-        id: 'center-manager-demo-id',
-        email: 'user@gmail.com',
-        full_name: 'مدير مركز إيواء',
-        role: 'center_manager',
-        sector_id: null // سيتم تحديده تلقائياً بعد إدخال رمز الدخول
-      };
-      U.save('db_user', this.user);
-      return this.user;
-    }
-
-    // باقي المدراء والموظفين يستخدمون حساباتهم المفعلة والموجودة في Supabase فقط
     if (sbConnected) {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw new Error('بيانات الدخول غير صحيحة');
-      
+      if (error) throw new Error(error.message);
       const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
-      this.user = profile ? { ...profile, email: data.user.email } : { 
-        id: data.user.id, 
-        email: data.user.email, 
-        full_name: email.split('@')[0], 
-        role: 'sector_staff' 
-      };
-      
-      subscribeToNotifications();
-      setTimeout(() => refreshNotifications(), 1000);
+      this.user = profile ? { ...profile, email: data.user.email } : { id: data.user.id, email: data.user.email, full_name: email.split('@')[0], role: 'sector_staff' };
+      if (this.user.email === 'user@gmail.com') {
+        this.user.role = 'center_manager';
+        this.user.full_name = 'مدير مركز إيواء';
+      } else {
+        subscribeToNotifications();
+        setTimeout(() => refreshNotifications(), 1000);
+      }
     } else {
-      throw new Error('لا يوجد اتصال بالإنترنت');
+      throw new Error('بيانات الدخول غير صحيحة أو لا يوجد اتصال بالإنترنت');
     }
-    
     U.save('db_user', this.user);
     return this.user;
   },
-
   async logout() {
     if (sbConnected) { await sb.auth.signOut(); realtimeSubs.forEach(s => s?.unsubscribe()); realtimeSubs = []; }
     this.user = null;
+    centerSession = null;
     localStorage.removeItem('db_user');
     sessionStorage.removeItem('center_session');
     render();
   },
-
   async validateCenterCode(code) {
     if (!sbConnected) throw new Error('لا يوجد اتصال بالإنترنت');
     if (!code || code.trim().length < 4) throw new Error('الرمز غير صالح');
@@ -308,21 +299,22 @@ const Auth = {
       .update({ last_used_at: new Date().toISOString() })
       .eq('id', data.id);
     const sector = SECTORS.find(s => s.id === data.sector_id);
-    
-    // تحديث بيانات المستخدم بناءً على الرمز
-    this.user.sector_id = data.sector_id;
-    this.user.full_name = data.center_name;
-    this.user.role = 'center_manager';
-    
-    const centerSession = {
+    centerSession = {
       codeId: data.id,
       centerName: data.center_name,
       sectorId: data.sector_id,
       sectorName: sector ? sector.name : 'غير محدد',
     };
-    
+    this.user = {
+      id: data.id,
+      email: 'center@local',
+      full_name: data.center_name,
+      role: 'center_manager',
+      sector_id: data.sector_id,
+    };
     sessionStorage.setItem('center_session', JSON.stringify(centerSession));
     U.save('db_user', this.user);
+    console.log('✅ تم إنشاء جلسة مدير المركز:', centerSession);
     return centerSession;
   }
 };
@@ -355,6 +347,9 @@ async function refreshNotifications() {
   } catch (e) { console.error('Error in refreshNotifications:', e); }
 }
 
+// =====================================================
+// DATA SERVICE
+// =====================================================
 const DB = {
   async getAll(filters = {}) {
     if (sbConnected) {
@@ -382,11 +377,7 @@ const DB = {
     if (sbConnected) {
       let targetSectorId = rec.sector_id;
       if (Auth.user && Auth.user.role === 'center_manager') {
-        const session = sessionStorage.getItem('center_session');
-        if (session) {
-          const parsed = JSON.parse(session);
-          targetSectorId = parsed.sectorId;
-        }
+        targetSectorId = centerSession?.sectorId || Auth.user.sector_id;
         if (!targetSectorId) {
           throw new Error('القطاع غير محدد - الرجاء تسجيل الدخول بالرمز مرة أخرى');
         }
@@ -734,12 +725,18 @@ const DB = {
   }
 };
 
+// =====================================================
+// ROUTER
+// =====================================================
 const Router = {
   page: 'dashboard',
   params: {},
   go(page, params = {}) { this.page = page; this.params = params; render(); window.scrollTo(0, 0); }
 };
 
+// =====================================================
+// REPORTS SERVICE
+// =====================================================
 const Reports = {
   buildReportHTML(title, subtitle, headers, rows, stats = null) {
     let html = `<div style="padding: 30px; background: white; direction: rtl; font-family: 'Cairo', sans-serif;">
@@ -856,7 +853,11 @@ const Reports = {
   }
 };
 
+// =====================================================
+// VIEWS
+// =====================================================
 const Views = {
+  // ✅ شاشة تسجيل الدخول - للمدير العام فقط + زر توليد الرمز
   login() {
     return `<div class="min-h-screen flex items-center justify-center p-4">
       <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md fade-in">
@@ -870,25 +871,35 @@ const Views = {
         <form class="space-y-4" onsubmit="return false;">
           <div><label class="block text-sm font-semibold mb-2 text-gray-700">البريد الإلكتروني</label><input type="email" id="lgEmail" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="name@example.com"></div>
           <div><label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label><input type="password" id="lgPass" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••"></div>
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"><span class="text-gray-600">تذكرني</span></label>
+            <button type="button" onclick="UI.forgotPassword()" class="text-teal-600 hover:text-teal-800 font-semibold cursor-pointer">هل نسيت كلمة المرور؟</button>
+          </div>
           <button type="button" id="lgBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">🔐 تسجيل الدخول</button>
         </form>
+        
+        <!-- ✅ قسم توليد رمز الدخول -->
         <div class="mt-6 pt-6 border-t border-gray-200">
-          <p class="text-center text-gray-600 text-sm mb-3">دخول مديري المراكز</p>
           <button type="button" onclick="UI.showGenerateCodeFromLogin()" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-xl font-bold cursor-pointer transition mb-3 flex items-center justify-center gap-2">
             <span class="text-xl">🔑</span>
             <span>توليد رمز دخول جديد</span>
           </button>
+          
+          <!-- حقل إدخال الرمز (يظهر بعد التوليد) -->
           <div id="codeInputSection" class="hidden">
             <label class="block text-sm font-semibold mb-2 text-gray-700">رمز الدخول</label>
             <input type="text" id="centerCodeInput" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none text-center text-2xl tracking-widest font-mono" placeholder="XXXX-XXXX" style="text-transform: uppercase;">
-            <button type="button" onclick="UI.loginWithCode()" class="btn-primary w-full py-3 rounded-xl font-bold mt-2">دخول بالرمز</button>
+            <button type="button" onclick="UI.loginWithCode()" class="btn-primary w-full py-3 rounded-xl font-bold mt-2">🚪 دخول بالرمز</button>
           </div>
         </div>
+        
         <div class="mt-4 text-xs text-gray-500 text-center">
           <p>الإصدار ${CONFIG.VERSION}</p>
           <p class="mt-1">© 2026 ${CONFIG.ORG}</p>
         </div>
       </div>
+      
+      <!-- ✅ Modal توليد الرمز -->
       <div id="generateCodeModal" class="hidden fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
         <div class="glass rounded-2xl p-6 max-w-md w-full">
           <h3 class="text-xl font-bold text-teal-800 mb-4">🔑 توليد رمز دخول جديد</h3>
@@ -905,8 +916,19 @@ const Views = {
                 ${SECTORS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
               </select>
             </div>
+            <div class="border-t pt-4 mt-4">
+              <p class="text-xs text-gray-600 mb-3">⚠️ يجب إدخال بيانات المدير العام للتحقق من الصلاحية</p>
+              <div>
+                <label class="block text-sm font-semibold mb-1">بريد المدير العام *</label>
+                <input type="email" id="adminEmail" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="admin@example.com">
+              </div>
+              <div class="mt-3">
+                <label class="block text-sm font-semibold mb-1">كلمة مرور المدير *</label>
+                <input type="password" id="adminPassword" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" placeholder="••••••••">
+              </div>
+            </div>
             <div class="flex gap-2 pt-2">
-              <button type="button" onclick="UI.generateCenterCode()" class="btn-primary flex-1 py-3 rounded-xl font-bold">توليد وحفظ</button>
+              <button type="button" onclick="UI.generateCodeFromLogin()" class="btn-primary flex-1 py-3 rounded-xl font-bold">توليد الرمز</button>
               <button type="button" onclick="document.getElementById('generateCodeModal').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-xl font-bold">إلغاء</button>
             </div>
           </div>
@@ -922,6 +944,7 @@ const Views = {
         <h1 class="text-2xl font-bold text-teal-800 mb-2">دخول مدير مركز إيواء</h1>
         <p class="text-gray-600 text-sm mb-6">الرجاء إدخال رمز الدخول الخاص بمركزك</p>
         <div id="codeErr" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-3 rounded mb-4 text-sm"></div>
+        <div id="codeSuccess" class="hidden bg-green-100 border-r-4 border-green-500 text-green-700 p-3 rounded mb-4 text-sm"></div>
         <form class="space-y-4" onsubmit="return false;">
           <div>
             <input type="text" id="centerCodeInput" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none text-center text-2xl tracking-widest font-mono" placeholder="XXXX-XXXX" maxlength="9" style="text-transform: uppercase;">
@@ -929,6 +952,10 @@ const Views = {
           <button type="button" id="validateCodeBtn" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">تحقق ودخول</button>
           <button type="button" onclick="Auth.logout()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold cursor-pointer transition">تسجيل خروج</button>
         </form>
+        <div class="mt-4 text-xs text-gray-500">
+          <p>💡 الرمز مكون من 8 أحرف (مثل: EAST-0001)</p>
+          <p class="mt-1">🔒 اتصال آمن ومشفر</p>
+        </div>
       </div>
     </div>`;
   },
@@ -956,7 +983,7 @@ const Views = {
           ${SECTORS.map(s => {
             const count = active.filter(r => r.sector_id === s.id).length;
             return `<button onclick="Router.go('sector', {id:'${s.id}'})" class="glass rounded-2xl shadow-lg p-5 card-hover text-right cursor-pointer">
-              <div class="bg-gradient-to-br ${s.color} text-white rounded-xl p-3 inline-flex items-center justify-center mb-2">${s.icon}</div>
+              <div class="bg-gradient-to-br ${s.color} text-white rounded-xl p-3 inline-flex items-center justify-center mb-2 text-3xl">${s.icon}</div>
               <h3 class="font-bold text-gray-800">${s.name}</h3>
               <div class="text-sm text-gray-500 mt-1">${count} مراسلة</div>
             </button>`;
@@ -978,7 +1005,6 @@ const Views = {
     </div>`;
   },
 
-  // ... (باقي دوال Views محفوظة كما هي لضمان عدم كسر أي شيء)
   async followups(data) {
     data = data || appData.correspondence || [];
     const u = Auth.user || {};
@@ -1059,8 +1085,7 @@ const Views = {
       </div>
     </div>`;
   },
-  
-  // (تم اختصار باقي الدوال هنا للحفاظ على حجم الرد، ولكنها موجودة بالكامل في الملف أدناه)
+
   async notifications() {
     const u = Auth.user || {};
     let notifications = [];
@@ -1068,6 +1093,7 @@ const Views = {
     const unreadCount = notifications.filter(n => !n.is_read).length;
     return `<div class="min-h-screen">${this.navbar()}<div class="max-w-4xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl shadow-xl p-6 mb-6"><h1 class="text-2xl font-bold">🔔 التنبيهات</h1><p class="opacity-90 mt-1">${unreadCount > 0 ? `${unreadCount} تنبيه غير مقروء` : 'لا توجد تنبيهات جديدة'}</p></div><div class="space-y-3">${notifications.length === 0 ? '<div class="glass rounded-2xl p-12 text-center text-gray-500">🔕 لا توجد تنبيهات</div>' : notifications.map(n => `<div class="notif-card ${n.is_read ? 'bg-white' : 'bg-blue-50 border-r-4 border-blue-500'}"><div class="flex justify-between items-start gap-3"><div class="flex-1"><h3 class="font-bold text-gray-800">${U.esc(n.title || 'تنبيه')}</h3><p class="text-gray-600 text-sm">${U.esc(n.message || '')}</p></div><div class="flex flex-col gap-2">${!n.is_read ? `<button onclick="UI.markNotifRead('${n.id}')" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200">✓ مقروء</button>` : ''}<button onclick="UI.deleteNotif('${n.id}')" class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200">🗑️</button></div></div></div>`).join('')}</div></div></div>`;
   },
+  
   general(data) { data = data || appData.correspondence || []; const filteredData = data.filter(r => !r.is_archived); return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-2xl shadow-xl p-6 mb-6"><h1 class="text-3xl font-bold">🏛️ الإدارة العامة</h1></div><div class="space-y-3">${filteredData.map(r => this.card(r)).join('')}</div></div></div>`; },
   sector(data) { data = data || appData.correspondence || []; const sid = Router.params.id; const s = SECTORS.find(x => x.id === sid); if (!s) return '<div class="p-8 text-white text-center">القطاع غير موجود</div>'; const filteredData = data.filter(r => r.sector_id === sid && !r.is_archived); return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br ${s.color} text-white rounded-2xl shadow-xl p-6 mb-6"><h1 class="text-3xl font-bold">${s.name}</h1></div><div class="space-y-3">${filteredData.map(r => this.card(r)).join('')}</div></div></div>`; },
   archive(data) { data = data || appData.correspondence || []; const filteredData = data.filter(r => r.is_archived); return `<div class="min-h-screen">${this.navbar()}<div class="max-w-7xl mx-auto p-4 md:p-6 fade-in"><div class="bg-gradient-to-br from-gray-700 to-gray-900 text-white rounded-2xl shadow-xl p-6 mb-6"><h1 class="text-3xl font-bold">📦 الأرشيف</h1></div><div class="space-y-3">${filteredData.map(r => this.card(r)).join('')}</div></div></div>`; },
@@ -1118,62 +1144,106 @@ const Views = {
   }
 };
 
+// =====================================================
+// UI ACTIONS
+// =====================================================
 const UI = {
+  // ✅ دوال توليد الرمز من شاشة الدخول
   showGenerateCodeFromLogin() {
     document.getElementById('generateCodeModal').classList.remove('hidden');
   },
-  async generateCenterCode() {
+  
+  async generateCodeFromLogin() {
     const centerName = document.getElementById('newCenterName').value.trim();
     const sectorId = document.getElementById('newSectorId').value;
+    const adminEmail = document.getElementById('adminEmail').value.trim();
+    const adminPassword = document.getElementById('adminPassword').value;
     const errEl = document.getElementById('codeModalErr');
     const successEl = document.getElementById('codeModalSuccess');
-    if (!centerName || !sectorId) {
+    
+    if (!centerName || !sectorId || !adminEmail || !adminPassword) {
       errEl.textContent = '❌ الرجاء ملء جميع الحقول';
       errEl.classList.remove('hidden');
       successEl.classList.add('hidden');
       return;
     }
+    
     errEl.classList.add('hidden');
     successEl.classList.add('hidden');
+    
     try {
+      // ✅ التحقق من بيانات المدير
+      const { data: authData, error: authError } = await sb.auth.signInWithPassword({ 
+        email: adminEmail, 
+        password: adminPassword 
+      });
+      
+      if (authError) {
+        throw new Error('بيانات المدير غير صحيحة');
+      }
+      
+      const { data: profile } = await sb.from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+      
+      if (!profile || !['super_admin', 'general_admin'].includes(profile.role)) {
+        throw new Error('ليس لديك صلاحية توليد الرموز');
+      }
+      
+      // ✅ توليد رمز عشوائي
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       let code = '';
       for (let i = 0; i < 8; i++) {
         if (i === 4) code += '-';
         code += chars.charAt(Math.floor(Math.random() * chars.length));
       }
+      
+      // ✅ حفظ الرمز
       const { error: insertError } = await sb.from('center_access_codes').insert([{
         code: code,
         center_name: centerName,
         sector_id: sectorId,
-        is_active: true
-        created_by: profile.id,  // ✅ تأكد من وجود هذا السطر
-        created_at: new Date().toISOString()
+        is_active: true,
+        created_by: profile.id
       }]);
+      
       if (insertError) throw insertError;
+      
       successEl.textContent = `✅ تم توليد الرمز: ${code}`;
       successEl.classList.remove('hidden');
+      
+      // ✅ إغلاق Modal وإظهار حقل إدخال الرمز
       setTimeout(() => {
         document.getElementById('generateCodeModal').classList.add('hidden');
         document.getElementById('codeInputSection').classList.remove('hidden');
         document.getElementById('centerCodeInput').value = code;
+        
+        // مسح حقول التوليد فقط
         document.getElementById('newCenterName').value = '';
+        document.getElementById('adminEmail').value = '';
+        document.getElementById('adminPassword').value = '';
       }, 1500);
+      
     } catch (e) {
       errEl.textContent = '❌ ' + (e.message || 'فشل التوليد');
       errEl.classList.remove('hidden');
     }
   },
+  
   async loginWithCode() {
     const codeInput = document.getElementById('centerCodeInput');
     const errEl = document.getElementById('loginErr');
+    
     if (!codeInput) return;
+    
     const code = codeInput.value.trim();
     if (!code) {
       errEl.textContent = 'الرجاء إدخال الرمز';
       errEl.classList.remove('hidden');
       return;
     }
+    
     try {
       await Auth.validateCenterCode(code);
       U.toast('✅ تم التحقق بنجاح', 'success');
@@ -1183,41 +1253,246 @@ const UI = {
       errEl.classList.remove('hidden');
     }
   },
+  
+  // ✅ دالة التحقق من رمز المركز (للشاشة المنفصلة)
   async validateCenterCode() {
     const codeInput = document.getElementById('centerCodeInput');
     const errEl = document.getElementById('codeErr');
+    const successEl = document.getElementById('codeSuccess');
+    const btn = document.getElementById('validateCodeBtn');
+    
     if (!codeInput) return;
     const code = codeInput.value.trim();
+    
     if (!code) {
       errEl.textContent = 'الرجاء إدخال الرمز';
       errEl.classList.remove('hidden');
       return;
     }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> جاري التحقق...';
+    errEl.classList.add('hidden');
+    successEl.classList.add('hidden');
+    
     try {
-      await Auth.validateCenterCode(code);
-      render();
+      const session = await Auth.validateCenterCode(code);
+      successEl.textContent = `✅ مرحباً ${session.centerName} - ${session.sectorName}`;
+      successEl.classList.remove('hidden');
+      setTimeout(() => { Router.page = 'create'; render(); }, 800);
     } catch (e) {
-      errEl.textContent = e.message;
+      errEl.textContent = '❌ ' + (e.message || 'فشل التحقق');
       errEl.classList.remove('hidden');
+      btn.disabled = false;
+      btn.innerHTML = 'تحقق ودخول';
     }
+  },
+
+  reply(id) { const content = prompt('نص الرد:'); if (!content) return; try { DB.addReply(id, content); U.toast('تم إضافة الرد', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
+  
+  followUp(id) {
+    const title = prompt('عنوان المهمة:');
+    if (!title) return;
+    const notes = prompt('ملاحظات (اختياري):') || '';
+    const dueDate = prompt('تاريخ الاستحقاق (YYYY-MM-DD) - اختياري:') || null;
+    if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+      U.toast('⚠️ صيغة التاريخ غير صحيحة. استخدم YYYY-MM-DD', 'warning');
+      return;
+    }
+    (async () => {
+      try {
+        const result = await DB.addFollowUp(id, { title, notes, due_date: dueDate, status: 'pending' });
+        if (result) {
+          U.toast('✅ تمت إضافة المتابعة بنجاح', 'success');
+          await render();
+        } else {
+          U.toast('❌ فشل إضافة المتابعة', 'error');
+        }
+      } catch (e) {
+        console.error('Error adding follow-up:', e);
+        U.toast('❌ خطأ: ' + (e.message || 'فشل حفظ المتابعة'), 'error');
+      }
+    })();
+  },
+  
+  async changeFollowUpStatus(fuId, corrId, newStatus) {
+    try {
+      await DB.updateFollowUp(fuId, { status: newStatus });
+      U.toast('✅ تم تحديث حالة المتابعة', 'success');
+      render();
+    } catch (e) { U.toast(e.message, 'error'); }
+  },
+  
+  async deleteFollowUp(fuId, corrId) {
+    if (!confirm('⚠️ هل تريد حذف هذه المتابعة؟')) return;
+    try {
+      await DB.deleteFollowUp(fuId, corrId);
+      U.toast('✅ تم حذف المتابعة', 'success');
+      render();
+    } catch (e) { U.toast(e.message, 'error'); }
+  },
+  
+  async markAllNotifRead() {
+    try {
+      await DB.markAllNotificationsRead();
+      U.toast('✅ تم تعليم جميع التنبيهات كمقروءة', 'success');
+      render();
+    } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
+  },
+  
+  async markNotifRead(id) {
+    try {
+      await DB.markNotificationRead(id);
+      U.toast('✅ تم تعليم التنبيه كمقروء', 'success');
+      render();
+    } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
+  },
+  
+  async deleteNotif(id) {
+    if (!confirm('هل تريد حذف هذا التنبيه؟')) return;
+    try {
+      await DB.deleteNotification(id);
+      U.toast('✅ تم حذف التنبيه', 'success');
+      render();
+    } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
+  },
+  
+  async clearAllNotifs() {
+    if (!confirm('هل تريد مسح جميع التنبيهات؟')) return;
+    try {
+      await DB.clearAllNotifications();
+      U.toast('✅ تم مسح جميع التنبيهات', 'success');
+      render();
+    } catch (e) { U.toast('❌ خطأ: ' + e.message, 'error'); }
+  },
+  
+  async archive(id) { if (!confirm('تأكيد أرشفة هذه المراسلة؟')) return; try { await DB.archive(id); U.toast('تمت الأرشفة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
+  async restore(id) { try { await DB.restore(id); U.toast('تمت الاستعادة', 'success'); render(); } catch (e) { U.toast(e.message, 'error'); } },
+  
+  async del(id) {
+    if (!confirm('⚠️ حذف نهائي؟')) return;
+    try {
+      await DB.remove(id);
+      U.toast('✅ تم الحذف', 'success');
+      appData.correspondence = appData.correspondence.filter(r => r.id !== id);
+      U.save('db_correspondence_cache', appData.correspondence);
+      Router.go('dashboard');
+    } catch (e) {
+      console.error('Delete error:', e);
+      U.toast('❌ فشل الحذف: ' + (e.message || 'خطأ غير معروف'), 'error');
+    }
+  },
+  
+  openWhatsApp() { const msg = encodeURIComponent(`مرحباً، أنا من ${CONFIG.ORG}`); window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${msg}`, '_blank'); },
+  
+  forgotPassword() { const email = prompt('الرجاء إدخال بريدك الإلكتروني لاستعادة كلمة المرور:'); if (!email) return; if (sbConnected) { sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }).then(() => U.toast('✅ تم إرسال رابط إعادة تعيين كلمة المرور', 'success')).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); } else { U.toast('⚠️ هذه الميزة متاحة فقط عند الاتصال بـ Supabase', 'warning'); } },
+  
+  registerNewUser() { if (!sbConnected) { U.toast('⚠️ التسجيل متوفر فقط عند الاتصال بـ Supabase', 'warning'); return; } const email = prompt('البريد الإلكتروني:'); if (!email) return; const password = prompt('كلمة المرور (6 أحرف على الأقل):'); if (!password || password.length < 6) { U.toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning'); return; } const fullName = prompt('الاسم الكامل:'); const username = prompt('اسم المستخدم:'); const role = prompt('الدور (super_admin/general_admin/sector_admin/central_oversight/sector_staff):', 'sector_staff'); sb.auth.signUp({ email, password, options: { data: { full_name: fullName || email.split('@')[0], username: username || email.split('@')[0], role: role || 'sector_staff' } } }).then(({ data, error }) => { if (error) throw error; U.toast('✅ تم إنشاء الحساب بنجاح!', 'success'); }).catch(err => U.toast('❌ خطأ: ' + err.message, 'error')); },
+  
+  async submitComplaint() {
+    const sector = document.getElementById('compSector').value;
+    const title = document.getElementById('compTitle').value.trim();
+    const description = document.getElementById('compDesc').value.trim();
+    const name = document.getElementById('compName').value.trim();
+    const phone = document.getElementById('compPhone').value.trim();
+    const type = document.getElementById('compType').value;
+    const priority = document.getElementById('compPriority').value;
+    const fileInput = document.getElementById('compFiles');
+    const files = fileInput?.files ? Array.from(fileInput.files) : [];
+    if (!title || !description) { U.toast('الرجاء إدخال العنوان والتفاصيل', 'warning'); return; }
+    const btn = document.getElementById('submitComplaintBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> جاري الإرسال...';
+    try {
+      await DB.createComplaint({ sector_id: sector, title, description, complainant_name: name, complainant_phone: phone, complainant_type: type, priority, files: files, source: 'internal' });
+      U.toast('✅ تم إرسال الشكوى بنجاح', 'success');
+      const u = Auth.user || {};
+      Router.go(u.role === 'central_oversight' ? 'oversightDashboard' : 'complaints');
+    } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); btn.disabled = false; btn.innerHTML = '📤 إرسال الشكوى'; }
+  },
+  
+  async updateComplaint(id) {
+    const status = document.getElementById('updateStatus').value;
+    const response = document.getElementById('adminResponse').value.trim();
+    const updates = { status, admin_response: response };
+    if (status === 'resolved') { updates.resolved_by = Auth.user?.id; updates.resolved_at = new Date().toISOString(); }
+    try { await DB.updateComplaint(id, updates); U.toast('✅ تم تحديث الشكوى', 'success'); Router.go('viewComplaint', { id }); } catch (e) { U.toast(e.message || 'حدث خطأ', 'error'); }
+  },
+  
+  async exportOversightReport() {
+    const u = Auth.user || {};
+    const complaints = await DB.getComplaints({ sector_id: u.sector_id });
+    const sector = SECTORS.find(s => s.id === u.sector_id);
+    const format = prompt('اختر صيغة التصدير:\n1 - PDF\n2 - Excel', '1');
+    if (format === '1') { await Reports.exportComplaintsPDF(complaints, sector?.name || ''); }
+    else if (format === '2') { Reports.exportComplaintsExcel(complaints, sector?.name || ''); }
+  },
+  
+  async syncOfflineData() { await DB.syncPending(); },
+  
+  copyAsText(id) {
+    const r = appData.correspondence.find(x => x.id === id);
+    if (!r) { U.toast('المراسلة غير موجودة', 'error'); return; }
+    const s = SECTORS.find(x => x.id === r.sector_id);
+    const text = `📋 ${CONFIG.ORG}\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n⚡ الأولوية: ${r.priority === 'high' ? 'عالية' : r.priority === 'low' ? 'منخفضة' : r.priority === 'urgent' ? 'عاجلة' : 'عادية'}\n\n📝 المحتوى:\n${r.content || '-'}\n\n━━━━━━━━━━━━━━━\nتم الإنشاء بواسطة: ${CONFIG.APP_NAME}`;
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => U.toast('✅ تم نسخ المراسلة كنص', 'success')).catch(() => this.fallbackCopy(text)); } else { this.fallbackCopy(text); }
+  },
+  
+  fallbackCopy(text) { const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0'; document.body.appendChild(textarea); textarea.select(); try { document.execCommand('copy'); U.toast('✅ تم نسخ المراسلة كنص', 'success'); } catch (e) { U.toast('❌ فشل النسخ', 'error'); } document.body.removeChild(textarea); },
+  
+  showQR(id) {
+    const r = appData.correspondence.find(x => x.id === id);
+    if (!r) return;
+    const modal = document.getElementById('qrModal');
+    const container = document.getElementById('qrContainer');
+    if (!modal || !container) return;
+    container.innerHTML = '';
+    const qrData = `📋 ${r.reference_number || ''}\n📌 ${r.subject}\n📅 ${U.fmtDate(r.created_at)}\n\n${r.content || ''}`;
+    try { new QRCode(container, { text: qrData, width: 220, height: 220, colorDark: '#0f766e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { container.innerHTML = '<div class="text-red-600">فشل إنشاء QR</div>'; }
+    modal.classList.remove('hidden');
+  },
+  
+  shareWhatsApp(id) {
+    const r = appData.correspondence.find(x => x.id === id);
+    if (!r) return;
+    const s = SECTORS.find(x => x.id === r.sector_id);
+    const text = `*${CONFIG.ORG}*\n\n🔢 الرقم: ${r.reference_number || '-'}\n📌 الموضوع: ${r.subject || '-'}\n📅 التاريخ: ${U.fmtDate(r.created_at)}\n🏢 القطاع: ${s?.name || '-'}\n\n📝 المحتوى:\n${r.content || '-'}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 };
 
+// =====================================================
+// MAIN RENDER
+// =====================================================
 async function render() {
   Auth.load();
   const app = document.getElementById('app');
+  const whatsappBtn = document.getElementById('whatsappBtn');
   sbConnected = isOnline && sb !== null;
+
   if (!Auth.user) {
     app.innerHTML = Views.login();
+    whatsappBtn.classList.add('hidden');
     setTimeout(() => {
       const btn = document.getElementById('lgBtn');
       if (btn) { btn.onclick = handleLogin; document.getElementById('lgPass').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); }); }
     }, 0);
   } else {
-    if (Auth.user.email === 'user@gmail.com' || Auth.user.role === 'center_manager') {
-      const session = sessionStorage.getItem('center_session');
-      if (!session) {
+    // ✅ التحقق من جلسة مدير المركز
+    if (Auth.user.role === 'center_manager') {
+      const savedSession = sessionStorage.getItem('center_session');
+      if (savedSession) {
+        try {
+          centerSession = JSON.parse(savedSession);
+          Auth.user.sector_id = centerSession.sectorId;
+          Auth.user.full_name = centerSession.centerName;
+        } catch (e) {
+          centerSession = null;
+        }
+      }
+      
+      if (!centerSession) {
         app.innerHTML = Views.centerCodeLogin();
+        whatsappBtn.classList.add('hidden');
         setTimeout(() => {
           const btn = document.getElementById('validateCodeBtn');
           if (btn) { btn.onclick = UI.validateCenterCode; }
@@ -1225,18 +1500,157 @@ async function render() {
           if (input) { input.addEventListener('keypress', e => { if (e.key === 'Enter') UI.validateCenterCode(); }); input.focus(); }
         }, 100);
         return;
-      } else {
-        const parsed = JSON.parse(session);
-        Auth.user.sector_id = parsed.sectorId;
-        Auth.user.full_name = parsed.centerName;
-        Auth.user.role = 'center_manager';
       }
     }
-    if (Auth.user.role === 'center_manager' && Router.page !== 'create') {
+    
+    whatsappBtn.classList.remove('hidden');
+    const u = Auth.user;
+    
+    // ✅ تقييد التصفح لمدير المركز
+    if (u.role === 'center_manager' && Router.page !== 'create') {
       Router.page = 'create';
     }
-    const viewFn = Views[Router.page] || Views.dashboard;
-    app.innerHTML = await viewFn();
+    
+    if (u.role === 'central_oversight' && Router.page === 'dashboard') Router.page = 'oversightDashboard';
+
+    if (sbConnected) {
+      try {
+        let filters = {};
+        if (u.role === 'sector_admin' && u.sector_id) filters.sector_id = u.sector_id;
+        appData.correspondence = await DB.getAll(filters);
+        if (u.role === 'super_admin' || u.role === 'general_admin') {
+          appData.complaints = await DB.getComplaints({});
+        } else if (u.role === 'central_oversight' && u.sector_id) {
+          appData.complaints = await DB.getComplaints({ sector_id: u.sector_id });
+        } else if (u.role === 'sector_admin' && u.sector_id) {
+          appData.complaints = await DB.getComplaints({ sector_id: u.sector_id });
+        } else {
+          appData.complaints = [];
+        }
+      } catch (e) {
+        console.error("فشل جلب البيانات", e);
+        appData = { correspondence: U.load('db_correspondence_cache', []), complaints: U.load('db_complaints_cache', []), _allFollowUps: [] };
+      }
+    } else {
+      appData.correspondence = U.load('db_correspondence_cache', U.load('db_correspondence', []));
+      appData.complaints = U.load('db_complaints_cache', U.load('db_complaints', []));
+    }
+
+    const views = {
+      dashboard: () => Views.dashboard(appData.correspondence),
+      sector: () => Views.sector(appData.correspondence),
+      general: () => Views.general(appData.correspondence),
+      archive: () => Views.archive(appData.correspondence),
+      followups: () => Views.followups(appData.correspondence),
+      notifications: () => Views.notifications(),
+      centerCodeLogin: () => Views.centerCodeLogin(),
+      create: () => Views.create(),
+      view: () => Views.view(),
+      complaints: () => Views.complaints(),
+    };
+
+    const viewFn = views[Router.page] || (u.role === 'central_oversight' ? views.oversightDashboard : views.dashboard);
+    const html = await viewFn();
+    app.innerHTML = html;
+    bindEvents();
+    updateSyncButton();
+
+    if (Auth.user && sbConnected && u.role !== 'center_manager') {
+      setTimeout(() => refreshNotifications(), 500);
+    }
+  }
+}
+
+function bindEvents() {
+  if (Router.page === 'create') {
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        const sector = document.getElementById('fSec')?.value;
+        const subject = document.getElementById('fSub')?.value.trim();
+        const content = document.getElementById('fCon')?.value.trim();
+        const sender = document.getElementById('fSen')?.value.trim();
+        const priority = document.getElementById('fPri')?.value;
+        const fileInput = document.getElementById('fFiles');
+        const files = fileInput?.files ? Array.from(fileInput.files) : [];
+        if (!subject || !content) { U.toast('الرجاء إدخال الموضوع والمحتوى', 'warning'); return; }
+        saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
+        try {
+          const rec = { subject, content, sender_name: sender, priority };
+          if (sector && sector !== 'undefined') {
+            rec.sector_id = sector;
+          }
+          const result = await DB.create(rec, files);
+          if (Array.isArray(result)) {
+            U.toast(`✅ تم تعميم المراسلة على ${result.length} قواطع`, 'success');
+            appData.correspondence = [...result, ...appData.correspondence];
+          } else {
+            U.toast('✅ تم حفظ المراسلة', 'success');
+            appData.correspondence = [result, ...appData.correspondence];
+          }
+          U.save('db_correspondence_cache', appData.correspondence);
+          if (Auth.user.role === 'center_manager') {
+            document.getElementById('fSub').value = '';
+            document.getElementById('fCon').value = '';
+            if (document.getElementById('fFiles')) document.getElementById('fFiles').value = '';
+          } else {
+            Router.go('dashboard');
+          }
+        } catch (e) {
+          U.toast(e.message || 'حدث خطأ', 'error');
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '💾 حفظ المراسلة';
+        }
+      };
+    }
+  }
+  
+  if (Router.page === 'createComplaint') { const btn = document.getElementById('submitComplaintBtn'); if (btn) btn.onclick = () => UI.submitComplaint(); }
+  if (Router.page === 'complaints') {
+    const filter = () => {
+      const search = document.getElementById('cSearch')?.value.toLowerCase() || '';
+      const status = document.getElementById('cStatus')?.value || '';
+      const priority = document.getElementById('cPriority')?.value || '';
+      const sector = document.getElementById('cSector')?.value || '';
+      let filtered = [...appData.complaints];
+      if (search) filtered = filtered.filter(c => (c.title + ' ' + c.description).toLowerCase().includes(search));
+      if (status) filtered = filtered.filter(c => c.status === status);
+      if (priority) filtered = filtered.filter(c => c.priority === priority);
+      if (sector) filtered = filtered.filter(c => c.sector_id === sector);
+      const el = document.getElementById('complaintsList');
+      if (el) {
+        if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-12 text-center text-gray-500">📭 لا توجد نتائج</div>'; }
+        else {
+          const statusColors = { pending: 'bg-yellow-100 text-yellow-800', in_progress: 'bg-blue-100 text-blue-800', resolved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
+          const statusLabels = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة' };
+          const priorityColors = { low: 'bg-gray-100 text-gray-700', medium: 'bg-blue-100 text-blue-700', high: 'bg-orange-100 text-orange-700', urgent: 'bg-red-100 text-red-700' };
+          const priorityLabels = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
+          el.innerHTML = filtered.map(c => {
+            const sec = SECTORS.find(s => s.id === c.sector_id);
+            return `<div class="glass rounded-2xl shadow-lg p-5 card-hover cursor-pointer ${c.priority === 'urgent' ? 'border-2 border-red-300' : ''}" onclick="Router.go('viewComplaint', {id:'${c.id}'})">
+              <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 text-xs text-gray-500 mb-1"><span>#${c.id.substring(0, 8)}</span><span>•</span><span>${U.fmtDate(c.created_at)}</span>${sec ? `<span>•</span><span>${sec.name}</span>` : ''}</div>
+                  <h3 class="font-bold text-lg text-gray-800">${U.esc(c.title)}</h3>
+                  <p class="text-sm text-gray-600 mt-1">${U.esc((c.description || '').substring(0, 150))}...</p>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[c.status]}">${statusLabels[c.status]}</span>
+                  <span class="px-3 py-1 rounded-full text-xs font-bold ${priorityColors[c.priority]}">${priorityLabels[c.priority]}</span>
+                </div>
+              </div>
+              <div class="flex gap-4 text-xs text-gray-500 flex-wrap">
+                ${c.complainant_phone ? `<span>📞 ${U.esc(c.complainant_phone)}</span>` : ''}
+                <span>📤 ${U.esc(c.submitted_by_name || 'مستخدم')}</span>
+                ${c.admin_response ? '<span class="text-green-600 font-semibold">✓ تم الرد</span>' : '<span class="text-orange-600">⏳ بانتظار الرد</span>'}
+              </div>
+            </div>`;
+          }).join('');
+        }
+      }
+    };
+    const s = document.getElementById('cSearch'), st = document.getElementById('cStatus'), p = document.getElementById('cPriority'), sc = document.getElementById('cSector');
+    if (s) s.oninput = filter; if (st) st.onchange = filter; if (p) p.onchange = filter; if (sc) sc.onchange = filter;
   }
 }
 
@@ -1247,20 +1661,25 @@ async function handleLogin() {
   const btn = document.getElementById('lgBtn');
   if (!email || !password) { errEl.textContent = 'الرجاء إدخال البريد وكلمة المرور'; errEl.classList.remove('hidden'); return; }
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> جاري الدخول...'; errEl.classList.add('hidden');
-  try { 
-    await Auth.login(email, password); 
-    U.toast(`مرحباً ${Auth.user.full_name}`, 'success'); 
-    render(); 
-  } catch (e) { 
-    errEl.textContent = e.message; 
-    errEl.classList.remove('hidden'); 
-    btn.disabled = false; 
-    btn.innerHTML = '🔐 تسجيل الدخول'; 
-  }
+  try { await Auth.login(email, password); U.toast(`مرحباً ${Auth.user.full_name}`, 'success'); render(); } catch (e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); btn.disabled = false; btn.innerHTML = '🔐 تسجيل الدخول'; }
 }
 
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); deferredPrompt = e;
+  const app = document.getElementById('app');
+  if (app && !Auth.user) {
+    const installBtn = document.createElement('button');
+    installBtn.className = 'install-pwa-btn';
+    installBtn.innerHTML = '📱 تثبيت التطبيق على الهاتف';
+    installBtn.onclick = async () => { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') U.toast('✅ تم تثبيت التطبيق!', 'success'); installBtn.remove(); deferredPrompt = null; };
+    app.appendChild(installBtn);
+  }
+});
+
 render();
-console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (Clean Auth)`);
+updateSyncButton();
+console.log(`✓ ${CONFIG.APP_NAME} v${CONFIG.VERSION} loaded (Final Stable)`);
 </script>
 </body>
 </html>
