@@ -90,6 +90,16 @@ input, textarea, select { font-family: 'Cairo', sans-serif; }
 .notif-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; border-right: 4px solid #e5e7eb; }
 .notif-card.unread { border-right-color: #3b82f6; background: #eff6ff; }
 .notif-card:hover { transform: translateX(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+
+  /* ✅ ضمان ظهور الأيقونات */
+.text-2xl, .text-3xl, .text-5xl, .text-6xl {
+  font-family: 'Cairo', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Twitter Color Emoji', sans-serif !important;
+}
+
+/* ✅ إصلاح خاص للأيقونات في الأزرار */
+button span[class*="text-"] {
+  font-family: inherit !important;
+}
 </style>
 </head>
 <body>
