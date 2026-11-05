@@ -2170,18 +2170,6 @@ async loginWithCode() {
     }
   }
 
-  async deleteCenterCode(id) {
-if (!confirm('⚠️ هل أنت متأكد من حذف هذا الرمز نهائياً؟\nلا يمكن التراجع عن هذا الإجراء!')) return;
-try {
-const { error } = await sb.from('center_access_codes').delete().eq('id', id);
-if (error) throw error;
-U.toast('✅ تم حذف الرمز بنجاح', 'success');
-render();
-} catch (e) {
-U.toast('❌ خطأ: ' + e.message, 'error');
-}
-}
-  
 };
 
 // =====================================================
