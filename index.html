@@ -1799,10 +1799,13 @@ login() {
                       </span>
                     </td>
                     <td class="p-4">
-                      <button onclick="UI.toggleCenterCode('${c.id}', ${!c.is_active})" class="text-sm px-3 py-1 rounded-lg ${c.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}">
-                        ${c.is_active ? 'إلغاء' : 'تفعيل'}
-                      </button>
-                    </td>
+<div class="flex gap-2 flex-wrap">
+<button onclick="UI.toggleCenterCode('${c.id}', ${!c.is_active})" class="text-sm px-3 py-1 rounded-lg ${c.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}">
+${c.is_active ? 'إلغاء' : 'تفعيل'}
+</button>
+${!c.is_active ? `<button onclick="UI.deleteCenterCode('${c.id}')" class="text-sm px-3 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600">🗑️ حذف</button>` : ''}
+</div>
+</td>
                   </tr>
                 `}).join('')}
             </tbody>
