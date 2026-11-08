@@ -111,7 +111,7 @@ const CONFIG = {
   APP_NAME: 'مراسلات إدارة إيواءات دير البلح',
   ORG: 'إدارة إيواءات دير البلح',
   DEV: 'WTDOsama – وتد لبرمجة مواقع الويب',
-  VERSION: '12.7.0-CenterAccess-Production',
+  VERSION: '12.7.1-CenterAccess-Production',
   SB_URL: 'https://vhypuurifaeqgyxdgubz.supabase.co',
   SB_KEY: 'sb_publishable_rhTVmxm81mzW-2_a4o7x6A_ii8b4hNk',
   USE_SB: true,
@@ -135,7 +135,7 @@ const ROLES = {
 };
 
 const STATUS_LABELS = { pending: 'قيد الانتظار', in_progress: 'قيد المعالجة', resolved: 'تم الحل', rejected: 'مرفوضة', done: 'مكتملة' };
-const PRIORITY_LABELS = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة', normal: 'عادية' };
+const PRIORITY_LABELS = { low: 'منخفضة', medium: 'عادية', high: 'عالية', urgent: 'عاجلة' };
 
 let sb = null;
 let sbConnected = false;
@@ -408,7 +408,7 @@ const DB = {
             const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
               id: newId, reference_number: refNum, subject: rec.subject, content: rec.content,
               sender_id: Auth.user?.id, sender_name: rec.sender_name || Auth.user?.full_name,
-              sector_id: sector.id, priority: rec.priority || 'normal',
+              sector_id: sector.id, priority: rec.priority || 'medium',
               is_archived: false, created_at: new Date().toISOString()
             }]).select().single();
             if (insertError) throw insertError;
@@ -431,7 +431,7 @@ const DB = {
           const { data: inserted, error: insertError } = await sb.from('correspondence').insert([{
             id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
             sender_id: Auth.user?.id, sender_name: Auth.user?.full_name || 'مدير مركز',
-            sector_id: targetSectorId, priority: rec.priority || 'normal',
+            sector_id: targetSectorId, priority: rec.priority || 'medium',
             is_archived: false, created_at: new Date().toISOString()
           }]).select().single();
           if (insertError) throw insertError;
@@ -450,7 +450,7 @@ const DB = {
       const recordId = U.uuid();
       const refNum = rec.reference_number || U.genRef(SECTORS.find(s => s.id === rec.sector_id)?.code || 'XX');
       const record = { id: recordId, reference_number: refNum, subject: rec.subject, content: rec.content,
-        sender_name: rec.sender_name || Auth.user?.full_name, sector_id: rec.sector_id, priority: rec.priority || 'normal',
+        sender_name: rec.sender_name || Auth.user?.full_name, sector_id: rec.sector_id, priority: rec.priority || 'medium',
         is_archived: false, replies: [], follow_ups: [], attachments: [], created_at: U.now(), _pending: true };
       const pending = U.load('db_pending_sync', []);
       pending.push({ type: 'correspondence', action: 'create', data: record, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
@@ -1276,7 +1276,7 @@ login() {
               </div>
               <div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية</label>
                 <select id="fPri" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                  <option value="normal">عادية</option>
+                  <option value="medium">عادية</option>
                   <option value="high">🔴 عالية</option>
                   <option value="low">منخفضة</option>
                   <option value="urgent"> عاجلة</option>
@@ -1315,7 +1315,7 @@ login() {
               <div><label class="block text-sm font-semibold mb-1 text-gray-700">المرسل</label><input type="text" id="fSen" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none" value="${U.esc(Auth.user?.full_name || '')}"></div>
               <div><label class="block text-sm font-semibold mb-1 text-gray-700">الأولوية</label>
                 <select id="fPri" class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-teal-600 focus:outline-none">
-                  <option value="normal">عادية</option><option value="high">عالية</option><option value="low">منخفضة</option><option value="urgent">عاجلة</option>
+                  <option value="medium">عادية</option><option value="high">عالية</option><option value="low">منخفضة</option><option value="urgent">عاجلة</option>
                 </select>
               </div>
             </div>
@@ -1577,7 +1577,7 @@ login() {
         <div class="flex gap-2 mt-2 flex-wrap text-xs">
           ${r.priority === 'high' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded"> عالية</span>' : ''}
           ${r.priority === 'urgent' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded">🚨 عاجلة</span>' : ''}
-          ${r.priority === 'normal' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
+          ${r.priority === 'medium' ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">🔵 عادية</span>' : ''}
           ${r.priority === 'low' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">🟢 منخفضة</span>' : ''}
           ${r.is_archived ? '<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📦 مؤرشف</span>' : ''}
           ${repliesCount > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">💬 ${repliesCount} رد</span>` : ''}
